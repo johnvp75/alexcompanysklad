@@ -21,6 +21,20 @@ class SimpleFrame extends JFrame
 		ButtonPanel panel=new ButtonPanel();
 		Container contentPane=getContentPane();
 		contentPane.add(panel);
+		StyleAction newAction= new StyleAction();
+		SimpleFrame.this.addWindowListener(newAction);
+		
+	}
+	private class StyleAction extends WindowAdapter{
+		public void windowOpened (WindowEvent e){
+			try
+			{
+				UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows");
+				SwingUtilities.updateComponentTreeUI(SimpleFrame.this);
+			}catch(Exception er){
+				er.printStackTrace();
+			}
+		}
 	}
 	public static final int DEFAULT_WIDTH = 300;
 	public static final int DEFAULT_HEIGHT = 200;
