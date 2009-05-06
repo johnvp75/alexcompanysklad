@@ -5,8 +5,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Vector;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
 //import org.kempelin.web.servlet.RegistrForm.TypeError;
@@ -98,10 +100,7 @@ class NewSaleFrame extends JPanel
 		JComboBox skladCombo = new JComboBox();
 		JComboBox clientCombo = new JComboBox();
 		JTable naklTable=new JTable();
-		TableColumn nCol = new TableColumn();
-		nCol.setHeaderValue("¹");
-
-		naklTable.addColumn(nCol);
+		
 //		skladCombo.addItem("Test");
 		String Query="select name from sklad order by name";
 		try { 
@@ -239,3 +238,30 @@ class ButtonPanel extends JPanel{
 	}
 }
 
+class realTableModel extends AbstractTableModel{
+	
+}
+class dataCont{
+	private Vector name, count,cost,discount;
+	private String nameClient, nameSklad;
+	private int inddiscount;
+	public dataCont (String anameClient,String anameSklad, int ainddiscount){
+		name=new Vector(0);
+		count=new Vector(0);
+		cost=new Vector(0);
+		discount=new Vector(0);
+		nameClient=anameClient;
+		nameSklad=anameSklad;
+		inddiscount=ainddiscount;
+	}
+	private void newCount(int aCount){
+		count.add(new Integer(aCount));
+	}
+	private void setCount(int aCount, int pos){
+		count.setElementAt(new Integer(aCount), pos);
+	}
+	private int getCount(int pos){
+		return ((Integer)count.elementAt(pos)).intValue();
+	}
+	
+}
