@@ -263,5 +263,8 @@ class dataCont{
 	private int getCount(int pos){
 		return ((Integer)count.elementAt(pos)).intValue();
 	}
-	
+	private void newName(String aName){
+		name.add(aName);
+	}
+	// private void 
 }
