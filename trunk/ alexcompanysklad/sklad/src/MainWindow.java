@@ -88,8 +88,8 @@ class NewSaleFrame extends JPanel
 		Statement st = null;
 		ResultSet rs = null;
 //			String init="";
-		SpringLayout layout = new SpringLayout();
-		setLayout(layout);
+//		SpringLayout layout = new SpringLayout();
+		setLayout(null);
 		JButton saveButton = new JButton("Сохранить");
 		JButton cancelButton = new JButton("Отмена");
 		JButton barcodeButton = new JButton("Штрих-код(F1,+)");
@@ -101,7 +101,7 @@ class NewSaleFrame extends JPanel
 		JComboBox clientCombo = new JComboBox();
 		realTableModel model = new realTableModel();
 		JTable naklTable=new JTable(model);
-		add(new JScrollPane(naklTable), "Center");
+		JScrollPane ScrollTable=new JScrollPane(naklTable);
 //		skladCombo.addItem("Test");
 		String Query="select name from sklad order by name";
 		try { 
@@ -128,6 +128,17 @@ class NewSaleFrame extends JPanel
 		catch (Exception e) { e.printStackTrace();}
 
 		rs=null;
+//		this.se
+		saveButton.setBounds(34, 495, 104, 22);
+		cancelButton.setBounds(159, 495, 104, 22);
+		barcodeButton.setBounds(285, 495, 150, 22);
+		listButton.setBounds(455, 495, 163, 22);
+		printButton.setBounds(638, 495, 104, 22);
+		skladLabel.setBounds(10, 28, 58, 22);
+		skladCombo.setBounds(79, 28, 207, 22);
+		clientLabel.setBounds(10, 58, 61, 22);
+		clientCombo.setBounds(79, 58, 207, 22);
+		ScrollTable.setBounds(6, 89, 769, 335);
 		add(saveButton);
 		add(cancelButton);
 		add(barcodeButton);
@@ -137,35 +148,8 @@ class NewSaleFrame extends JPanel
 		add(skladCombo);
 		add(clientLabel);
 		add(clientCombo);
-		add(naklTable);
-		Spring s=Spring.constant(0,10000,10000);
-//		Spring s1=Spring.constant(0,50000,50000);
-		Spring sSouth=Spring.constant(-10);
-		layout.putConstraint(SpringLayout.SOUTH, saveButton, sSouth ,SpringLayout.SOUTH,this); 
-		layout.putConstraint(SpringLayout.SOUTH, cancelButton, sSouth ,SpringLayout.SOUTH,this);
-		layout.putConstraint(SpringLayout.SOUTH, barcodeButton, sSouth ,SpringLayout.SOUTH,this);
-		layout.putConstraint(SpringLayout.SOUTH, listButton, sSouth ,SpringLayout.SOUTH,this);
-		layout.putConstraint(SpringLayout.SOUTH, printButton, sSouth ,SpringLayout.SOUTH,this);
-		sSouth=Spring.constant(10);
-		layout.putConstraint(SpringLayout.WEST, skladLabel, sSouth, SpringLayout.WEST, this );
-		layout.putConstraint(SpringLayout.WEST, clientLabel, sSouth, SpringLayout.WEST, this );
-		layout.putConstraint(SpringLayout.NORTH, skladCombo, sSouth ,SpringLayout.NORTH,this);
-		sSouth=Spring.constant(13);
-		layout.putConstraint(SpringLayout.NORTH, skladLabel, sSouth ,SpringLayout.NORTH,this);
-		layout.putConstraint(SpringLayout.WEST, skladCombo, s, SpringLayout.EAST, skladLabel );
-		sSouth=Spring.constant(40);
-		layout.putConstraint(SpringLayout.NORTH, clientCombo, sSouth ,SpringLayout.NORTH,this);
-		sSouth=Spring.constant(43);
-		layout.putConstraint(SpringLayout.NORTH, clientLabel, sSouth ,SpringLayout.NORTH,this);
-		layout.putConstraint(SpringLayout.WEST, clientCombo, s, SpringLayout.WEST, this );
-		layout.putConstraint(SpringLayout.WEST, clientCombo, s, SpringLayout.EAST, clientLabel );
+		add(ScrollTable);
 		
-		layout.putConstraint(SpringLayout.WEST, saveButton, s, SpringLayout.WEST, this );
-		layout.putConstraint(SpringLayout.WEST, cancelButton, s, SpringLayout.EAST, saveButton );
-		layout.putConstraint(SpringLayout.WEST, barcodeButton, s, SpringLayout.EAST, cancelButton );
-		layout.putConstraint(SpringLayout.WEST, listButton, s, SpringLayout.EAST, barcodeButton );
-		layout.putConstraint(SpringLayout.WEST, printButton, s, SpringLayout.EAST, listButton );
-		layout.putConstraint(SpringLayout.EAST, this, s, SpringLayout.EAST,printButton );
 		
 	}
 }
@@ -176,7 +160,7 @@ class SimpleFrame extends JFrame
 {
 	public SimpleFrame(){
 		setTitle("Склад 4.0 менеджер "+GetUserName());
-		setSize(640, 480);
+		setSize(800, 600);
 
 		
 
@@ -268,17 +252,17 @@ class realTableModel extends AbstractTableModel{
 	}
 	public String getColumnName(int column){
 		switch (column){
-		case 1:
+		case 0:
 			return "№";
-		case 2:
+		case 1:
 			return "Наименование";
-		case 3:
+		case 2:
 			return "Кол-во";
-		case 4:
+		case 3:
 			return "Цена";
-		case 5:
+		case 4:
 			return "Сумма";
-		case 6:
+		case 5:
 			return "Скидка";
 		default:
 			return "";
@@ -293,17 +277,17 @@ class realTableModel extends AbstractTableModel{
 		}else 
 			if (getEditable()){
 				switch (column){
+				case 0:
+					return false;
 				case 1:
 					return false;
 				case 2:
-					return false;
+					return true;
 				case 3:
 					return true;
 				case 4:
-					return true;
-				case 5:
 					return false;
-				case 6:
+				case 5:
 					return true;
 				default:
 					return false;
@@ -415,17 +399,17 @@ class dataCont{
 	}
 	public Object getValueAt(int row, int column){
 		switch (column){
-		case 1:
+		case 0:
 			return (Integer)row;
-		case 2:
+		case 1:
 			return getName(row);
-		case 3:
+		case 2:
 			return getCount(row);
-		case 4:
+		case 3:
 			return getCost(row);
-		case 5:
+		case 4:
 			return (Double)(((Integer)getCount(row)).intValue()*((Double)getCost(row)).doubleValue()*(1-((Double)getDiscount(row)).doubleValue()/100));
-		case 6:
+		case 5:
 			return getDiscount(row);
 		default:
 			return null;
@@ -433,13 +417,13 @@ class dataCont{
 	}
 	public void setValueAt(Object aValue, int row, int column){
 		switch (column){
-		case 2:
+		case 1:
 			setName(aValue,row);
-		case 3:
+		case 2:
 			setCount(aValue, row);
-		case 4:
+		case 3:
 			setCost(aValue,row);
-		case 6:
+		case 4:
 			setDiscount(aValue,row);
 		}
 	}
