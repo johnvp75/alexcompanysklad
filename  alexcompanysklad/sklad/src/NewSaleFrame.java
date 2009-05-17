@@ -1,7 +1,10 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.sql.ResultSet;
 
+import javax.swing.ComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -9,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JComboBox.KeySelectionManager;
 
 
 
@@ -109,6 +113,8 @@ class NewSaleFrame extends JPanel
 		editableCheck.setBounds(555, 58, 207, 22);
 //Задаем слушателей
 		clientCombo.addActionListener(new ClientChoose());
+//		clientCombo.setKeySelectionManager(new KeySel());
+		clientCombo.addKeyListener(new KeySel());
 		
 //Добавляем элементы на форму
 		add(saveButton);
@@ -187,7 +193,7 @@ class NewSaleFrame extends JPanel
 		}
 		private boolean checkClient(){
 			boolean ret=false;
-			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name like '%"+(String)clientCombo.getSelectedItem()+"%'");
+			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'");
 			try { 
 				rs.next();
 				if (rs.getInt(1)>0){
@@ -198,6 +204,18 @@ class NewSaleFrame extends JPanel
 			catch (Exception e) { }
 			return ret;
 
+		}
+	}
+	private class KeySel implements KeyListener{
+		public void keyPressed(KeyEvent event){
+			
+			
+		}
+		public void keyReleased(KeyEvent event){
+			
+		}
+		public void keyTyped(KeyEvent event){
+			
 		}
 	}
 	

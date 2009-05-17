@@ -41,7 +41,11 @@ class NewClientDialog extends JPanel {
 		phone.setBounds(137, 80, 396, 51);
 		typeLabel.setBounds(165, 172, 80, 22);
 		opt.setBounds(283, 157, 93, 22);
-		roz.setBounds(283, 194, 93, 22);
+		roz.setBounds(283, 185, 93, 22);
+		
+		clientname.addActionListener(new nextFocus());
+		address.addActionListener(new nextFocus());
+
 		
 		panel.add(clientLabel);
 		panel.add(clientname);
@@ -128,13 +132,18 @@ class NewClientDialog extends JPanel {
 		if (dialog==null || dialog.getOwner()!=owner){
 			dialog=new JDialog(owner,true);
 			dialog.add(this);
-			dialog.getRootPane().setDefaultButton(okButton);
+//			dialog.getRootPane().setDefaultButton(okButton);
 			dialog.pack();
 		}
 		dialog.setTitle(title);
-		dialog.setBounds(0, 0, 564, 299);
-		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+		dialog.setBounds(118, 150, 564, 299);
+//		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setVisible(true);
 		return ok;
+	}
+	private class nextFocus implements ActionListener{
+		public void actionPerformed(ActionEvent event){
+			((JTextField)event.getSource()).transferFocus();
+		}
 	}
 }
