@@ -1,0 +1,87 @@
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
+
+
+class MainFrame extends JFrame
+{
+	public MainFrame(){
+		setTitle("Склад 4.0");
+		setSize(800, 600);
+		JMenuBar menuBar= new JMenuBar();
+		setJMenuBar(menuBar);
+		saleMenu=new JMenu("Продажа");
+		menuBar.add(saleMenu);
+		editMenu=new JMenu("Редактирование");
+		menuBar.add(editMenu);
+		JMenuItem barcodeItem=new JMenuItem("Штрих-код");
+		editMenu.add(barcodeItem);
+		JMenu docMenu =new JMenu("Накладные");
+		editMenu.add(docMenu);
+		JMenuItem regdocItem = new JMenuItem("Проведенные");
+		JMenuItem nonregdocItem = new JMenuItem("Непроведенные");
+		docMenu.add(regdocItem);
+		docMenu.add(nonregdocItem);
+		JMenu clientMenu=new JMenu("Клиенты");
+		JMenuItem lgotiItem =new JMenuItem("Скидка");
+		JMenuItem dataItem =new JMenuItem("Данные");
+		editMenu.add(clientMenu);
+		clientMenu.add(lgotiItem);
+		clientMenu.add(dataItem);
+		doceditMenu = new JMenu("Накладные в обработке");
+		menuBar.add(doceditMenu);
+		JMenu windowMenu = new JMenu("Окно");
+		menuBar.add(windowMenu);
+		JMenuItem windowcloseItem = new JMenuItem("Закрыть текущее окно");
+		JMenuItem windowcloseallItem = new JMenuItem("Закрыть все окна");
+		windowMenu.add(windowcloseItem);
+		windowMenu.add(windowcloseallItem);
+		newFrame = new NewSaleFrame();
+		newFrame.setVisible(false);
+		add(newFrame);
+//		NewSaleAction NewSale=new NewSaleAction();
+		saleMenu.addMenuListener(new NewSaleAction());
+	}
+	private JMenu saleMenu;
+	private JMenu editMenu;
+	private JMenu doceditMenu;
+	private NewSaleFrame newFrame;
+	private ManagerChooser dialog=null;
+	private class NewSaleAction implements MenuListener{
+		public void menuSelected(MenuEvent event)
+		{
+			
+			if (dialog==null)
+				dialog=new ManagerChooser();
+			if (dialog.showDialog(MainFrame.this, "Вход в систему")){
+				newFrame.setVisible(true);
+				saleMenu.setSelected(false);
+				saleMenu.setEnabled(false);
+				editMenu.setEnabled(false);
+				doceditMenu.setEnabled(false);
+				SetUserName(dialog.GetManager());
+				}else{
+					saleMenu.setSelected(false);
+//					saleMenu.set
+				}
+		}
+		public void menuDeselected(MenuEvent event){
+			
+		}
+		public void menuCanceled(MenuEvent event){
+			
+		}
+		
+	}
+	public void SetUserName(String aUserName){
+		UserName=aUserName;
+		setTitle("Склад 4.0 менеджер "+aUserName);
+	}
+	public String GetUserName(){
+		return UserName;
+	}
+	private String UserName ="";
+}
