@@ -1,18 +1,9 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.sql.ResultSet;
 
-import javax.swing.ComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JComboBox.KeySelectionManager;
+import javax.swing.*;
+//import javax.swing.JComboBox.KeySelectionManager;
 
 
 
@@ -22,9 +13,10 @@ class NewSaleFrame extends JPanel
 {
 	private JLabel okrLabel;
 	private JComboBox okrCombo;
-	private JComboBox clientCombo;
+	private AutoComplete clientCombo;
 	private JComboBox skladCombo;
 	private NewClientDialog newClient=null;
+	private realTableModel model;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -57,7 +49,7 @@ class NewSaleFrame extends JPanel
 		okrCombo.addItem("До 0,01");
 		JCheckBox editableCheck = new JCheckBox("Редактировать в ячейке");
 		skladCombo = new JComboBox();
-		clientCombo = new JComboBox();
+		clientCombo = new AutoComplete();
 		clientCombo.setEditable(true);
 		ResultSet rs = DataSet.QueryExec("select name from sklad order by name");
 		try{
@@ -77,7 +69,7 @@ class NewSaleFrame extends JPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
-
+//		clientCombo.getEditor().selectAll();
 		rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
 		try {
 			rs.next();
@@ -88,7 +80,7 @@ class NewSaleFrame extends JPanel
 		}
 		catch (Exception e) { e.printStackTrace();}
 
-		realTableModel model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),0);
+		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),0);
 		JTable naklTable=new JTable(model);
 		naklTable.getColumnModel().getColumn(0).setMaxWidth(30);
 		naklTable.getColumnModel().getColumn(1).setMaxWidth(455);
@@ -113,9 +105,8 @@ class NewSaleFrame extends JPanel
 		editableCheck.setBounds(555, 58, 207, 22);
 //Задаем слушателей
 		clientCombo.addActionListener(new ClientChoose());
-//		clientCombo.setKeySelectionManager(new KeySel());
-		clientCombo.addKeyListener(new KeySel());
-		
+		barcodeButton.addActionListener(new barcode());
+
 //Добавляем элементы на форму
 		add(saveButton);
 		add(cancelButton);
@@ -189,6 +180,10 @@ class NewSaleFrame extends JPanel
 
 				}
 			}
+//			ComboBoxEditor edit=clientCombo.getEditor();
+//			edit.selectAll();
+			clientCombo.getEditor().selectAll();
+			
 			
 		}
 		private boolean checkClient(){
@@ -206,19 +201,18 @@ class NewSaleFrame extends JPanel
 
 		}
 	}
-	private class KeySel implements KeyListener{
-		public void keyPressed(KeyEvent event){
-			
-			
-		}
-		public void keyReleased(KeyEvent event){
-			
-		}
-		public void keyTyped(KeyEvent event){
-			
+	private class barcode implements ActionListener{
+		public void actionPerformed(ActionEvent event){
+			try{
+				String TovarName = inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem());
+				model.setValueAt(TovarName, 1, 1);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				// Вставить звук
+			}
 		}
 	}
-	
 }
 
 	
