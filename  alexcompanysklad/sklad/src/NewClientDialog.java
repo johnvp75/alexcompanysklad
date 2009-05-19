@@ -18,7 +18,6 @@ class NewClientDialog extends JPanel {
 	public NewClientDialog(){
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
-//		panel.setLocation(350, 250);
 		panel.setLayout(null);
 		JLabel clientLabel = new JLabel("Название (Ф.И.О.):");
 		JLabel addressLabel = new JLabel("Адрес:");
