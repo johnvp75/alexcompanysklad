@@ -14,6 +14,7 @@ class InputCountTovar extends JPanel{
 	private JLabel costOne;
 	private JDialog dialog;
 	public InputCountTovar(){
+		setLayout(null);
 		name=new JLabel("");
 		JLabel costBoxLabel=new JLabel("Цена за упаковку:");
 		costBox=new JLabel("0,00");
@@ -50,24 +51,19 @@ class InputCountTovar extends JPanel{
 			}
 		});
 		DigInput listener =new DigInput();
-		count.addKeyListener(new KeyAdapter(){
-			public void keyTyped(KeyEvent event){
-				if (event.getKeyChar()=='k')
-					event.setKeyChar('E');
-			}
-		});
-		costBoxLabel.setBounds(5, 5, 60, 22);
-		costBox.setBounds(5, 5, 60, 22);
-		costOneLabel.setBounds(5, 5, 60, 22);
-		costOptLabel.setBounds(5, 5, 60, 22);
-		countButton.setBounds(5, 5, 60, 22);
-		countLabel.setBounds(5, 5, 60, 22);
-		incaseLabel.setBounds(5, 5, 60, 22);
-		costOne.setBounds(5, 5, 60, 22);
-		costOpt.setBounds(5, 5, 60, 22);
-		count.setBounds(5, 5, 60, 22);
-		incase.setBounds(5, 5, 60, 22);
-		name.setBounds(5, 5, 60, 22);
+		count.addKeyListener(listener);
+		costBoxLabel.setBounds(15, 54, 104, 22);
+		costBox.setBounds(132, 54, 40, 22);
+		costOneLabel.setBounds(15, 82, 104, 22);
+		costOptLabel.setBounds(178, 54, 85, 22);
+		countButton.setBounds(221, 131, 68, 22);
+		countLabel.setBounds(15, 187, 83, 22);
+		incaseLabel.setBounds(15, 131, 142, 22);
+		costOne.setBounds(132, 82, 40, 22);
+		costOpt.setBounds(275, 54, 40, 22);
+		count.setBounds(113, 187, 90, 22);
+		incase.setBounds(173, 131, 29, 22);
+		name.setBounds(15, 14, 308, 22);
 		
 		add(costBoxLabel);
 		add(costBox);
@@ -81,15 +77,16 @@ class InputCountTovar extends JPanel{
 		add(count);
 		add(incase);
 		add(name);
-		class DigInput extends KeyAdapter{
-			public void keyTyped(KeyEvent event){
-				if (event.getKeyChar()=='k')
-					event.setKeyChar('E');
-			}
-			
+		
+	}
+	class DigInput extends KeyAdapter{
+		public void keyTyped(KeyEvent event){
+			if (event.getKeyChar()=='k')
+				event.setKeyChar('E');
 		}
 		
 	}
+
 	public int showDialog(Component parent, String title, int Box, int Opt, int One, String aName, int ainCase){
 		Frame owner = null;
 		if (parent instanceof Frame)
