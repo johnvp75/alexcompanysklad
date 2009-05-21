@@ -2,6 +2,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Locale;
 
 
 public class DataSet {
@@ -9,8 +10,9 @@ public class DataSet {
 	public static ResultSet QueryExec(String Query){
 		if (cn==null)
 			try {
+				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@91.210.177.35:1521:XE", "sklad", "sklad");
 			}
 			catch (Exception e) { e.printStackTrace();}
 		Statement st = null;
