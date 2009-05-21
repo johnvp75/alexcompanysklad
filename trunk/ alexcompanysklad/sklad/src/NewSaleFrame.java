@@ -17,6 +17,7 @@ class NewSaleFrame extends JPanel
 	private JComboBox skladCombo;
 	private NewClientDialog newClient=null;
 	private realTableModel model;
+	private static InputCountTovar formInput = null;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -204,14 +205,20 @@ class NewSaleFrame extends JPanel
 	private class barcode implements ActionListener{
 		public void actionPerformed(ActionEvent event){
 			try{
-				String TovarName = inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem());
-				model.setValueAt(TovarName, 1, 1);
+				Input(inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem()));
+				
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 				// Вставить звук
 			}
 		}
+	}
+	private void Input(String aValue){
+		 if (formInput==null)
+			 formInput = new InputCountTovar();
+		 int kolTov=formInput.showDialog(this, "Количество", 1, 2, 3, aValue, 1);
+		 
 	}
 }
 
