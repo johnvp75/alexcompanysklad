@@ -78,6 +78,13 @@ class realTableModel extends AbstractTableModel{
 				return false;
 			}
 	}
+	public int present(String aName){
+		int ret=-1;
+		for (int i=0;i<=nakl.getSize()-1;i++)
+			if (((String)nakl.getValueAt(i, 1)).equals(aName))
+				ret=i;
+		return ret;	
+	}
 }
 class dataCont{
 	private Vector name, count,cost,discount;
