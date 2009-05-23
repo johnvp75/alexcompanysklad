@@ -50,7 +50,6 @@ class NewSaleFrame extends JPanel
 		okrCombo.addItem("Без округления");
 		okrCombo.addItem("До 1");
 		okrCombo.addItem("До 0,1");
-		okrCombo.addItem("До 0,01");
 		JCheckBox editableCheck = new JCheckBox("Редактировать в ячейке");
 		skladCombo = new JComboBoxFire();
 		clientCombo = new AutoComplete();
@@ -162,7 +161,6 @@ class NewSaleFrame extends JPanel
 						rs.next();
 						model.setIndDiscount(rs.getInt(1));}
 				}else{
-					model.setIndDiscount(0);
 					okrLabel.setVisible(true);
 					okrCombo.setVisible(true);
 					priceCombo.setVisible(true);
@@ -262,7 +260,7 @@ class NewSaleFrame extends JPanel
 			 e.printStackTrace();
 		 }
 		 
-		 float Opt,One,Box;
+		 double Opt,One,Box;
 		 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=1");
 		 try{
 			 rs.next();
@@ -290,26 +288,18 @@ class NewSaleFrame extends JPanel
 		boolean roz=false;
 		One=Box;
 		rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
-		int disc = 0;
+		Box=Box*(1-model.getIndDiscount()/100);
+		if (res==-1){
+			One=One/inBox;
+			One=(int)(One*Math.pow(10, 2-okrCombo.getSelectedIndex()))/Math.pow(10, 2-okrCombo.getSelectedIndex());
+		}
 		try {
-			rs.next();
-			res=rs.getInt(1);
-			rs.close();
-			if (res==1){
-				rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')");
-				rs.next();
-				disc=rs.getInt(1);
-				Box=Box*(1-disc/100);
-			}else{
-				rs=DataSet.QueryExec("select kol from tovar where name='"+aValue+"'");
-				
-			}
-			
-				
+			if (!(rs.getInt(1)==1))
+				roz=true;
 		}
 		catch (Exception e) { e.printStackTrace();}
 
-		 int kolTov=formInput.showDialog(this, "Количество", 1, 2, 3, aValue, inBox);
+		 int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
 		 
 	}
 }
