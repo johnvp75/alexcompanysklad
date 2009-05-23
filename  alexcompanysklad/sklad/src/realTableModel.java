@@ -85,6 +85,9 @@ class realTableModel extends AbstractTableModel{
 				ret=i;
 		return ret;	
 	}
+	public int getIndDiscount(){
+		return nakl.getIndDiscount();
+	}
 }
 class dataCont{
 	private Vector name, count,cost,discount;
