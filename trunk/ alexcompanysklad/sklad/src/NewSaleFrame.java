@@ -48,8 +48,8 @@ class NewSaleFrame extends JPanel
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
 		okrCombo.addItem("Без округления");
-		okrCombo.addItem("До 1");
 		okrCombo.addItem("До 0,1");
+		okrCombo.addItem("До 1");
 		JCheckBox editableCheck = new JCheckBox("Редактировать в ячейке");
 		skladCombo = new JComboBoxFire();
 		clientCombo = new AutoComplete();
@@ -250,7 +250,7 @@ class NewSaleFrame extends JPanel
 		 if (formInput==null)
 			 formInput = new InputCountTovar();
 		 int inBox=1;
-		 ResultSet rs=DataSet.QueryExec("Select kol form tovar where name='"+aValue+"'");
+		 ResultSet rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'");
 		 try{
 			 rs.next();
 			 inBox=rs.getInt(1);
@@ -261,6 +261,7 @@ class NewSaleFrame extends JPanel
 		 }
 		 
 		 double Opt,One,Box;
+		 Opt=0;
 		 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=1");
 		 try{
 			 rs.next();
@@ -288,12 +289,14 @@ class NewSaleFrame extends JPanel
 		boolean roz=false;
 		One=Box;
 		rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
+		
 		Box=Box*(1-model.getIndDiscount()/100);
 		if (res==-1){
 			One=One/inBox;
-			One=(int)(One*Math.pow(10, 2-okrCombo.getSelectedIndex()))/Math.pow(10, 2-okrCombo.getSelectedIndex());
+			One=(int)(One*Math.pow(10, 2-okrCombo.getSelectedIndex())+0.5)/Math.pow(10, 2-okrCombo.getSelectedIndex());
 		}
 		try {
+			rs.next();
 			if (!(rs.getInt(1)==1))
 				roz=true;
 		}
