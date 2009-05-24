@@ -87,7 +87,7 @@ class InputCountTovar extends JPanel{
 		
 	}
 
-	public int showDialog(Component parent, String title, int Box, int Opt, int One, String aName, int ainCase){
+	public int showDialog(Component parent, String title, double Box, double Opt, double One, String aName, int ainCase, boolean aRoz){
 		Frame owner = null;
 		if (parent instanceof Frame)
 			owner = (Frame)parent;
@@ -109,7 +109,7 @@ class InputCountTovar extends JPanel{
 		return (new Integer(count.getText())).intValue();
 		 
 	}
-	private void setCost(int Box, int Opt, int One){
+	private void setCost(double Box, double Opt, double One){
 		costBox.setText(Box+"");
 		costOne.setText(One+"");
 		costOpt.setText(Opt+"");
