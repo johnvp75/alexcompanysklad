@@ -1,6 +1,10 @@
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.*;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.io.*;
 
 import javax.swing.*;
 
@@ -12,23 +16,32 @@ class InputCountTovar extends JPanel{
 	private JLabel costBox;
 	private JLabel costOpt;
 	private JLabel costOne;
+	private JLabel costBoxLabel;
+	private JLabel costOneLabel;
 	private JDialog dialog;
 	public InputCountTovar(){
 		setLayout(null);
 		name=new JLabel("");
-		JLabel costBoxLabel=new JLabel("Цена за упаковку:");
+//		Font font = new Font("Times New Roman",Font.PLAIN,14);
+		name.setFont(new Font("Times New Roman",Font.BOLD,20));
+		costBoxLabel=new JLabel("Цена за упаковку:");
 		costBox=new JLabel("0,00");
 		JLabel costOptLabel = new JLabel("Цена оптовая:");
 		costOpt = new JLabel("0,00");
-		JLabel costOneLabel = new JLabel("Цена за штуку");
+		costOneLabel = new JLabel("Цена за штуку");
 		costOne = new JLabel("0,00");
 		JLabel incaseLabel = new JLabel("Кол-во штук в упаковке");
+		count=new JTextField("1");
+		count.selectAll();
+		JButton inCaseButton = new JButton("Изменить");
 		incase = new JTextField("1");
 		incase.setEnabled(false);
-		JButton countButton = new JButton("изменить");
-		countButton.addActionListener(new ActionListener(){
+		inCaseButton.setFocusable(false);
+		inCaseButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				incase.setEnabled(true);
+				incase.selectAll();
+				incase.requestFocus();
 			}
 		});
 		incase.addActionListener(new ActionListener(){
@@ -38,11 +51,11 @@ class InputCountTovar extends JPanel{
 				if (incase.getText().equals("0"))
 					incase.setText("1");
 				DataSet.QueryExec("Update tovar set kol="+incase.getText()+" where name='"+name.getText()+"'");
+				((JTextField)event.getSource()).transferFocus();
 			}
 			
 		});
 		JLabel countLabel = new JLabel("Количество:");
-		count=new JTextField("1");
 		count.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				if (count.getText().length()==0)
@@ -56,33 +69,48 @@ class InputCountTovar extends JPanel{
 		costBox.setBounds(132, 54, 40, 22);
 		costOneLabel.setBounds(15, 82, 104, 22);
 		costOptLabel.setBounds(178, 54, 85, 22);
-		countButton.setBounds(221, 131, 68, 22);
+		count.setBounds(113, 187, 90, 22);
+		inCaseButton.setBounds(221, 131, 95, 22);
 		countLabel.setBounds(15, 187, 83, 22);
 		incaseLabel.setBounds(15, 131, 142, 22);
 		costOne.setBounds(132, 82, 40, 22);
 		costOpt.setBounds(275, 54, 40, 22);
-		count.setBounds(113, 187, 90, 22);
 		incase.setBounds(173, 131, 29, 22);
 		name.setBounds(15, 14, 308, 22);
+		
+/*		costOptLabel.setFont(font);
+		costBoxLabel.setFont(font);
+		costOneLabel.setFont(font);
+		costBox.setFont(font);
+		costOne.setFont(font);
+		costOpt.setFont(font);
+		inCaseButton.setFont(font);
+		incaseLabel.setFont(font);
+		incase.setFont(font);
+		countLabel.setFont(font);
+		count.setFont(font);
+*/
 		
 		add(costBoxLabel);
 		add(costBox);
 		add(costOneLabel);
 		add(costOptLabel);
-		add(countButton);
+		add(count);
+		add(inCaseButton);
 		add(countLabel);
 		add(incaseLabel);
 		add(costOne);
 		add(costOpt);
-		add(count);
 		add(incase);
 		add(name);
 		
 	}
 	class DigInput extends KeyAdapter{
 		public void keyTyped(KeyEvent event){
-			if (event.getKeyChar()=='k')
-				event.setKeyChar('E');
+
+			if (!( String.valueOf(event.getKeyChar())).matches("[0-9]"))
+//				event.setKeyCode(0);
+				event.setKeyChar(KeyEvent.CHAR_UNDEFINED);
 		}
 		
 	}
@@ -99,20 +127,28 @@ class InputCountTovar extends JPanel{
 //			dialog.getRootPane().setDefaultButton(okButton);
 			dialog.pack();
 		}
+		costBox.setVisible(!aRoz);
+		costBoxLabel.setVisible(!aRoz);
+		costOne.setVisible(aRoz);
+		costOneLabel.setVisible(aRoz);
 		dialog.setTitle(title);
 		setCost(Box,Opt,One);
 		setNameTov(aName);
 		setinCase(ainCase);
-		dialog.setBounds(118, 150, 564, 299);
+		dialog.setBounds(200, 150, 400, 299);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setVisible(true);
 		return (new Integer(count.getText())).intValue();
 		 
 	}
 	private void setCost(double Box, double Opt, double One){
-		costBox.setText(Box+"");
-		costOne.setText(One+"");
-		costOpt.setText(Opt+"");
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ; 
+	    String s = formatter.format ( Box ) ;
+		costBox.setText(s);
+		s= formatter.format ( One ) ;
+		costOne.setText(s);
+		s= formatter.format ( Opt ) ;
+		costOpt.setText(s);
 	}
 	private void setNameTov(String aName){
 		name.setText(aName);
