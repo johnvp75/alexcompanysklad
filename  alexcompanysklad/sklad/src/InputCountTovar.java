@@ -135,10 +135,14 @@ class InputCountTovar extends JPanel{
 		setCost(Box,Opt,One);
 		setNameTov(aName);
 		setinCase(ainCase);
+		setCount();
 		dialog.setBounds(200, 150, 400, 299);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setVisible(true);
-		return (new Integer(count.getText())).intValue();
+		int ret=(new Integer(count.getText())).intValue();
+		if (aRoz)
+			ret=ret*((new Integer(incase.getText())).intValue());
+		return ret;
 		 
 	}
 	private void setCost(double Box, double Opt, double One){
@@ -157,4 +161,9 @@ class InputCountTovar extends JPanel{
 	private void setinCase(int ainCase){
 		incase.setText(ainCase+"");
 	}
+	private void setCount(){
+		count.setText("1");
+		count.selectAll();
+	}
+		
 }

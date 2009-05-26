@@ -1,3 +1,5 @@
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 
@@ -52,6 +54,8 @@ class realTableModel extends AbstractTableModel{
 	}	
 	public void setValueAt(Object aValue, int row, int column){
 		nakl.setValueAt(aValue, row, column);
+//		fireTableCellUpdated(row, column);
+		fireTableRowsUpdated(row, row);
 	}
 	public boolean isCellEditable(int row, int column){
 		if (row>nakl.getSize()){
@@ -79,14 +83,15 @@ class realTableModel extends AbstractTableModel{
 			}
 	}
 	public int present(String aName){
-		int ret=-1;
-		for (int i=0;i<=nakl.getSize()-1;i++)
-			if (((String)nakl.getValueAt(i, 1)).equals(aName))
-				ret=i;
-		return ret;	
+		return nakl.present(aName);	
 	}
 	public int getIndDiscount(){
 		return nakl.getIndDiscount();
+	}
+	public void add(String aName, int aCount, double aCost, int aDiscount){
+		nakl.add(aName, aCount, aCost, aDiscount);
+		fireTableStructureChanged();
+		
 	}
 }
 class dataCont{
@@ -94,10 +99,10 @@ class dataCont{
 	private String nameClient, nameSklad;
 	private int inddiscount;
 	public dataCont (String anameClient,String anameSklad, int ainddiscount){
-		name=new Vector(0);
-		count=new Vector(0);
-		cost=new Vector(0);
-		discount=new Vector(0);
+		name=new Vector<String>(0);
+		count=new Vector<Integer>(0);
+		cost=new Vector<Double>(0);
+		discount=new Vector<Integer>(0);
 		nameClient=anameClient;
 		nameSklad=anameSklad;
 		inddiscount=ainddiscount;
@@ -124,7 +129,7 @@ class dataCont{
 		count.add(new Integer(aCount));
 	}
 	private void setCount(Object aCount, int pos){
-		count.setElementAt(aCount, pos);
+		count.setElementAt(new Integer((String)aCount), pos);
 	}
 	private Object getCount(int pos){
 		return count.elementAt(pos);
@@ -142,25 +147,30 @@ class dataCont{
 		cost.add(new Double(aCost));
 	}
 	private void setCost(Object aCost, int pos){
-		cost.setElementAt(aCost, pos);
+		cost.setElementAt(new Double ((String)aCost), pos);
 	}
 	private Object getCost(int pos){
 		return cost.elementAt(pos);
 	}
-	private void newDiscount(double aDiscount){
-		discount.add(new Double(aDiscount));
+	private void newDiscount(int aDiscount){
+		discount.add(new Integer(aDiscount));
 	}
 	private void setDiscount(Object aDiscount, int pos){
-		discount.setElementAt(aDiscount, pos);
+		discount.setElementAt(new Integer((String)aDiscount), pos);
 	}
 	private Object getDiscount(int pos){
 		return discount.elementAt(pos);
 	}
-	public void add(String aName, int aCount, double aCost, double aDiscount){
-		newCount(aCount);
-		newName(aName);
-		newCost(aCost);
-		newDiscount(aDiscount);
+	public void add(String aName, int aCount, double aCost, int aDiscount){
+		int pr=present(aName);
+		if (pr==-1){
+			newCount(aCount);
+			newName(aName);
+			newCost(aCost);
+			newDiscount(aDiscount);
+		}else{
+			setCount((new Integer((Integer)getCount(pr) +aCount)).toString(), pr);
+		}
 	}
 	/*
 	public Boolean set(String aName, int aCount, double aCost, double aDiscount,int pos){
@@ -190,17 +200,21 @@ class dataCont{
 		return name.size();
 	}
 	public Object getValueAt(int row, int column){
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		String s="";
 		switch (column){
 		case 0:
-			return (Integer)row;
+			return (Integer)row+1;
 		case 1:
 			return getName(row);
 		case 2:
 			return getCount(row);
 		case 3:
-			return getCost(row);
+		    s = formatter.format ( (Double)(((Double)getCost(row)).doubleValue()*(1-((Integer)getDiscount(row)).doubleValue()/100)) ) ;
+			return new Double(s);
 		case 4:
-			return (Double)(((Integer)getCount(row)).intValue()*((Double)getCost(row)).doubleValue()*(1-((Double)getDiscount(row)).doubleValue()/100));
+			s = formatter.format ( (Double)(((Integer)getCount(row)).intValue()*((Double)getCost(row)).doubleValue()*(1-((Integer)getDiscount(row)).doubleValue()/100)) ) ;
+			return new Double(s);
 		case 5:
 			return getDiscount(row);
 		default:
@@ -211,12 +225,23 @@ class dataCont{
 		switch (column){
 		case 1:
 			setName(aValue,row);
+			break;
 		case 2:
 			setCount(aValue, row);
+			break;
 		case 3:
 			setCost(aValue,row);
-		case 4:
+			break;
+		case 5:
 			setDiscount(aValue,row);
+			break;
 		}
+	}
+	public int present(String aName){
+		int ret=-1;
+		for (int i=0;i<=getSize()-1;i++)
+			if ((getName(i)).equals(aName))
+				ret=i;
+		return ret;	
 	}
 }
