@@ -1,7 +1,6 @@
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Font;
+import java.awt.event.*;
 import java.sql.ResultSet;
-
 import javax.swing.*;
 //import javax.swing.JComboBox.KeySelectionManager;
 
@@ -20,6 +19,8 @@ class NewSaleFrame extends JPanel
 	private JLabel priceLabel;
 	private realTableModel model;
 	private static InputCountTovar formInput = null;
+	private JButton barcodeButton;
+//	private JTable naklTable;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -39,7 +40,7 @@ class NewSaleFrame extends JPanel
 		setLayout(null);
 		JButton saveButton = new JButton("Сохранить");
 		JButton cancelButton = new JButton("Отмена");
-		JButton barcodeButton = new JButton("Штрих-код(F1,+)");
+		barcodeButton = new JButton("Штрих-код(F1,+)");
 		JButton listButton = new JButton("Выбрать из списка");
 		JButton printButton = new JButton("Печать");
 		JLabel skladLabel = new JLabel("Склад:");
@@ -86,6 +87,9 @@ class NewSaleFrame extends JPanel
 
 		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),0);
 		JTable naklTable=new JTable(model);
+		Font font = new Font("Times New Roman",Font.PLAIN,16);
+		naklTable.setFont(font);
+		naklTable.setAutoCreateColumnsFromModel(false);
 		naklTable.getColumnModel().getColumn(0).setMaxWidth(30);
 		naklTable.getColumnModel().getColumn(1).setMaxWidth(455);
 		naklTable.getColumnModel().getColumn(2).setMaxWidth(50);
@@ -111,11 +115,37 @@ class NewSaleFrame extends JPanel
 		editableCheck.setBounds(555, 58, 207, 22);
 //Задаем слушателей
 		clientCombo.addActionListener(new ClientChoose());
-		barcodeButton.addActionListener(new barcode());
+		barcodeButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				BarCodeFire();
+			}
+		});
 		skladCombo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				model.setSklad((String)skladCombo.getSelectedItem());
 			}
+		});
+		editableCheck.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				model.setEditable(((JCheckBox)(event.getSource())).isSelected());
+			}
+		});
+		addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent event){
+				int keyCode=event.getKeyCode();
+				if (keyCode==KeyEvent.VK_F1 || keyCode==107){
+					BarCodeFire();
+				}
+			}
+		});
+		clientCombo.addFocusListener(new FocusListener(){
+			public void focusGained(FocusEvent event){
+				((AutoComplete)event.getSource()).getEditor().selectAll();
+			}
+			public void focusLost(FocusEvent event){
+				((AutoComplete)event.getSource()).getEditor().selectAll();
+			}
+
 		});
 
 //Добавляем элементы на форму
@@ -137,6 +167,7 @@ class NewSaleFrame extends JPanel
 		
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
+		setFocusable(true);
 		
 	}
 	private class ClientChoose implements ActionListener{
@@ -216,7 +247,7 @@ class NewSaleFrame extends JPanel
 			}
 //			ComboBoxEditor edit=clientCombo.getEditor();
 //			edit.selectAll();
-			clientCombo.getEditor().selectAll();
+//			clientCombo.getEditor().selectAll();
 			model.setClient((String)clientCombo.getSelectedItem());
 		}
 		private boolean checkClient(){
@@ -234,20 +265,10 @@ class NewSaleFrame extends JPanel
 
 		}
 	}
-	private class barcode implements ActionListener{
-		public void actionPerformed(ActionEvent event){
-			try{
-				Input(inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem()));
-				
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				// Вставить звук
-			}
-		}
-	}
 	private void Input(String aValue){
-		 if (formInput==null)
+		if (aValue==null)
+			return;
+		if (formInput==null)
 			 formInput = new InputCountTovar();
 		 int inBox=1;
 		 ResultSet rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'");
@@ -284,7 +305,7 @@ class NewSaleFrame extends JPanel
 				 e.printStackTrace();
 			 }
 		 }else{
-			 Box=((Float)model.getValueAt(res, 3)).floatValue();
+			 Box=((Double)model.getValueAt(res, 3)).doubleValue();
 		 }
 		boolean roz=false;
 		One=Box;
@@ -301,9 +322,24 @@ class NewSaleFrame extends JPanel
 				roz=true;
 		}
 		catch (Exception e) { e.printStackTrace();}
-
-		 int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
+		double aCost=Box;
+		if (roz){
+			aCost=One;
+		}
+		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
+		model.add(aValue, kolTov, aCost, 0);
+//		naklTable.repaint();
 		 
+	}
+	private void BarCodeFire(){
+		try{
+			Input(inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem()));
+			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			// Вставить звук
+		}
 	}
 }
 class JComboBoxFire extends JComboBox{
@@ -312,4 +348,3 @@ class JComboBoxFire extends JComboBox{
 		super.fireActionEvent();
 	}
 }
-	
