@@ -138,16 +138,11 @@ class NewSaleFrame extends JPanel
 				}
 			}
 		});
-		clientCombo.addFocusListener(new FocusListener(){
-			public void focusGained(FocusEvent event){
-				((AutoComplete)event.getSource()).getEditor().selectAll();
-			}
-			public void focusLost(FocusEvent event){
-				((AutoComplete)event.getSource()).getEditor().selectAll();
-			}
-
+		clientCombo.getEditor().getEditorComponent().addFocusListener(new FocusAdapter(){
+		    public void focusGained(FocusEvent event){
+		        clientCombo.getEditor().selectAll();
+		    }
 		});
-
 //Добавляем элементы на форму
 		add(saveButton);
 		add(cancelButton);
