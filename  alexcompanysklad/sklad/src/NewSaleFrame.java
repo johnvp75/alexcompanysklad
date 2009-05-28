@@ -20,7 +20,7 @@ class NewSaleFrame extends JPanel
 	private realTableModel model;
 	private static InputCountTovar formInput = null;
 	private JButton barcodeButton;
-//	private JTable naklTable;
+	private JTable naklTable;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -86,7 +86,8 @@ class NewSaleFrame extends JPanel
 		priceCombo.setSelectedItem("Оптовый");
 
 		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),0);
-		JTable naklTable=new JTable(model);
+		
+		naklTable=new JTable(model);
 		Font font = new Font("Times New Roman",Font.PLAIN,16);
 		naklTable.setFont(font);
 		naklTable.setAutoCreateColumnsFromModel(false);
@@ -130,14 +131,18 @@ class NewSaleFrame extends JPanel
 				model.setEditable(((JCheckBox)(event.getSource())).isSelected());
 			}
 		});
-		addKeyListener(new KeyAdapter(){
-			public void keyPressed(KeyEvent event){
-				int keyCode=event.getKeyCode();
-				if (keyCode==KeyEvent.VK_F1 || keyCode==107){
-					BarCodeFire();
-				}
-			}
-		});
+		pressF1 press=new pressF1();
+		addKeyListener(press);
+		skladCombo.addKeyListener(press);
+		clientCombo.getEditor().getEditorComponent().addKeyListener(press);
+		editableCheck.addKeyListener(press);
+		cancelButton.addKeyListener(press);
+		listButton.addKeyListener(press);
+		printButton.addKeyListener(press);
+		saveButton.addKeyListener(press);
+		barcodeButton.addKeyListener(press);
+		okrCombo.addKeyListener(press);
+		priceCombo.addKeyListener(press);
 		clientCombo.getEditor().getEditorComponent().addFocusListener(new FocusAdapter(){
 		    public void focusGained(FocusEvent event){
 		        clientCombo.getEditor().selectAll();
@@ -163,6 +168,7 @@ class NewSaleFrame extends JPanel
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
 		setFocusable(true);
+//		this.requestFocus();
 		
 	}
 	private class ClientChoose implements ActionListener{
@@ -334,6 +340,16 @@ class NewSaleFrame extends JPanel
 		catch (Exception e) {
 			e.printStackTrace();
 			// Вставить звук
+		}
+	}
+	public class pressF1 extends KeyAdapter{
+		public void keyPressed(KeyEvent event){
+			int keyCode=event.getKeyCode();
+			if (keyCode==KeyEvent.VK_F1 || keyCode==107){
+				event.setKeyCode(KeyEvent.VK_UNDEFINED);
+				naklTable.requestFocus();
+				BarCodeFire();
+			}
 		}
 	}
 }

@@ -58,6 +58,8 @@ class MainFrame extends JFrame
 				dialog=new ManagerChooser();
 			if (dialog.showDialog(MainFrame.this, "¬ход в систему")){
 				newFrame.setVisible(true);
+//				newFrame.requestFocus();
+
 				saleMenu.setSelected(false);
 				saleMenu.setEnabled(false);
 				editMenu.setEnabled(false);
