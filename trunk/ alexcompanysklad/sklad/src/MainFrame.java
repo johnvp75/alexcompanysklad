@@ -8,6 +8,7 @@ import javax.swing.event.MenuListener;
 
 class MainFrame extends JFrame
 {
+	
 	public MainFrame(){
 		setTitle("Склад 4.0");
 		setSize(800, 600);
@@ -40,6 +41,7 @@ class MainFrame extends JFrame
 		windowMenu.add(windowcloseItem);
 		windowMenu.add(windowcloseallItem);
 		newFrame = new NewSaleFrame();
+		newFrame.parent=this;
 		newFrame.setVisible(false);
 		add(newFrame);
 //		NewSaleAction NewSale=new NewSaleAction();
@@ -50,6 +52,7 @@ class MainFrame extends JFrame
 	private JMenu doceditMenu;
 	private NewSaleFrame newFrame;
 	private ManagerChooser dialog=null;
+	private String UserName ="";
 	private class NewSaleAction implements MenuListener{
 		public void menuSelected(MenuEvent event)
 		{
@@ -78,12 +81,20 @@ class MainFrame extends JFrame
 		}
 		
 	}
-	public void SetUserName(String aUserName){
+	private void SetUserName(String aUserName){
 		UserName=aUserName;
 		setTitle("Склад 4.0 менеджер "+aUserName);
 	}
-	public String GetUserName(){
+	private String GetUserName(){
 		return UserName;
 	}
-	private String UserName ="";
+	public void closeSaleFrame(){
+		saleMenu.setEnabled(true);
+		editMenu.setEnabled(true);
+		doceditMenu.setEnabled(true);
+		
+		SetUserName("");
+		
+	}
+	
 }

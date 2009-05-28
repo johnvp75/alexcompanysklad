@@ -100,7 +100,10 @@ class ManagerChooser extends JPanel
 		}
 		dialog.setTitle(title);
 		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+		ClearPassword();
+		password.requestFocus();
 		dialog.setVisible(true);
+		
 		return ok;
 	}
 }

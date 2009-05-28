@@ -93,6 +93,16 @@ class realTableModel extends AbstractTableModel{
 		fireTableStructureChanged();
 		
 	}
+	public void removeAll(){
+		int all=nakl.getSize();
+		for (int i=0;i<all;i++)
+			nakl.remove(i);
+		fireTableStructureChanged();
+	}
+	public void removeRow(int aRow){
+		nakl.remove(aRow);
+		fireTableRowsUpdated(aRow, nakl.getSize());
+	}
 }
 class dataCont{
 	private Vector name, count,cost,discount;
