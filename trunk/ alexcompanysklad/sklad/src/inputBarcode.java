@@ -21,6 +21,8 @@ public class inputBarcode {
 	private static TovarChooser tovchoose=null;
 	public static String newcod(String cod, String sklad) throws IOException{
 		int count=0;
+		if (cod==null)
+			throw new IOException();
 		ResultSet rs;
 		if (cod.charAt(0)=='*')
 
