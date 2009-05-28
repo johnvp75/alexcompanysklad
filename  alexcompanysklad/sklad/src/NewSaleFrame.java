@@ -21,6 +21,7 @@ class NewSaleFrame extends JPanel
 	private static InputCountTovar formInput = null;
 	private JButton barcodeButton;
 	private JTable naklTable;
+	public MainFrame parent;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -147,6 +148,17 @@ class NewSaleFrame extends JPanel
 		    public void focusGained(FocusEvent event){
 		        clientCombo.getEditor().selectAll();
 		    }
+		});
+		cancelButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (model.getRowCount()>0&& JOptionPane.showConfirmDialog(null, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
+					return;
+				}
+				model.removeAll();
+				setVisible(false);
+				parent.closeSaleFrame();
+
+			}
 		});
 //Добавляем элементы на форму
 		add(saveButton);
