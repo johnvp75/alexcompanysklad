@@ -78,8 +78,8 @@ public class inputBarcode {
 			setLayout(new BorderLayout());
 			JPanel panel = new JPanel();
 			nameList=new JList();
-			JScrollPane listScroller = new JScrollPane(nameList);
-			panel.add(listScroller);
+//			JScrollPane listScroller = new JScrollPane(nameList);
+			panel.add(new JScrollPane(nameList));
 			nameList.addMouseListener(new MouseAdapter(){
 				public void mouseClicked(MouseEvent event){
 					if (event.getClickCount()==2){

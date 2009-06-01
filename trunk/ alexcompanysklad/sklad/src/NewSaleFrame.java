@@ -19,6 +19,7 @@ class NewSaleFrame extends JPanel
 	private JLabel priceLabel;
 	private realTableModel model;
 	private static InputCountTovar formInput = null;
+	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
 	private JTable naklTable;
 	public MainFrame parent;
@@ -158,6 +159,14 @@ class NewSaleFrame extends JPanel
 				setVisible(false);
 				parent.closeSaleFrame();
 
+			}
+		});
+		listButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (formGroup==null)
+					formGroup= new ListChoose();
+				if (formGroup.showDialog(parent, "Выбор товара"))
+					Input(formGroup.getTovar());
 			}
 		});
 //Добавляем элементы на форму

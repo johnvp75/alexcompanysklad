@@ -14,7 +14,6 @@ class ManagerChooser extends JPanel
 	private boolean ok;
 	private JDialog dialog;
 	public ManagerChooser() {
-		// TODO Auto-generated constructor stub
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
 //		panel.setLocation(350, 250);
