@@ -3,12 +3,17 @@ import java.awt.Component;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeModelListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -113,7 +118,9 @@ class GroupTreeModel implements TreeModel{
 }
 
 public class ListChoose extends JPanel {
+	String Sklad;
 	GroupTreeModel model;
+	DefaultListModel modelList;
 	JList nameList;
 	JTree groupTree;
 	private JButton okButton;
@@ -127,8 +134,27 @@ public class ListChoose extends JPanel {
 		groupTree.setRootVisible(false);
 		groupTree.setShowsRootHandles(true);
 		groupTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-		nameList=new JList();
+		groupTree.addTreeSelectionListener(new TreeSelectionListener(){
+			public void valueChanged(TreeSelectionEvent event){
+				int index;
+				index=((DataNode)event.getPath().getLastPathComponent()).getIndex();
+				initList(index);
+			}
+		});
+		modelList=new DefaultListModel();
+		nameList=new JList(modelList);
+		nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		nameList.setVisibleRowCount(22);
 //		JScrollPane listScroller = new JScrollPane(nameList);
+		nameList.addMouseListener(new MouseAdapter(){
+			public void mouseClicked(MouseEvent event){
+				if (event.getClickCount()==2){
+					ok=true;
+					dialog.setVisible(false);
+				}
+			}
+		});
+
 		panel.add(new JScrollPane(groupTree));
 		panel.add(new JScrollPane(nameList));
 		add(panel,BorderLayout.CENTER);
@@ -156,13 +182,13 @@ public class ListChoose extends JPanel {
 		buttonPanel.add(cancelButton);
 		add(buttonPanel,BorderLayout.SOUTH);
 	}
-	public void addTovar(Vector<String> value){
-		nameList.setListData(value);
-	}
+	
+
 	public String getTovar(){
 		return (String)nameList.getSelectedValue();
 	}
-	public boolean showDialog(Component parent, String title){
+	public boolean showDialog(Component parent, String title, String aSklad){
+		Sklad=aSklad;
 		ok=false;
 		Frame owner = null;
 		if (parent instanceof Frame)
@@ -179,6 +205,18 @@ public class ListChoose extends JPanel {
 		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setVisible(true);
 		return ok;
+	}
+	private void initList(int aIndex){
+		modelList.clear();
+		String Query="select trim(name) from (Select distinct tovar.name from kart inner join tovar on kart.id_tovar=tovar.id_tovar where (kart.id_group="+aIndex+") and (kart.id_skl=(Select id_skl from sklad where name='"+Sklad+"')) order by tovar.name)";
+		ResultSet rs=DataSet.QueryExec(Query);
+		try {
+			while (rs.next())
+				modelList.addElement(rs.getString(1));
+			rs.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 

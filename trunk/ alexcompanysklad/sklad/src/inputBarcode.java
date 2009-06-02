@@ -14,6 +14,7 @@ import javax.swing.JDialog;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
 
@@ -37,9 +38,9 @@ public class inputBarcode {
 		catch (Exception e) { }
 		if (count==0) throw new IOException();
 		if (cod.charAt(0)=='*')
-			rs=DataSet.QueryExec("select tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name");
+			rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)");
 		else
-			rs=DataSet.QueryExec("select tovar.name from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name");
+			rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)");
 		try {
 			rs.next();
 			if (count==1)
@@ -78,6 +79,7 @@ public class inputBarcode {
 			setLayout(new BorderLayout());
 			JPanel panel = new JPanel();
 			nameList=new JList();
+			nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 //			JScrollPane listScroller = new JScrollPane(nameList);
 			panel.add(new JScrollPane(nameList));
 			nameList.addMouseListener(new MouseAdapter(){

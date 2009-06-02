@@ -152,7 +152,7 @@ class NewSaleFrame extends JPanel
 		});
 		cancelButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				if (model.getRowCount()>0&& JOptionPane.showConfirmDialog(null, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
+				if (model.getRowCount()>0&& JOptionPane.showConfirmDialog(parent, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
 					return;
 				}
 				model.removeAll();
@@ -165,7 +165,7 @@ class NewSaleFrame extends JPanel
 			public void actionPerformed(ActionEvent event){
 				if (formGroup==null)
 					formGroup= new ListChoose();
-				if (formGroup.showDialog(parent, "Выбор товара"))
+				if (formGroup.showDialog(parent, "Выбор товара",skladCombo.getSelectedItem().toString()))
 					Input(formGroup.getTovar());
 			}
 		});
