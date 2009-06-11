@@ -129,6 +129,7 @@ public class ListChoose extends JPanel {
 	public ListChoose() {
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
+		//panel.setLayout(null);
 		model= new GroupTreeModel();
 		groupTree=new JTree(model);
 		groupTree.setRootVisible(false);
@@ -145,7 +146,10 @@ public class ListChoose extends JPanel {
 		nameList=new JList(modelList);
 		nameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		nameList.setVisibleRowCount(22);
-//		JScrollPane listScroller = new JScrollPane(nameList);
+		nameList.setFixedCellWidth(300);
+		nameList.setFixedCellHeight(16);
+		JScrollPane listScroller = new JScrollPane(nameList);
+		JScrollPane treeScroller = new JScrollPane(groupTree);
 		nameList.addMouseListener(new MouseAdapter(){
 			public void mouseClicked(MouseEvent event){
 				if (event.getClickCount()==2){
@@ -154,9 +158,11 @@ public class ListChoose extends JPanel {
 				}
 			}
 		});
-
-		panel.add(new JScrollPane(groupTree));
-		panel.add(new JScrollPane(nameList));
+//		treeScroller.setBounds(5, 5, 180, 200);
+		panel.add(treeScroller);
+		panel.add(listScroller);
+//		panel.setBounds(arg0, arg1, arg2, arg3)
+//		setSize(400,300);
 		add(panel,BorderLayout.CENTER);
 		okButton = new JButton("Ok!");
 		okButton.addActionListener(new 
@@ -188,6 +194,7 @@ public class ListChoose extends JPanel {
 		return (String)nameList.getSelectedValue();
 	}
 	public boolean showDialog(Component parent, String title, String aSklad){
+		
 		Sklad=aSklad;
 		ok=false;
 		Frame owner = null;
@@ -202,6 +209,7 @@ public class ListChoose extends JPanel {
 			dialog.pack();
 		}
 		dialog.setTitle(title);
+		dialog.pack();
 		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setVisible(true);
 		return ok;
