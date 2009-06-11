@@ -88,8 +88,12 @@ class realTableModel extends AbstractTableModel{
 	public int getIndDiscount(){
 		return nakl.getIndDiscount();
 	}
-	public void add(String aName, int aCount, double aCost, int aDiscount){
-		nakl.add(aName, aCount, aCost, aDiscount);
+	public void add(String aName, int aCount, double aCost, int aDiscount, int aAkcia){
+		boolean b=false;
+		if (aAkcia==1)
+			b=true;
+		
+		nakl.add(aName, aCount, aCost, aDiscount, b);
 		fireTableStructureChanged();
 		
 	}
@@ -103,9 +107,21 @@ class realTableModel extends AbstractTableModel{
 		nakl.remove(aRow);
 		fireTableRowsUpdated(aRow, nakl.getSize());
 	}
+	public double summ(){
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		double ret=0;
+		for (int i=0;i<nakl.getSize();i++){
+			int j=1;
+			if (nakl.getAkcia(i))
+				j=0;
+			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-(nakl.getIndDiscount()/100)*j);
+		}
+		String s = formatter.format(ret);
+		return (new Double(s));
+	}
 }
 class dataCont{
-	private Vector name, count,cost,discount;
+	private Vector name, count,cost,discount,akcia;
 	private String nameClient, nameSklad;
 	private int inddiscount;
 	public dataCont (String anameClient,String anameSklad, int ainddiscount){
@@ -113,6 +129,7 @@ class dataCont{
 		count=new Vector<Integer>(0);
 		cost=new Vector<Double>(0);
 		discount=new Vector<Integer>(0);
+		akcia=new Vector<Boolean>(0);
 		nameClient=anameClient;
 		nameSklad=anameSklad;
 		inddiscount=ainddiscount;
@@ -171,13 +188,23 @@ class dataCont{
 	private Object getDiscount(int pos){
 		return discount.elementAt(pos);
 	}
-	public void add(String aName, int aCount, double aCost, int aDiscount){
+	private void newAkcia(boolean aAkcia){
+		akcia.add(new Boolean(aAkcia));
+	}
+/*	private void setAkcia(boolean aAkcia, int pos){
+		akcia.setElementAt(new Boolean(aAkcia), pos);
+	}*/
+	public boolean getAkcia(int pos){
+		return ((Boolean)akcia.elementAt(pos)).booleanValue();
+	}
+	public void add(String aName, int aCount, double aCost, int aDiscount, boolean aAkcia){
 		int pr=present(aName);
 		if (pr==-1){
 			newCount(aCount);
 			newName(aName);
 			newCost(aCost);
 			newDiscount(aDiscount);
+			newAkcia(aAkcia);
 		}else{
 			setCount((new Integer((Integer)getCount(pr) +aCount)).toString(), pr);
 		}
@@ -203,6 +230,7 @@ class dataCont{
 			count.removeElementAt(pos);
 			cost.removeElementAt(pos);
 			discount.removeElementAt(pos);
+			akcia.removeElementAt(pos);
 			return true;
 		}
 	}

@@ -2,6 +2,8 @@ import java.awt.Font;
 import java.awt.event.*;
 import java.sql.ResultSet;
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 //import javax.swing.JComboBox.KeySelectionManager;
 
 
@@ -17,12 +19,14 @@ class NewSaleFrame extends JPanel
 	private NewClientDialog newClient=null;
 	private JComboBox priceCombo;
 	private JLabel priceLabel;
+	private JLabel itogo;
 	private realTableModel model;
 	private static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
 	private JTable naklTable;
 	public MainFrame parent;
+	private JCheckBox editableCheck;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -47,13 +51,14 @@ class NewSaleFrame extends JPanel
 		JButton printButton = new JButton("Печать");
 		JLabel skladLabel = new JLabel("Склад:");
 		JLabel clientLabel = new JLabel("Клиент:");
+		itogo = new JLabel("Итого (учитывая скидку): 0,00");
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
 		okrCombo.addItem("Без округления");
 		okrCombo.addItem("До 0,1");
 		okrCombo.addItem("До 1");
-		JCheckBox editableCheck = new JCheckBox("Редактировать в ячейке");
+		editableCheck = new JCheckBox("Редактировать в ячейке");
 		skladCombo = new JComboBoxFire();
 		clientCombo = new AutoComplete();
 		clientCombo.setEditable(true);
@@ -116,6 +121,7 @@ class NewSaleFrame extends JPanel
 		okrLabel.setBounds(457, 28, 86, 22);
 		okrCombo.setBounds(555, 28, 207, 22);
 		editableCheck.setBounds(555, 58, 207, 22);
+		itogo.setBounds(285, 446, 400, 22);
 //Задаем слушателей
 		clientCombo.addActionListener(new ClientChoose());
 		barcodeButton.addActionListener(new ActionListener(){
@@ -169,6 +175,28 @@ class NewSaleFrame extends JPanel
 					Input(formGroup.getTovar());
 			}
 		});
+		saveButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				for (int i=0; i<model.getRowCount(); i++){
+					if(((Integer)model.getValueAt(i, 2)).intValue()==0){
+						model.removeRow(i);
+						i--;
+					}
+				}
+				for (int i=0; i<model.getRowCount(); i++){
+					if(((Double)model.getValueAt(i, 3)).doubleValue()==0){
+						JOptionPane.showMessageDialog(parent,"Нулевые цены недопустимы! \n Будьте внимательней! ","Ошибка",JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+				}
+				
+			}
+		});
+		model.addTableModelListener(new TableModelListener(){
+			public void tableChanged(TableModelEvent event){
+				itogo.setText("Итого (учитывая скидку): "+model.summ());
+			}
+		});
 //Добавляем элементы на форму
 		add(saveButton);
 		add(cancelButton);
@@ -185,6 +213,7 @@ class NewSaleFrame extends JPanel
 		add(priceLabel);
 		add(priceCombo);
 		add(editableCheck);
+		add(itogo);
 		
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
@@ -288,10 +317,11 @@ class NewSaleFrame extends JPanel
 		}
 	}
 	private void Input(String aValue){
-		if (aValue==null)
+		 if (aValue==null)
 			return;
-		if (formInput==null)
+		 if (formInput==null)
 			 formInput = new InputCountTovar();
+		 int akcia=0;
 		 int inBox=1;
 		 ResultSet rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'");
 		 try{
@@ -317,10 +347,11 @@ class NewSaleFrame extends JPanel
 		 int res=model.present(aValue);
 		 Box=0;
 		 if (res==-1){
-			 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')");
+			 rs=DataSet.QueryExec("select cost,akciya from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')");
 			 try{
 				 rs.next();
 				 Box=rs.getFloat(1);
+				 akcia=rs.getInt(2);
 				 rs.close();
 			 }
 			 catch (Exception e){
@@ -349,7 +380,7 @@ class NewSaleFrame extends JPanel
 			aCost=One;
 		}
 		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
-		model.add(aValue, kolTov, aCost, 0);
+		model.add(aValue, kolTov, aCost, 0, akcia);
 //		naklTable.repaint();
 		 
 	}
@@ -373,6 +404,16 @@ class NewSaleFrame extends JPanel
 			}
 		}
 	}
+	public void showform(){
+		skladCombo.setSelectedIndex(0);
+		clientCombo.setSelectedIndex(0);
+		priceCombo.setSelectedIndex(0);
+		okrCombo.setSelectedIndex(0);
+		editableCheck.setSelected(false);
+		setVisible(true);
+		
+		
+	}
 }
 class JComboBoxFire extends JComboBox{
 	public void fireActionEvent()
@@ -380,3 +421,4 @@ class JComboBoxFire extends JComboBox{
 		super.fireActionEvent();
 	}
 }
+
