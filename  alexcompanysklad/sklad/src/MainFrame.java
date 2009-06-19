@@ -85,7 +85,7 @@ class MainFrame extends JFrame
 		UserName=aUserName;
 		setTitle("Склад 4.0 менеджер "+aUserName);
 	}
-	private String GetUserName(){
+	public String GetUserName(){
 		return UserName;
 	}
 	public void closeSaleFrame(){
