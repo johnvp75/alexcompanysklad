@@ -27,7 +27,6 @@ public class DataSet {
 			try {
 				rs.close();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -36,7 +35,6 @@ public class DataSet {
 				try {
 					st.close();
 				} catch (SQLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 		}

@@ -189,7 +189,14 @@ class NewSaleFrame extends JPanel
 						return;
 					}
 				}
-				
+				// Записываем шапку
+				String SQL;
+				int id=1;
+				SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_manager, id_val, sum, note, disc) select 2 as id_type_doc,"+id+" as id_doc"+
+						", (select id_client rom client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
+						", (select id_manager from manager where name='"+parent.GetUserName()+"') as id_manager"+
+						"";
 			}
 		});
 		model.addTableModelListener(new TableModelListener(){
