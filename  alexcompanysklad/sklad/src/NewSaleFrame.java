@@ -27,6 +27,7 @@ class NewSaleFrame extends JPanel
 	private JTable naklTable;
 	public MainFrame parent;
 	private JCheckBox editableCheck;
+	private String note;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -63,7 +64,7 @@ class NewSaleFrame extends JPanel
 		clientCombo = new AutoComplete();
 		clientCombo.setEditable(true);
 		priceCombo=new JComboBox();
-		ResultSet rs = DataSet.QueryExec("select name from sklad order by name");
+		ResultSet rs = DataSet.QueryExec("select name from sklad order by name",true);
 		try{
 			rs.next();
 			while (!rs.isAfterLast()){
@@ -72,7 +73,7 @@ class NewSaleFrame extends JPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
-		rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by name");
+		rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by name",true);
 		try { 
 			rs.next();
 			while (!rs.isAfterLast()){
@@ -81,7 +82,7 @@ class NewSaleFrame extends JPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
-		rs = DataSet.QueryExec("select trim(name) from type_price order by name");
+		rs = DataSet.QueryExec("select trim(name) from type_price order by name",true);
 		try { 
 			rs.next();
 			while (!rs.isAfterLast()){
@@ -91,8 +92,17 @@ class NewSaleFrame extends JPanel
 		}
 		catch (Exception e) { e.printStackTrace();}
 		priceCombo.setSelectedItem("Оптовый");
-
-		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),0);
+		int disc=0;
+		try{
+			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+			if (rs.next()){
+				disc=rs.getInt(1);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc);
 		
 		naklTable=new JTable(model);
 		Font font = new Font("Times New Roman",Font.PLAIN,16);
@@ -151,6 +161,7 @@ class NewSaleFrame extends JPanel
 		barcodeButton.addKeyListener(press);
 		okrCombo.addKeyListener(press);
 		priceCombo.addKeyListener(press);
+		naklTable.addKeyListener(press);
 		clientCombo.getEditor().getEditorComponent().addFocusListener(new FocusAdapter(){
 		    public void focusGained(FocusEvent event){
 		        clientCombo.getEditor().selectAll();
@@ -191,12 +202,37 @@ class NewSaleFrame extends JPanel
 				}
 				// Записываем шапку
 				String SQL;
-				int id=1;
-				SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_manager, id_val, sum, note, disc) select 2 as id_type_doc,"+id+" as id_doc"+
-						", (select id_client rom client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+				ResultSet rs1;
+				SQL="lock table document in exclusive mode";
+				try{
+					int id=1;
+					DataSet.UpdateQuery(SQL);
+					rs1=DataSet.QueryExec("select id_doc from document where id_doc=(select max(id_doc) from document)", false);
+					if (rs1.next()){
+						id=rs1.getInt(1)+1;
+					}
+					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
 						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-						", (select id_manager from manager where name='"+parent.GetUserName()+"') as id_manager"+
-						"";
+						", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+						", "+model.summ()+" as sum ,'"+getNote()+"' as note, "+model.getIndDiscount()+" as disc, " +
+						" id_manager from manager where name='"+parent.GetUserName()+"'";
+					DataSet.UpdateQuery(SQL);
+					for (int i=0;i<model.getRowCount();i++){
+						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, "+model.getValueAt(i, 2)+
+							" as kol, "+model.getValueAt(i, 3)+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
+							model.getValueAt(i, 1)+"'";
+						DataSet.UpdateQuery(SQL);
+					}
+					DataSet.commit();
+					model.removeAll();
+					setVisible(false);
+					parent.closeSaleFrame();
+				}
+				catch(Exception e){
+					 DataSet.rollback();
+					 e.printStackTrace();
+				}
 			}
 		});
 		model.addTableModelListener(new TableModelListener(){
@@ -232,7 +268,7 @@ class NewSaleFrame extends JPanel
 		public void actionPerformed(ActionEvent event){
 			model.setIndDiscount(0);
 			if (checkClient()){
-			ResultSet rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
+			ResultSet rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 			
 			try {
 				rs.next();
@@ -242,11 +278,11 @@ class NewSaleFrame extends JPanel
 					priceLabel.setVisible(false);
 					priceCombo.setVisible(false);
 					rs.close();
-					rs=DataSet.QueryExec("select count(*) from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')");
+					rs=DataSet.QueryExec("select count(*) from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
 					rs.next();
 					if (rs.getInt(1)>0){
 						rs.close();
-						rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')");
+						rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
 						rs.next();
 						model.setIndDiscount(rs.getInt(1));}
 				}else{
@@ -265,7 +301,7 @@ class NewSaleFrame extends JPanel
 				newClient.setClient(((String)clientCombo.getSelectedItem()).trim());
 				if (newClient.showDialog(NewSaleFrame.this, "Ввод нового клиента")){
 					clientCombo.removeAllItems();
-					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name");
+					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",true);
 					try { 
 						rs.next();
 						while (!rs.isAfterLast()){
@@ -275,7 +311,7 @@ class NewSaleFrame extends JPanel
 					}
 					catch (Exception e) { e.printStackTrace();}
 					clientCombo.setSelectedItem(newClient.getClient());
-					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
+					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 					try {
 						rs.next();
 						if (rs.getInt(1)==1){
@@ -289,7 +325,7 @@ class NewSaleFrame extends JPanel
 					
 				}else{
 					clientCombo.setSelectedIndex(0);
-					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
+					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 					try {
 						rs.next();
 						if (rs.getInt(1)==1){
@@ -310,7 +346,7 @@ class NewSaleFrame extends JPanel
 		}
 		private boolean checkClient(){
 			boolean ret=false;
-			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'");
+			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'",true);
 			try { 
 				rs.next();
 				if (rs.getInt(1)>0){
@@ -329,8 +365,9 @@ class NewSaleFrame extends JPanel
 		 if (formInput==null)
 			 formInput = new InputCountTovar();
 		 int akcia=0;
+		 int isakcia=0;
 		 int inBox=1;
-		 ResultSet rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'");
+		 ResultSet rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'",true);
 		 try{
 			 rs.next();
 			 inBox=rs.getInt(1);
@@ -342,7 +379,7 @@ class NewSaleFrame extends JPanel
 		 
 		 double Opt,One,Box;
 		 Opt=0;
-		 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=1");
+		 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=1",true);
 		 try{
 			 rs.next();
 			 Opt=rs.getFloat(1);
@@ -354,11 +391,12 @@ class NewSaleFrame extends JPanel
 		 int res=model.present(aValue);
 		 Box=0;
 		 if (res==-1){
-			 rs=DataSet.QueryExec("select cost,akciya from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')");
+			 rs=DataSet.QueryExec("select cost,akciya,isakcia from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')",true);
 			 try{
 				 rs.next();
 				 Box=rs.getFloat(1);
 				 akcia=rs.getInt(2);
+				 isakcia=rs.getInt(3);
 				 rs.close();
 			 }
 			 catch (Exception e){
@@ -369,7 +407,7 @@ class NewSaleFrame extends JPanel
 		 }
 		boolean roz=false;
 		One=Box;
-		rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'");
+		rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 		
 		Box=Box*(1-model.getIndDiscount()/100);
 		if (res==-1){
@@ -387,7 +425,7 @@ class NewSaleFrame extends JPanel
 			aCost=One;
 		}
 		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
-		model.add(aValue, kolTov, aCost, 0, akcia);
+		model.add(aValue, kolTov, aCost, akcia, isakcia);
 //		naklTable.repaint();
 		 
 	}
@@ -414,12 +452,18 @@ class NewSaleFrame extends JPanel
 	public void showform(){
 		skladCombo.setSelectedIndex(0);
 		clientCombo.setSelectedIndex(0);
-		priceCombo.setSelectedIndex(0);
+		priceCombo.setSelectedItem("Оптовый");
 		okrCombo.setSelectedIndex(0);
 		editableCheck.setSelected(false);
 		setVisible(true);
 		
 		
+	}
+	private void setNote(String aValue){
+		note=aValue;
+	}
+	private String getNote(){
+		return note;
 	}
 }
 class JComboBoxFire extends JComboBox{

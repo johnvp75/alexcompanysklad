@@ -20,7 +20,7 @@ class ManagerChooser extends JPanel
 		panel.setLayout(new GridLayout(2,2));
 		panel.add(new JLabel("Менеджер:"));
 		username=new JComboBox();
-		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%;1;%' order by manager.name");
+		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%;1;%' order by manager.name",true);
 		try { 
 			rs.next();
 			while (!rs.isAfterLast()){
@@ -67,7 +67,7 @@ class ManagerChooser extends JPanel
 	private boolean PasswordCheck(){
 		boolean ret=false;
 		String z="select count(*) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
-		ResultSet rs = DataSet.QueryExec(z);
+		ResultSet rs = DataSet.QueryExec(z,true);
 		try { 
 			rs.next();
 			if (rs.getInt(1)>0){

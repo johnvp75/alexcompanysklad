@@ -52,7 +52,7 @@ class GroupTreeModel implements TreeModel{
 		}else{
 			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
 		}
-		ResultSet rs=DataSet.QueryExec(SQL);
+		ResultSet rs=DataSet.QueryExec(SQL,true);
 		try{
 			for(int i=0;i<=index;i++)
 				rs.next();
@@ -70,7 +70,7 @@ class GroupTreeModel implements TreeModel{
 		}else{
 			SQL="select count(*) from groupid where parent_group = "+((DataNode)parent).getIndex();
 		}
-		ResultSet rs=DataSet.QueryExec(SQL);
+		ResultSet rs=DataSet.QueryExec(SQL,true);
 		try{
 			if (!(rs==null)){ 
 				rs.next();
@@ -94,7 +94,7 @@ class GroupTreeModel implements TreeModel{
 		}else{
 			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
 		}
-		ResultSet rs=DataSet.QueryExec(SQL);
+		ResultSet rs=DataSet.QueryExec(SQL,true);
 		try{
 			int i=-1;
 			while (rs.next()){
@@ -217,7 +217,7 @@ public class ListChoose extends JPanel {
 	private void initList(int aIndex){
 		modelList.clear();
 		String Query="select trim(name) from (Select distinct tovar.name from kart inner join tovar on kart.id_tovar=tovar.id_tovar where (kart.id_group="+aIndex+") and (kart.id_skl=(Select id_skl from sklad where name='"+Sklad+"')) order by tovar.name)";
-		ResultSet rs=DataSet.QueryExec(Query);
+		ResultSet rs=DataSet.QueryExec(Query,true);
 		try {
 			while (rs.next())
 				modelList.addElement(rs.getString(1));
