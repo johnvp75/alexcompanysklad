@@ -27,20 +27,20 @@ public class inputBarcode {
 		ResultSet rs;
 		if (cod.charAt(0)=='*')
 
-			rs=DataSet.QueryExec("select count(*) from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"')");
+			rs=DataSet.QueryExec("select count(*) from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"')",true);
 		else
-			rs=DataSet.QueryExec("select count(*) from BAR_CODE where BAR_CODE='"+cod+"' and id_skl = (select id_skl from SKLAD where name='"+sklad+"')");
+			rs=DataSet.QueryExec("select count(*) from BAR_CODE where BAR_CODE='"+cod+"' and id_skl = (select id_skl from SKLAD where name='"+sklad+"')",true);
 		try { 
 			rs.next();
 			count=rs.getInt(1);
 			rs.close();
 		}
-		catch (Exception e) { }
+		catch (Exception e) {e.printStackTrace(); }
 		if (count==0) throw new IOException();
 		if (cod.charAt(0)=='*')
-			rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)");
+			rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
 		else
-			rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)");
+			rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
 		try {
 			rs.next();
 			if (count==1)
@@ -62,11 +62,14 @@ public class inputBarcode {
 			}
 			
 		}
-		catch (Exception e) {throw new IOException(); }
+		catch (Exception e) {
+			e.printStackTrace();
+			throw new IOException();
+			}
 		finally {
 			try{
 			rs.close();}
-			catch (Exception e) { }
+			catch (Exception e) {e.printStackTrace(); }
 		}
 	}
 }
@@ -118,6 +121,7 @@ public class inputBarcode {
 		}
 		public void addTovar(Vector<String> value){
 			nameList.setListData(value);
+			nameList.setSelectedIndex(0);
 		}
 		public String getTovar(){
 			return (String)nameList.getSelectedValue();

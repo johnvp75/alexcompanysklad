@@ -74,7 +74,7 @@ class realTableModel extends AbstractTableModel{
 				case 4:
 					return false;
 				case 5:
-					return true;
+					return false;
 				default:
 					return false;
 				}	
@@ -90,7 +90,7 @@ class realTableModel extends AbstractTableModel{
 	}
 	public void add(String aName, int aCount, double aCost, int aDiscount, int aAkcia){
 		boolean b=false;
-		if (aAkcia==1)
+		if (aAkcia>0)
 			b=true;
 		
 		nakl.add(aName, aCount, aCost, aDiscount, b);
@@ -100,7 +100,7 @@ class realTableModel extends AbstractTableModel{
 	public void removeAll(){
 		int all=nakl.getSize();
 		for (int i=0;i<all;i++)
-			nakl.remove(i);
+			nakl.remove(0);
 		fireTableStructureChanged();
 	}
 	public void removeRow(int aRow){
@@ -114,7 +114,7 @@ class realTableModel extends AbstractTableModel{
 			int j=1;
 			if (nakl.getAkcia(i))
 				j=0;
-			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-(nakl.getIndDiscount()/100)*j);
+			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-((new Integer(nakl.getIndDiscount())).doubleValue()/100)*j)*(1-((Integer)nakl.getValueAt(i, 5)).doubleValue()/100);
 		}
 		String s = formatter.format(ret);
 		return (new Double(s));
@@ -248,10 +248,12 @@ class dataCont{
 		case 2:
 			return getCount(row);
 		case 3:
-		    s = formatter.format ( (Double)(((Double)getCost(row)).doubleValue()*(1-((Integer)getDiscount(row)).doubleValue()/100)) ) ;
+//		    s = formatter.format ( (Double)(((Double)getCost(row)).doubleValue()*(1-((Integer)getDiscount(row)).doubleValue()/100)) ) ;
+			s = formatter.format ( (Double)(((Double)getCost(row)).doubleValue()));
 			return new Double(s);
 		case 4:
-			s = formatter.format ( (Double)(((Integer)getCount(row)).intValue()*((Double)getCost(row)).doubleValue()*(1-((Integer)getDiscount(row)).doubleValue()/100)) ) ;
+//			s = formatter.format ( (Double)(((Integer)getCount(row)).intValue()*((Double)getCost(row)).doubleValue()*(1-((Integer)getDiscount(row)).doubleValue()/100)) ) ;
+			s = formatter.format ( (Double)(((Integer)getCount(row)).intValue()*((Double)getCost(row)).doubleValue()) ) ;
 			return new Double(s);
 		case 5:
 			return getDiscount(row);

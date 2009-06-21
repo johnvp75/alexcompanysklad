@@ -94,7 +94,7 @@ class NewClientDialog extends JPanel {
 	}
 	public boolean CheckClient(){
 		boolean ret=false;
-		ResultSet rs=DataSet.QueryExec("Select count(*) from client where name like '%"+clientname.getText().trim()+"%'");
+		ResultSet rs=DataSet.QueryExec("Select count(*) from client where name like '%"+clientname.getText().trim()+"%'",true);
 		try { 
 			rs.next();
 			if (rs.getInt(1)==0){
@@ -112,7 +112,7 @@ class NewClientDialog extends JPanel {
 			typeChoose=1;
 		}
 		String query="insert into client (name,adres,phone,type) values ('"+clientname.getText().trim()+"','"+address.getText().trim()+"','"+phone.getText().trim()+"',"+typeChoose+")";
-		DataSet.QueryExec(query);
+		DataSet.QueryExec(query,true);
 //		DataSet.QueryExec("commit");
 	}
 	public String getClient(){

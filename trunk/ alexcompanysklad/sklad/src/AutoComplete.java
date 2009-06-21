@@ -1,10 +1,11 @@
 
 import java.awt.event.*;
+
 import javax.swing.*;
 import javax.swing.text.*;
 public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionManager
 {
-	private String searchFor;
+	private String searchFor, previos;
 	private long lap;
 	public class CBDocument extends PlainDocument
 	{
@@ -27,12 +28,26 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 			if(tf != null)
 			{
 				tf.setDocument(new CBDocument());
+				addKeyListener(new KeyAdapter(){
+					public void keyPressed(KeyEvent event){
+						int keyCode=event.getKeyCode();
+						if (keyCode==107){
+							event.setKeyCode(KeyEvent.VK_UNDEFINED);
+						}
+					}
+				});
 				addActionListener(new ActionListener()
 				{
 					public void actionPerformed(ActionEvent evt)
 					{
 						JTextField tf = (JTextField)getEditor().getEditorComponent();
 						String text = tf.getText();
+						if (text.equals("+")){
+							tf.setText(previos);
+							return;
+						}else{
+							previos=text;
+						}
 						ComboBoxModel aModel = getModel();
 						String current;
 						for(int i = 0; i < aModel.getSize(); i++)

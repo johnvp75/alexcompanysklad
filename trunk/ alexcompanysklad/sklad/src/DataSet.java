@@ -12,7 +12,7 @@ public class DataSet {
 	private static Statement st = null;
 	private static ResultSet rs = null;
 	private static int retstr=0;
-	public static ResultSet QueryExec(String Query){
+	public static ResultSet QueryExec(String Query, boolean commited){
 		if (cn==null)
 			try {
 				Locale.setDefault(Locale.ENGLISH);
@@ -42,9 +42,12 @@ public class DataSet {
 		try { 
 			st = cn.createStatement();
 			rs = st.executeQuery(Query);
-			cn.commit();
+			if (commited) 
+				cn.commit();
 		}
-		catch (Exception e) { e.printStackTrace();}
+		catch (Exception e) { 
+			rs=null;
+			e.printStackTrace();}
 		
 		return rs;
 	}
