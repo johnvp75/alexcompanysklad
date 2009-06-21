@@ -119,6 +119,17 @@ class realTableModel extends AbstractTableModel{
 		String s = formatter.format(ret);
 		return (new Double(s));
 	}
+	public double summAkcia(){
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		double ret=0;
+		for (int i=0;i<nakl.getSize();i++){
+			if (nakl.getAkcia(i))
+				ret=ret+((Double)nakl.getValueAt(i, 4))*(1-((Integer)nakl.getValueAt(i, 5)).doubleValue()/100);
+		}
+		String s = formatter.format(ret);
+		return (new Double(s));
+	}
+
 }
 class dataCont{
 	private Vector name, count,cost,discount,akcia;
