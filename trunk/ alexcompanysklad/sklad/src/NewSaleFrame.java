@@ -211,18 +211,41 @@ class NewSaleFrame extends JPanel
 					if (rs1.next()){
 						id=rs1.getInt(1)+1;
 					}
-					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+					if (model.summ()>model.summAkcia()){
+						SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+							", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+							", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
+							", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+							", "+(model.summ()-model.summAkcia())+" as sum ,'"+getNote()+"' as note, "+model.getIndDiscount()+" as disc, " +
+							" id_manager from manager where name='"+parent.GetUserName()+"'";
+						DataSet.UpdateQuery(SQL);
+						for (int i=0;i<model.getRowCount();i++){
+							if (!(model.nakl.getAkcia(i))){
+								SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, "+model.getValueAt(i, 2)+
+									" as kol, "+model.getValueAt(i, 3)+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
+									model.getValueAt(i, 1)+"'";
+								DataSet.UpdateQuery(SQL);
+							}
+						}
+						id++;
+					}
+					if (model.summAkcia()>0){
+						SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
 						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
 						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
 						", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
-						", "+model.summ()+" as sum ,'"+getNote()+"' as note, "+model.getIndDiscount()+" as disc, " +
+						", "+model.summAkcia()+" as sum ,'"+getNote()+"' as note, 0 as disc, " +
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 					DataSet.UpdateQuery(SQL);
 					for (int i=0;i<model.getRowCount();i++){
-						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, "+model.getValueAt(i, 2)+
-							" as kol, "+model.getValueAt(i, 3)+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
-							model.getValueAt(i, 1)+"'";
-						DataSet.UpdateQuery(SQL);
+						if (model.nakl.getAkcia(i)){
+							SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, "+model.getValueAt(i, 2)+
+								" as kol, "+model.getValueAt(i, 3)+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
+								model.getValueAt(i, 1)+"'";
+							DataSet.UpdateQuery(SQL);
+						}
+					}
+	
 					}
 					DataSet.commit();
 					model.removeAll();
