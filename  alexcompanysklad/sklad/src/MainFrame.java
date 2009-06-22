@@ -1,6 +1,7 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -59,25 +60,7 @@ class MainFrame extends JFrame
 		saleMenu.addMenuListener(new NewSaleAction());
 		printWorkDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				if (Printdialog==null)
-					Printdialog=new TovarChooser();
-				ResultSet rs=DataSet.QueryExec("Select distinct trim(client.name) from document inner join client on client.id_client=document.id_client where numb is NULL order by trim(name)",true );
-				Vector<String> data =new Vector<String>(0);
-				try{
-					rs.next();
-					while (!rs.isAfterLast()){
-					String item=rs.getString(1);
-					data.addElement(item);
-					rs.next();
-				}
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-				Printdialog.addTovar(data);
-				if (Printdialog.showDialog(null, "Выбор клиента")){
-					DataSet.UpdateQuery("lock table document in exclusive mode");
-					
-				}
+				print();
 			}
 		});
 	}
@@ -135,6 +118,44 @@ class MainFrame extends JFrame
 		doceditMenu.setEnabled(true);
 		printMenu.setEnabled(true);
 		SetUserName("");
+		
+	}
+	public void print(){
+		if (Printdialog==null)
+			Printdialog=new TovarChooser();
+		ResultSet rs=DataSet.QueryExec("Select distinct trim(client.name) from document inner join client on client.id_client=document.id_client where numb is NULL order by trim(name)",true );
+		Vector<String> data =new Vector<String>(0);
+		try{
+			rs.next();
+			while (!rs.isAfterLast()){
+			String item=rs.getString(1);
+			data.addElement(item);
+			rs.next();
+		}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		Printdialog.addTovar(data);
+		if (Printdialog.showDialog(null, "Выбор клиента")){
+			DataSet.UpdateQuery("lock table document in exclusive mode");
+			int numb=0;
+			rs=DataSet.QueryExec("select max(numb) from document where to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))", false) ;
+			try {
+				if (rs.next())
+					numb=rs.getInt(1);
+				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+Printdialog.getTovar()+"'))";
+				rs=DataSet.QueryExec(SQL, false);
+				while (rs.next()){
+					numb++;
+					DataSet.UpdateQuery("update document set numb="+numb+", day=sysdate where id_doc="+rs.getString(1));
+					rs=DataSet.QueryExec(SQL, false);
+				}
+				DataSet.commit();
+			} catch (SQLException e) {
+				DataSet.rollback();
+				e.printStackTrace();
+			}
+		}
 		
 	}
 	
