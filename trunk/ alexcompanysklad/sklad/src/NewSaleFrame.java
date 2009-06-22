@@ -220,7 +220,7 @@ class NewSaleFrame extends JPanel
 					if (model.summ()>model.summAkcia()){
 						SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 							"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-							"(disc="+model.getIndDiscount()+")";
+							"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&')";
 						rs1=DataSet.QueryExec(SQL, false);
 						if (rs1.next()){
 							id=rs1.getInt(1);
@@ -249,15 +249,19 @@ class NewSaleFrame extends JPanel
 					if (model.summAkcia()>0){
 						SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 							"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-							"(disc=0)";
+							"(disc=0)and (substr(note,1,1)='&')";
 						rs1=DataSet.QueryExec(SQL, false);
-
-						SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
-							", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
-							", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-							", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
-							", "+model.summAkcia()+" as sum ,'"+getNote()+"' as note, 0 as disc, " +
-							" id_manager from manager where name='"+parent.GetUserName()+"'";
+						if (rs1.next()){
+							id=rs1.getInt(1);
+							SQL="update document set sum="+(rs1.getDouble(2)+model.summAkcia())+" where id_doc="+id;
+						}else{
+							SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+								", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+								", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
+								", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+								", "+model.summAkcia()+" as sum ,'&"+getNote()+"' as note, 0 as disc, " +
+								" id_manager from manager where name='"+parent.GetUserName()+"'";
+						}
 						DataSet.UpdateQuery(SQL);
 						for (int i=0;i<model.getRowCount();i++){
 							if (model.nakl.getAkcia(i)){

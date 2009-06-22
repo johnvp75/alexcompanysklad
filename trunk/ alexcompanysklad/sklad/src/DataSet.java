@@ -17,7 +17,7 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@91.210.177.35:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE", "sklad", "sklad");
 				cn.setAutoCommit(false);
 			}
 			catch (Exception e) { e.printStackTrace();}
@@ -30,17 +30,17 @@ public class DataSet {
 				e.printStackTrace();
 			}
 		}
-		if (!(st==null)){
+		if (st==null){
 
 				try {
-					st.close();
+					st = cn.createStatement();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
 		}
 
 		try { 
-			st = cn.createStatement();
+//			st = cn.createStatement();
 			rs = st.executeQuery(Query);
 			if (commited) 
 				cn.commit();
@@ -52,18 +52,21 @@ public class DataSet {
 		return rs;
 	}
 	public static int UpdateQuery(String aValue){
+		retstr=0;
 		if (cn==null)
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@91.210.177.35:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE", "sklad", "sklad");
 				cn.setAutoCommit(false);
 			}
 			catch (Exception e) { e.printStackTrace();}
-		if (!(st==null)){
+//			Statement st = null;
+//			ResultSet rs = null;
+			if (st==null){
 
 			try {
-				st.close();
+				st = cn.createStatement();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -71,7 +74,7 @@ public class DataSet {
 		}
 
 		try { 
-			st = cn.createStatement();
+//			st = cn.createStatement();
 			retstr=st.executeUpdate(aValue);
 			
 		}
