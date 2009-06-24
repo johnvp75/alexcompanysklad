@@ -4,5 +4,10 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="ojdbc14_g.jar"/>
 	<classpathentry kind="lib" path="ojdbc14.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/bootstrapconnector.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/juh.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/jurt.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/ridl.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/unoil.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

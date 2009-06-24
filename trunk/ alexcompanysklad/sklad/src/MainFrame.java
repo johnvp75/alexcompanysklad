@@ -139,6 +139,8 @@ class MainFrame extends JFrame
 		if (Printdialog.showDialog(null, "Выбор клиента")){
 			DataSet.UpdateQuery("lock table document in exclusive mode");
 			int numb=0;
+			int id=0;
+			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			rs=DataSet.QueryExec("select max(numb) from document where to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))", false) ;
 			try {
 				if (rs.next())
@@ -147,7 +149,24 @@ class MainFrame extends JFrame
 				rs=DataSet.QueryExec(SQL, false);
 				while (rs.next()){
 					numb++;
-					DataSet.UpdateQuery("update document set numb="+numb+", day=sysdate where id_doc="+rs.getString(1));
+					id=rs.getInt(1);
+					DataSet.UpdateQuery("update document set numb="+numb+", day=sysdate where id_doc="+id);
+					rs=DataSet.QueryExec("select trim(tovar.name), lines.kol, cost, disc, lines.kol*cost*(1-disc/100) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" order by tovar.name", false);
+					for (int i=0; i<OutData.size();i++)
+						OutData.get(i).clear();
+					OutData.clear();
+					while (rs.next()){
+						Vector<String> Row=new Vector<String>(0);
+						Row.add(rs.getString(1));
+						Row.add(rs.getString(2));
+						Row.add(rs.getString(3));
+						Row.add(rs.getString(4));
+						Row.add(rs.getString(5));
+						OutData.add(Row);
+					}
+					OutputOO.OpenDoc("nakl.ots");
+					OutputOO.Insert(2, 10, OutData);
+//					OutputOO.CloseDoc();
 					rs=DataSet.QueryExec(SQL, false);
 				}
 				DataSet.commit();
