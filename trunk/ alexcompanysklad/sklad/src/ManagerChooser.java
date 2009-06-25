@@ -20,7 +20,7 @@ class ManagerChooser extends JPanel
 		panel.setLayout(new GridLayout(2,2));
 		panel.add(new JLabel("Менеджер:"));
 		username=new JComboBox();
-		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%;1;%' order by manager.name",true);
+		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%;2;%' order by manager.name",true);
 		try { 
 			rs.next();
 			while (!rs.isAfterLast()){

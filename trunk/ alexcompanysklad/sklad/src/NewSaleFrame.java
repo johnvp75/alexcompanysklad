@@ -28,6 +28,7 @@ class NewSaleFrame extends JPanel
 	public MainFrame parent;
 	private JCheckBox editableCheck;
 	private String note;
+	JTextField noteText;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -52,6 +53,8 @@ class NewSaleFrame extends JPanel
 		JButton printButton = new JButton("Печать");
 		JLabel skladLabel = new JLabel("Склад:");
 		JLabel clientLabel = new JLabel("Клиент:");
+		JLabel noteLabel = new JLabel("Примечание");
+		noteText = new JTextField("");
 		itogo = new JLabel("Итого (учитывая скидку): 0,00");
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
@@ -129,9 +132,12 @@ class NewSaleFrame extends JPanel
 		priceLabel.setBounds(457, 1, 86, 22);
 		priceCombo.setBounds(555, 1, 207, 22);
 		okrLabel.setBounds(457, 28, 86, 22);
-		okrCombo.setBounds(555, 28, 207, 22);
+		okrCombo.setBounds(555, 28, 207, 22);	
 		editableCheck.setBounds(555, 58, 207, 22);
-		itogo.setBounds(285, 446, 400, 22);
+		itogo.setBounds(285, 425, 400, 22);
+		noteLabel.setBounds(10, 450, 90, 22);
+		noteText.setBounds(100, 450, 670, 22);
+		
 //Задаем слушателей
 		clientCombo.addActionListener(new ClientChoose());
 		barcodeButton.addActionListener(new ActionListener(){
@@ -162,6 +168,7 @@ class NewSaleFrame extends JPanel
 		okrCombo.addKeyListener(press);
 		priceCombo.addKeyListener(press);
 		naklTable.addKeyListener(press);
+		noteText.addKeyListener(press);
 		clientCombo.getEditor().getEditorComponent().addFocusListener(new FocusAdapter(){
 		    public void focusGained(FocusEvent event){
 		        clientCombo.getEditor().selectAll();
@@ -188,105 +195,18 @@ class NewSaleFrame extends JPanel
 		});
 		saveButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				for (int i=0; i<model.getRowCount(); i++){
-					if(((Integer)model.getValueAt(i, 2)).intValue()==0){
-						model.removeRow(i);
-						i--;
-					}
-				}
-				for (int i=0; i<model.getRowCount(); i++){
-					if(((Double)model.getValueAt(i, 3)).doubleValue()==0){
-						JOptionPane.showMessageDialog(parent,"Нулевые цены недопустимы! \n Будьте внимательней! ","Ошибка",JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-				}
-				// Записываем шапку
-				String SQL;
-				ResultSet rs1;
-				int roz=0;
-				SQL="lock table document in exclusive mode";
-				try{
-					int id=1;
-					DataSet.UpdateQuery(SQL);
-					rs1=DataSet.QueryExec("select type from client where name='"+(String)clientCombo.getSelectedItem()+"'", true);
-					rs1.next();
-					if (rs1.getInt(1)==2){
-						roz=1;
-					}
-					rs1=DataSet.QueryExec("select id_doc from document where id_doc=(select max(id_doc) from document)", false);
-					if (rs1.next())
-						id=rs1.getInt(1)+1;
-					
-					if (model.summ()>model.summAkcia()){
-						SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
-							"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-							"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&')";
-						rs1=DataSet.QueryExec(SQL, false);
-						if (rs1.next()){
-							id=rs1.getInt(1);
-							SQL="update document set sum="+(rs1.getDouble(2)+model.summ()-model.summAkcia())+" where id_doc="+id;
-						}else{
-							SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
-								", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
-								", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-								", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
-								", "+(model.summ()-model.summAkcia())+" as sum ,'"+getNote()+"' as note, "+model.getIndDiscount()+" as disc, " +
-								" id_manager from manager where name='"+parent.GetUserName()+"'";
-						}
-						DataSet.UpdateQuery(SQL);
-						for (int i=0;i<model.getRowCount();i++){
-							if (!(model.nakl.getAkcia(i))){
-								SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
-									" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
-									model.getValueAt(i, 1)+"'";
-								DataSet.UpdateQuery(SQL);
-							}
-						}
-						rs1=DataSet.QueryExec("select id_doc from document where id_doc=(select max(id_doc) from document)", false);
-						if (rs1.next())
-							id=rs1.getInt(1)+1;
-					}
-					if (model.summAkcia()>0){
-						SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
-							"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-							"(disc=0)and (substr(note,1,1)='&')";
-						rs1=DataSet.QueryExec(SQL, false);
-						if (rs1.next()){
-							id=rs1.getInt(1);
-							SQL="update document set sum="+(rs1.getDouble(2)+model.summAkcia())+" where id_doc="+id;
-						}else{
-							SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
-								", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
-								", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-								", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
-								", "+model.summAkcia()+" as sum ,'&"+getNote()+"' as note, 0 as disc, " +
-								" id_manager from manager where name='"+parent.GetUserName()+"'";
-						}
-						DataSet.UpdateQuery(SQL);
-						for (int i=0;i<model.getRowCount();i++){
-							if (model.nakl.getAkcia(i)){
-								SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
-									" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
-									model.getValueAt(i, 1)+"'";
-								DataSet.UpdateQuery(SQL);
-							}
-					}
-	
-					}
-					DataSet.commit();
-					model.removeAll();
-					setVisible(false);
-					parent.closeSaleFrame();
-				}
-				catch(Exception e){
-					 DataSet.rollback();
-					 e.printStackTrace();
-				}
+				save();
 			}
 		});
 		model.addTableModelListener(new TableModelListener(){
 			public void tableChanged(TableModelEvent event){
 				itogo.setText("Итого (учитывая скидку): "+model.summ());
+			}
+		});
+		printButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (save())
+					parent.print();
 			}
 		});
 //Добавляем элементы на форму
@@ -306,6 +226,8 @@ class NewSaleFrame extends JPanel
 		add(priceCombo);
 		add(editableCheck);
 		add(itogo);
+		add(noteLabel);
+		add(noteText);
 		
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
@@ -504,7 +426,10 @@ class NewSaleFrame extends JPanel
 		priceCombo.setSelectedItem("Оптовый");
 		okrCombo.setSelectedIndex(0);
 		editableCheck.setSelected(false);
+		setNote("");
+		noteText.setText("");
 		setVisible(true);
+		skladCombo.grabFocus();
 		
 		
 	}
@@ -513,6 +438,106 @@ class NewSaleFrame extends JPanel
 	}
 	private String getNote(){
 		return note;
+	}
+	private boolean save(){
+		boolean ret=true;
+		setNote(noteText.getText());
+		for (int i=0; i<model.getRowCount(); i++){
+			if(((Integer)model.getValueAt(i, 2)).intValue()==0){
+				model.removeRow(i);
+				i--;
+			}
+		}
+		for (int i=0; i<model.getRowCount(); i++){
+			if(((Double)model.getValueAt(i, 3)).doubleValue()==0){
+				JOptionPane.showMessageDialog(parent,"Нулевые цены недопустимы! \n Будьте внимательней! ","Ошибка",JOptionPane.ERROR_MESSAGE);
+				return false;
+			}
+		}
+		// Записываем шапку
+		String SQL;
+		ResultSet rs1;
+		int roz=0;
+		SQL="lock table document in exclusive mode";
+		try{
+			int id=1;
+			DataSet.UpdateQuery(SQL);
+			rs1=DataSet.QueryExec("select type from client where name='"+(String)clientCombo.getSelectedItem()+"'", true);
+			rs1.next();
+			if (rs1.getInt(1)==2){
+				roz=1;
+			}
+			rs1=DataSet.QueryExec("select id_doc from document where id_doc=(select max(id_doc) from document)", false);
+			if (rs1.next())
+				id=rs1.getInt(1)+1;
+			
+			if (model.summ()>model.summAkcia()){
+				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
+					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
+					"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&')";
+				rs1=DataSet.QueryExec(SQL, false);
+				if (rs1.next()){
+					id=rs1.getInt(1);
+					SQL="update document set sum="+(rs1.getDouble(2)+model.summ()-model.summAkcia())+" where id_doc="+id;
+				}else{
+					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
+						", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+						", "+(model.summ()-model.summAkcia())+" as sum ,'-"+getNote()+"' as note, "+model.getIndDiscount()+" as disc, " +
+						" id_manager from manager where name='"+parent.GetUserName()+"'";
+				}
+				DataSet.UpdateQuery(SQL);
+				for (int i=0;i<model.getRowCount();i++){
+					if (!(model.nakl.getAkcia(i))){
+						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
+							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
+							model.getValueAt(i, 1)+"'";
+						DataSet.UpdateQuery(SQL);
+					}
+				}
+				rs1=DataSet.QueryExec("select id_doc from document where id_doc=(select max(id_doc) from document)", false);
+				if (rs1.next())
+					id=rs1.getInt(1)+1;
+			}
+			if (model.summAkcia()>0){
+				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
+					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
+					"(disc=0)and (substr(note,1,1)='&')";
+				rs1=DataSet.QueryExec(SQL, false);
+				if (rs1.next()){
+					id=rs1.getInt(1);
+					SQL="update document set sum="+(rs1.getDouble(2)+model.summAkcia())+" where id_doc="+id;
+				}else{
+					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
+						", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+						", "+model.summAkcia()+" as sum ,'&"+getNote()+"' as note, 0 as disc, " +
+						" id_manager from manager where name='"+parent.GetUserName()+"'";
+				}
+				DataSet.UpdateQuery(SQL);
+				for (int i=0;i<model.getRowCount();i++){
+					if (model.nakl.getAkcia(i)){
+						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
+							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
+							model.getValueAt(i, 1)+"'";
+						DataSet.UpdateQuery(SQL);
+					}
+			}
+
+			}
+			DataSet.commit();
+			model.removeAll();
+			setVisible(false);
+			parent.closeSaleFrame();
+		}
+		catch(Exception e){
+			 DataSet.rollback();
+			 ret=false;
+			 e.printStackTrace();
+		}
+		return ret;
 	}
 }
 class JComboBoxFire extends JComboBox{

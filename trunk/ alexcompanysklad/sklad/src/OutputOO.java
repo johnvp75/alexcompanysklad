@@ -2,7 +2,9 @@ import java.util.Vector;
 
 import ooo.connector.BootstrapSocketConnector;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.XComponent;
@@ -14,6 +16,7 @@ import com.sun.star.table.XCell;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XCloseable;
+import com.sun.star.view.XPrintable;
 import com.sun.star.text.*;
 
 
@@ -25,11 +28,10 @@ public class OutputOO {
 	public OutputOO() {
 		// TODO Auto-generated constructor stub
 	}
-	private static void connect(){
+	private static void connect() {
 		if (xRemouteContext==null)
 		try{
 			xRemouteContext=BootstrapSocketConnector.bootstrap(oooExeFolder);
-			System.out.println("соединяемся с работающим Office...");
 			xRemouteServiceManager=xRemouteContext.getServiceManager();
 			}
 		catch(Exception e){
@@ -37,7 +39,7 @@ public class OutputOO {
 			e.printStackTrace();
 			}
 	}
-	public static void OpenDoc(String DocPath) {
+	public static void OpenDoc(String DocPath, boolean hidden) {
 		try{
 			connect();
 			Object desktop=xRemouteServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", xRemouteContext);
@@ -45,8 +47,8 @@ public class OutputOO {
 			PropertyValue[] loadProps=new PropertyValue[1];
 			loadProps[0] = new PropertyValue();
             loadProps[0].Name = "Hidden";
-            loadProps[0].Value = new Boolean(false);
-			XComponent xSpreadsheetComponent=xComponentLoader.loadComponentFromURL("file://localhost/C:/John/John/win/project/Sklad/scan/data/forms/"+DocPath, "_blank", 0, loadProps);
+            loadProps[0].Value = new Boolean(hidden);
+			XComponent xSpreadsheetComponent=xComponentLoader.loadComponentFromURL("file://localhost/C:/Users/Жека/workspace/sklad/Forms/"+DocPath, "_blank", 0, loadProps);
 			xSpreadsheetDocument=(XSpreadsheetDocument)UnoRuntime.queryInterface(XSpreadsheetDocument.class, xSpreadsheetComponent);
 		}
 		catch(Exception e){
@@ -65,8 +67,6 @@ public class OutputOO {
 	public static void Insert(int X, int Y, Vector<Vector<String>> aValue){
 		try{
 			XSpreadsheets xSpreadsheets=xSpreadsheetDocument.getSheets();
-			com.sun.star.uno.Type elemType=xSpreadsheets.getElementType();
-			System.out.println(elemType.getTypeName());
 			Object sheet=xSpreadsheets.getByName("Лист1");
 			XSpreadsheet xSpreadsheet=(XSpreadsheet)UnoRuntime.queryInterface(XSpreadsheet.class, sheet);
 			int width=aValue.get(0).size();
@@ -80,6 +80,41 @@ public class OutputOO {
 					xCellText.setString(aValue.get(i).get(j));
 				}
 			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+	public static void InsertOne(String aValue, int aSize, boolean aBold, int X, int Y){
+		try{
+			XSpreadsheets xSpreadsheets=xSpreadsheetDocument.getSheets();
+			Object sheet=xSpreadsheets.getByName("Лист1");
+			XSpreadsheet xSpreadsheet=(XSpreadsheet)UnoRuntime.queryInterface(XSpreadsheet.class, sheet);
+			XCell xCell;
+			XText xCellText; 
+			xCell=xSpreadsheet.getCellByPosition(X-1,Y-1);
+			xCellText = (XText)UnoRuntime.queryInterface(XText.class, xCell);
+			xCellText.setString(aValue);
+			XPropertySet xCellProps=(XPropertySet)UnoRuntime.queryInterface(XPropertySet.class, xCell);
+			if (aBold)
+				xCellProps.setPropertyValue("CharWeight", new Float(FontWeight.BOLD));
+			xCellProps.setPropertyValue("CharHeight", new Float(aSize));
+			
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		
+	}
+	public static void print(int copies){
+		
+		try{
+			XPrintable xPrintable=(XPrintable)UnoRuntime.queryInterface(XPrintable.class, xSpreadsheetDocument);
+			PropertyValue[] loadProps=new PropertyValue[1];
+			loadProps[0] = new PropertyValue();
+            loadProps[0].Name = "Wait";
+            loadProps[0].Value = new Boolean(true);
+            for (int i=0; i<copies;i++)
+            	xPrintable.print(loadProps);
+
 		}catch(Exception e){
 			e.printStackTrace();
 		}
