@@ -2,6 +2,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -136,12 +140,23 @@ class MainFrame extends JFrame
 			e.printStackTrace();
 		}
 		Printdialog.addTovar(data);
-		if (Printdialog.showDialog(null, "Выбор клиента")){
+		if ((Printdialog.showDialog(null, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			DataSet.UpdateQuery("lock table document in exclusive mode");
 			int numb=0;
 			int id=0;
+			boolean isOpt=true;
+			rs=DataSet.QueryExec("select type from client where name='"+Printdialog.getTovar()+"'", false);
+			try{
+				rs.next();
+				if (rs.getInt(1)==2)
+					isOpt=false;
+			}catch (SQLException e) {
+				DataSet.rollback();
+				e.printStackTrace();
+				return;
+			}
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
-			rs=DataSet.QueryExec("select max(numb) from document where to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))", false) ;
+			rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
 			try {
 				if (rs.next())
 					numb=rs.getInt(1);
@@ -151,22 +166,79 @@ class MainFrame extends JFrame
 					numb++;
 					id=rs.getInt(1);
 					DataSet.UpdateQuery("update document set numb="+numb+", day=sysdate where id_doc="+id);
-					rs=DataSet.QueryExec("select trim(tovar.name), lines.kol, cost, disc, lines.kol*cost*(1-disc/100) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" order by tovar.name", false);
+					if (isOpt)
+						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
+					else
+						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by tovar.name", false);
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
 					OutData.clear();
+					NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+					int j=0;
 					while (rs.next()){
 						Vector<String> Row=new Vector<String>(0);
-						Row.add(rs.getString(1));
-						Row.add(rs.getString(2));
-						Row.add(rs.getString(3));
-						Row.add(rs.getString(4));
-						Row.add(rs.getString(5));
+						j++;
+						Row.add(j+"");
+						if (isOpt){
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(2));
+							Row.add(rs.getString(3));
+							Row.add(formatter.format(rs.getDouble(4)));
+							Row.add(rs.getString(5));
+							Row.add(formatter.format(rs.getDouble(6)));
+						}else{
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(2));
+							Row.add(formatter.format(rs.getDouble(3)));
+							Row.add(formatter.format(rs.getDouble(4)));
+						}
 						OutData.add(Row);
 					}
-					OutputOO.OpenDoc("nakl.ots");
-					OutputOO.Insert(2, 10, OutData);
-//					OutputOO.CloseDoc();
+//					String SQL1=;
+					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name) from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
+							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
+					String pref="";
+					rs.next();
+					if (rs.getString(2).charAt(0)=='&')
+						pref=" (АКЦИЯ)";
+					GregorianCalendar now=new GregorianCalendar();
+
+					int size=OutData.size();
+					if (isOpt) 
+						{
+						OutputOO.OpenDoc("nakl_opt.ots",true);
+						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1);
+						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
+						OutputOO.InsertOne("Получатель: "+Printdialog.getTovar(),11, true, 1,4);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7);
+						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7);
+						OutputOO.InsertOne("ИТОГО:",10,false,5,9+size);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)/(1-rs.getDouble(3)/100)),10,false,7,9+size);
+						OutputOO.InsertOne("Скидка",10,false,2,9+size+1);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(3))+"%",10,false,5,9+size+1);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)*(1/(1-rs.getDouble(3)/100)-1)),10,false,7,9+size+1);
+						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4);
+						}
+					else
+						{
+						OutputOO.OpenDoc("nakl_roz.ots",true);
+						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1);
+						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
+						OutputOO.InsertOne("Получатель: "+Printdialog.getTovar(),11, true, 1,4);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7);
+						OutputOO.InsertOne("Итого:",10,false,2,9+size);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2);
+
+						}
+					OutputOO.Insert(1, 9, OutData);
+					OutputOO.print(2);
+					OutputOO.CloseDoc();
+					
 					rs=DataSet.QueryExec(SQL, false);
 				}
 				DataSet.commit();
@@ -176,6 +248,23 @@ class MainFrame extends JFrame
 			}
 		}
 		
+	}
+	private String Month(int aValue){
+		switch (aValue+1){
+		case 1:return "января";
+		case 2:return "февраля";
+		case 3:return "марта";
+		case 4:return "апреля";
+		case 5:return "мая";
+		case 6:return "июня";
+		case 7:return "июля";
+		case 8:return "августа";
+		case 9:return "сентября";
+		case 10:return "октября";
+		case 11:return "ноября";
+		case 12:return "декабря";
+		default: return "";
+		}
 	}
 	
 }
