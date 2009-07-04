@@ -18,7 +18,14 @@ import javax.swing.event.MenuListener;
 
 class MainFrame extends JFrame
 {
-	
+	private JMenu saleMenu;
+	private JMenu editMenu;
+	private JMenu doceditMenu;
+	private JMenu printMenu;
+	private NewSaleFrame newFrame;
+	private ManagerChooser dialog=null;
+	private TovarChooser Printdialog=null;
+	private String UserName ="";
 	public MainFrame(){
 		setTitle("Склад 4.0");
 		setSize(800, 600);
@@ -68,14 +75,6 @@ class MainFrame extends JFrame
 			}
 		});
 	}
-	private JMenu saleMenu;
-	private JMenu editMenu;
-	private JMenu doceditMenu;
-	private JMenu printMenu;
-	private NewSaleFrame newFrame;
-	private ManagerChooser dialog=null;
-	private TovarChooser Printdialog=null;
-	private String UserName ="";
 	private class NewSaleAction implements MenuListener{
 		public void menuSelected(MenuEvent event)
 		{
