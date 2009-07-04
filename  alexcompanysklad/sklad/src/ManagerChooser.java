@@ -13,6 +13,7 @@ class ManagerChooser extends JPanel
 	private JButton okButton;
 	private boolean ok;
 	private JDialog dialog;
+	private ChangePassword PasswordDialog;
 	public ManagerChooser() {
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
@@ -59,15 +60,28 @@ class ManagerChooser extends JPanel
 						dialog.setVisible(false);
 					}
 				});
+		JButton ChangePasButton = new JButton("Изменить пароль");
+		ChangePasButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (PasswordDialog==null)
+					PasswordDialog = new ChangePassword();
+				PasswordDialog.setUserName(GetManager());
+				PasswordDialog.showDialog(dialog, "Новый пароль для "+GetManager());
+				ClearPassword();
+				password.requestFocus();
+			}
+		});
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(okButton);
 		buttonPanel.add(cancelButton);
+		buttonPanel.add(ChangePasButton );
 		add(buttonPanel,BorderLayout.SOUTH);
+		
 	}
 	private boolean PasswordCheck(){
 		boolean ret=false;
-		String z="select count(*) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
-		ResultSet rs = DataSet.QueryExec(z,true);
+		String SQL="select count(*) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
+		ResultSet rs = DataSet.QueryExec(SQL,true);
 		try { 
 			rs.next();
 			if (rs.getInt(1)>0){

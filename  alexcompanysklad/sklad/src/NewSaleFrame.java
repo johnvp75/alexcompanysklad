@@ -1,4 +1,5 @@
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.event.*;
 import java.sql.ResultSet;
 import javax.swing.*;
@@ -28,6 +29,7 @@ class NewSaleFrame extends JPanel
 	public MainFrame parent;
 	private JCheckBox editableCheck;
 	private String note;
+	private JPopupMenu popup;
 	JTextField noteText;
 	public NewSaleFrame()
 	{
@@ -118,6 +120,12 @@ class NewSaleFrame extends JPanel
 		naklTable.getColumnModel().getColumn(4).setMaxWidth(96);
 		naklTable.getColumnModel().getColumn(5).setMaxWidth(58);
 		JScrollPane ScrollTable=new JScrollPane(naklTable);
+		
+		
+		popup = new JPopupMenu();
+		JMenuItem del = new JMenuItem("Удалить строку");
+		popup.add(del);
+		naklTable.setComponentPopupMenu(popup);
 
 		saveButton.setBounds(34, 495, 104, 22);
 		cancelButton.setBounds(159, 495, 104, 22);
@@ -207,6 +215,14 @@ class NewSaleFrame extends JPanel
 			public void actionPerformed(ActionEvent event){
 				if (save())
 					parent.print();
+			}
+		});
+		del.addActionListener(new ActionListener (){
+			public void actionPerformed(ActionEvent event){
+				Point p=popup.getPopupLocation(null);
+				if (p.x==0){
+					
+				}
 			}
 		});
 //Добавляем элементы на форму
