@@ -126,12 +126,13 @@ class MainFrame extends JFrame
 	public void print(){
 		if (Printdialog==null)
 			Printdialog=new TovarChooser();
-		ResultSet rs=DataSet.QueryExec("Select distinct trim(client.name) from document inner join client on client.id_client=document.id_client where numb is NULL order by trim(name)",true );
+		ResultSet rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where numb is NULL group by trim(name),document.id_client",true );
 		Vector<String> data =new Vector<String>(0);
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
 		try{
 			rs.next();
 			while (!rs.isAfterLast()){
-			String item=rs.getString(1);
+			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" грн.";
 			data.addElement(item);
 			rs.next();
 		}
@@ -139,12 +140,13 @@ class MainFrame extends JFrame
 			e.printStackTrace();
 		}
 		Printdialog.addTovar(data);
-		if ((Printdialog.showDialog(null, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
+		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
+			String tovar=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
 			DataSet.UpdateQuery("lock table document in exclusive mode");
 			int numb=0;
 			int id=0;
 			boolean isOpt=true;
-			rs=DataSet.QueryExec("select type from client where name='"+Printdialog.getTovar()+"'", false);
+			rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
 			try{
 				rs.next();
 				if (rs.getInt(1)==2)
@@ -159,7 +161,7 @@ class MainFrame extends JFrame
 			try {
 				if (rs.next())
 					numb=rs.getInt(1);
-				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+Printdialog.getTovar()+"'))";
+				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
 				rs=DataSet.QueryExec(SQL, false);
 				while (rs.next()){
 					numb++;
@@ -172,7 +174,6 @@ class MainFrame extends JFrame
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
 					OutData.clear();
-					NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
 					int j=0;
 					while (rs.next()){
 						Vector<String> Row=new Vector<String>(0);
@@ -208,7 +209,7 @@ class MainFrame extends JFrame
 						OutputOO.OpenDoc("nakl_opt.ots",true);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1);
 						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+Printdialog.getTovar(),11, true, 1,4);
+						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
 						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7);
 						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7);
@@ -226,7 +227,7 @@ class MainFrame extends JFrame
 						OutputOO.OpenDoc("nakl_roz.ots",true);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1);
 						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+Printdialog.getTovar(),11, true, 1,4);
+						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
 						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7);
 						OutputOO.InsertOne("Итого:",10,false,2,9+size);

@@ -20,13 +20,25 @@ import javax.swing.SwingUtilities;
 
 public class inputBarcode {
 	private static TovarChooser tovchoose=null;
-	public static String newcod(String cod, String sklad) throws IOException{
+	private static NewTovar newTovar;
+	public static String newcod(String cod, String sklad, String price) throws IOException{
 		int count=0;
 		if (cod==null)
 			throw new IOException();
 		ResultSet rs;
+		if (cod.charAt(0)=='+'){
+//		Новый товар
+			if (newTovar==null)
+				newTovar= new NewTovar();
+			newTovar.setSklad(sklad);	
+			newTovar.setPrice(price);
+			newTovar.setTovar(cod.substring(1));
+			if (newTovar.showDialog(null, "Новый товар"))
+				return newTovar.getTovar();
+			else
+				throw new IOException();
+		}
 		if (cod.charAt(0)=='*')
-
 			rs=DataSet.QueryExec("select count(*) from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"')",true);
 		else
 			rs=DataSet.QueryExec("select count(*) from BAR_CODE where BAR_CODE='"+cod+"' and id_skl = (select id_skl from SKLAD where name='"+sklad+"')",true);
@@ -140,7 +152,8 @@ public class inputBarcode {
 				dialog.pack();
 			}
 			dialog.setTitle(title);
-			dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+//			dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+			dialog.setLocationRelativeTo(parent);
 			dialog.setVisible(true);
 			return ok;
 		}
