@@ -137,6 +137,7 @@ class NewClientDialog extends JPanel {
 		dialog.setTitle(title);
 		dialog.setBounds(118, 150, 564, 299);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+		dialog.setLocationRelativeTo(parent);
 		dialog.setVisible(true);
 		return ok;
 	}

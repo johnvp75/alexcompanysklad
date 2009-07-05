@@ -1,10 +1,15 @@
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.*;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+
+
 //import javax.swing.JComboBox.KeySelectionManager;
 
 
@@ -157,6 +162,15 @@ class NewSaleFrame extends JPanel
 		skladCombo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				model.setSklad((String)skladCombo.getSelectedItem());
+				ResultSet rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
+				try {
+					rs.next();
+					priceCombo.setSelectedItem(rs.getString(1));
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				clientCombo.fireActionEvent();
 			}
 		});
 		editableCheck.addActionListener(new ActionListener(){
@@ -210,6 +224,14 @@ class NewSaleFrame extends JPanel
 		model.addTableModelListener(new TableModelListener(){
 			public void tableChanged(TableModelEvent event){
 				itogo.setText("Итого (учитывая скидку): "+model.summ());
+				if (model.getRowCount()==0){
+					skladCombo.setEnabled(true);
+					priceCombo.setEnabled(true);
+				}
+				else{
+					skladCombo.setEnabled(false);
+					priceCombo.setEnabled(false);
+				}
 			}
 		});
 		printButton.addActionListener(new ActionListener(){
@@ -269,8 +291,6 @@ class NewSaleFrame extends JPanel
 				if (rs.getInt(1)==1){
 					okrLabel.setVisible(false);
 					okrCombo.setVisible(false);
-					priceLabel.setVisible(false);
-					priceCombo.setVisible(false);
 					rs.close();
 					rs=DataSet.QueryExec("select count(*) from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
 					rs.next();
@@ -279,11 +299,12 @@ class NewSaleFrame extends JPanel
 						rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
 						rs.next();
 						model.setIndDiscount(rs.getInt(1));}
+					else{
+						model.setIndDiscount(0);
+					}
 				}else{
 					okrLabel.setVisible(true);
 					okrCombo.setVisible(true);
-					priceCombo.setVisible(true);
-					priceLabel.setVisible(true);
 				}
 					
 			}
@@ -425,11 +446,11 @@ class NewSaleFrame extends JPanel
 	}
 	private void BarCodeFire(){
 		try{
-			Input(inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem()));
+			Input(inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem(),(String)priceCombo.getSelectedItem()));
 			
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			Toolkit.getDefaultToolkit().beep();
 			// Вставить звук
 		}
 		if (InputCountTovar.getNext())
@@ -448,7 +469,16 @@ class NewSaleFrame extends JPanel
 	public void showform(){
 		skladCombo.setSelectedIndex(0);
 		clientCombo.setSelectedIndex(0);
-		priceCombo.setSelectedItem("Оптовый");
+		ResultSet rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
+		try {
+			rs.next();
+			priceCombo.setSelectedItem(rs.getString(1));
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
 		okrCombo.setSelectedIndex(0);
 		editableCheck.setSelected(false);
 		setNote("");
@@ -508,7 +538,7 @@ class NewSaleFrame extends JPanel
 					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
 						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
 						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-						", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+						", (select distinct id_val from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_val" +
 						", "+(model.summ()-model.summAkcia())+" as sum ,'-"+getNote()+"' as note, "+model.getIndDiscount()+" as disc, " +
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}
@@ -537,7 +567,7 @@ class NewSaleFrame extends JPanel
 					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
 						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
 						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-						", (select distinct id_val from price where (id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and (id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"'))) as id_val" +
+						", (select distinct id_val from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_val" +
 						", "+model.summAkcia()+" as sum ,'&"+getNote()+"' as note, 0 as disc, " +
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}

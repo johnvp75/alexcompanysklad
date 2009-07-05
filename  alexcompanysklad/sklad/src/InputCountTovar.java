@@ -148,6 +148,7 @@ class InputCountTovar extends JPanel{
 		setCount();
 		dialog.setBounds(200, 150, 400, 299);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+		dialog.setLocationRelativeTo(parent);
 		dialog.setVisible(true);
 		int ret=(new Integer(count.getText())).intValue();
 		if (aRoz)

@@ -39,7 +39,7 @@ class GroupTreeModel implements TreeModel{
 	private DataNode root;
 	private EventListenerList listenerList = new EventListenerList(); 
 	public GroupTreeModel(){
-		root=new DataNode ("Все группы",-1);
+		root=new DataNode ("Все группы",-2);
 	}
 	public Object getRoot(){
 		return root;
@@ -47,7 +47,7 @@ class GroupTreeModel implements TreeModel{
 	public Object getChild(Object parent,int index){
 		String SQL; 
 		DataNode child=null;
-		if (((DataNode)parent).getIndex()==-1){
+		if (((DataNode)parent).getIndex()==-2){
 			SQL="select trim(name),id_group from groupid where parent_group is NULL order by name";
 		}else{
 			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
@@ -65,7 +65,7 @@ class GroupTreeModel implements TreeModel{
 	public int getChildCount(Object parent){
 		int count=0;
 		String SQL; 
-		if (((DataNode)parent).getIndex()==-1){
+		if (((DataNode)parent).getIndex()==-2){
 			SQL="select count(*) from groupid where parent_group is NULL";
 		}else{
 			SQL="select count(*) from groupid where parent_group = "+((DataNode)parent).getIndex();
@@ -89,7 +89,7 @@ class GroupTreeModel implements TreeModel{
 	public int getIndexOfChild(Object parent,Object child){
 		int count=-1;
 		String SQL; 
-		if (((DataNode)parent).getIndex()==-1){
+		if (((DataNode)parent).getIndex()==-2){
 			SQL="select trim(name),id_group from groupid where parent_group is NULL order by name";
 		}else{
 			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
@@ -210,7 +210,8 @@ public class ListChoose extends JPanel {
 		}
 		dialog.setTitle(title);
 		dialog.pack();
-		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+//		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+		dialog.setLocationRelativeTo(parent);
 		dialog.setVisible(true);
 		return ok;
 	}

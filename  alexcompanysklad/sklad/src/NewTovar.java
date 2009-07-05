@@ -36,6 +36,8 @@ public class NewTovar extends JPanel {
 	private JButton okButton = null;
 	private JButton CancelButton = null;
 	private boolean ok;
+	private String Sklad;
+	private String Price;
 	private JDialog dialog;
 	/**
 	 * This is the default constructor
@@ -82,6 +84,7 @@ public class NewTovar extends JPanel {
 			jPanel.add(getAkciaCheckBox(), null);
 			jPanel.add(DiscLabel, null);
 			jPanel.add(getDiscTextField(), null);
+			jPanel.setBounds(0, 0, 582, 150);
 		}
 		return jPanel;
 	}
@@ -221,13 +224,29 @@ public class NewTovar extends JPanel {
 							return;
 						}
 						else{
-							DataSet.UpdateQuery("insert into tovar (name,kol) value ('"+TovarNameTextField.getText().trim()+"', "+inBoxTextField.getText()+")");
+							rs = DataSet.QueryExec("Select max(id_tovar)+1 from tovar", false);
+							rs.next();
+							int id_tovar=rs.getInt(1);
+							String SQL="insert into tovar (id_tovar,name,kol) values ("+id_tovar+",'"+TovarNameTextField.getText().trim()+"', "+inBoxTextField.getText()+")"; 
+							DataSet.UpdateQuery(SQL);
+							rs = DataSet.QueryExec("Select max(id_nom)+1 from kart", false);
+							rs.next();
+							int id_nom=rs.getInt(1);
+							SQL="insert into kart (id_tovar, id_group, id_nom, id_skl) select "+id_tovar+", -1, "+id_nom+", id_skl from sklad where name='"+Sklad+"'";
+							DataSet.UpdateQuery(SQL);
+							int isakcia=0;
+							if (AkciaCheckBox.isSelected())
+								isakcia=1;
+							SQL="insert into price (id_tovar, cost, akciya, isakcia, id_skl, id_price) select "+id_tovar+" ,0, "+DiscTextField.getText()+", "+isakcia+", (select id_skl from sklad where name='"+Sklad+"'), id_price from type_price where name='"+Price+"'";
+							DataSet.UpdateQuery(SQL);
+							ok=true;
+							DataSet.commit();
+							dialog.setVisible(false);
 						}
 					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
-					ok=true;
+					
 				}
 			});
 		}
@@ -243,6 +262,12 @@ public class NewTovar extends JPanel {
 		if (CancelButton == null) {
 			CancelButton = new JButton();
 			CancelButton.setText("Отмена");
+			CancelButton.addActionListener(new java.awt.event.ActionListener() {
+				public void actionPerformed(java.awt.event.ActionEvent e) {
+					ok=false;
+					dialog.setVisible(false);
+				}
+			});
 		}
 		return CancelButton;
 	}
@@ -259,11 +284,30 @@ public class NewTovar extends JPanel {
 			dialog.pack();
 		}
 		dialog.setTitle(title);
-		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+//		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
+		dialog.setSize(582, 200);
+		dialog.setLocationRelativeTo(parent);
+		initform();
 		dialog.setVisible(true);
 		
 		return ok;
 	}
-
+	public String getTovar(){
+		return TovarNameTextField.getText();
+	}
+	public void setTovar(String aValue){
+		TovarNameTextField.setText(aValue);
+	}
+	private void initform(){
+		inBoxTextField.setText("1");
+		DiscTextField.setText("0");
+		AkciaCheckBox.setSelected(false);
+	}
+	public void setSklad(String aValue){
+		Sklad=aValue;
+	}
+	public void setPrice(String aValue){
+		Price=aValue;
+	}
 
 }  //  @jve:decl-index=0:visual-constraint="10,10"
