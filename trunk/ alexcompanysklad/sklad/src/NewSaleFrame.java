@@ -30,6 +30,7 @@ class NewSaleFrame extends JPanel
 	private JCheckBox editableCheck;
 	private String note;
 	private JPopupMenu popup;
+	private int p;
 	JTextField noteText;
 	public NewSaleFrame()
 	{
@@ -110,8 +111,8 @@ class NewSaleFrame extends JPanel
 		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc);
 		
 		naklTable=new JTable(model);
-		Font font = new Font("Times New Roman",Font.PLAIN,16);
-		naklTable.setFont(font);
+//		Font font = new Font("Times New Roman",Font.PLAIN,16);
+//		naklTable.setFont(font);
 		naklTable.setAutoCreateColumnsFromModel(false);
 		naklTable.getColumnModel().getColumn(0).setMaxWidth(30);
 		naklTable.getColumnModel().getColumn(1).setMaxWidth(455);
@@ -125,7 +126,7 @@ class NewSaleFrame extends JPanel
 		popup = new JPopupMenu();
 		JMenuItem del = new JMenuItem("Удалить строку");
 		popup.add(del);
-		naklTable.setComponentPopupMenu(popup);
+//		naklTable.setComponentPopupMenu(popup);
 
 		saveButton.setBounds(34, 495, 104, 22);
 		cancelButton.setBounds(159, 495, 104, 22);
@@ -219,9 +220,15 @@ class NewSaleFrame extends JPanel
 		});
 		del.addActionListener(new ActionListener (){
 			public void actionPerformed(ActionEvent event){
-				Point p=popup.getPopupLocation(null);
-				if (p.x==0){
-					
+				int row=p/naklTable.getRowHeight();
+				model.removeRow(row);
+			}
+		});
+		naklTable.addMouseListener(new MouseAdapter(){
+			public void mousePressed(MouseEvent event){
+				if (event.getButton()==MouseEvent.BUTTON3){
+					popup.show(naklTable, event.getX(), event.getY());
+					p=event.getY();
 				}
 			}
 		});
@@ -425,6 +432,8 @@ class NewSaleFrame extends JPanel
 			e.printStackTrace();
 			// Вставить звук
 		}
+		if (InputCountTovar.getNext())
+			BarCodeFire();
 	}
 	public class pressF1 extends KeyAdapter{
 		public void keyPressed(KeyEvent event){
