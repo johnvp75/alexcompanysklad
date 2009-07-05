@@ -19,6 +19,7 @@ class InputCountTovar extends JPanel{
 	private JLabel costBoxLabel;
 	private JLabel costOneLabel;
 	private JDialog dialog;
+	private static boolean next;
 	public InputCountTovar(){
 		setLayout(null);
 		name=new JLabel("");
@@ -107,11 +108,19 @@ class InputCountTovar extends JPanel{
 	}
 	class DigInput extends KeyAdapter{
 		public void keyTyped(KeyEvent event){
-
 			if (!( String.valueOf(event.getKeyChar())).matches("[0-9]"))
 //				event.setKeyCode(0);
 				event.setKeyChar(KeyEvent.CHAR_UNDEFINED);
 		}
+		public void keyPressed(KeyEvent event){
+			int keyCode=event.getKeyCode();
+			if (keyCode==KeyEvent.VK_F1 || keyCode==107){
+				event.setKeyCode(KeyEvent.VK_UNDEFINED);
+				setNext(true);
+				dialog.setVisible(false);
+			}
+		}
+
 		
 	}
 
@@ -127,6 +136,7 @@ class InputCountTovar extends JPanel{
 //			dialog.getRootPane().setDefaultButton(okButton);
 			dialog.pack();
 		}
+		setNext(false);
 		costBox.setVisible(!aRoz);
 		costBoxLabel.setVisible(!aRoz);
 		costOne.setVisible(aRoz);
@@ -165,5 +175,10 @@ class InputCountTovar extends JPanel{
 		count.setText("1");
 		count.selectAll();
 	}
-		
+	public static boolean getNext(){
+		return next;
+	}
+	private void setNext(boolean aValue){
+		next=aValue;
+	}
 }

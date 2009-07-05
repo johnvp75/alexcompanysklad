@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/jurt.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/ridl.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/unoil.jar"/>
+	<classpathentry kind="lib" path="C:/JavaProjects/synthetica/synthetica.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
