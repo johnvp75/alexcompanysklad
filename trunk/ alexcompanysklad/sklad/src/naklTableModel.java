@@ -4,12 +4,14 @@ import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
 
 
-class realTableModel extends AbstractTableModel{
-	public realTableModel(String aClient, String aSklad, int aDiscount){
-		nakl = new dataCont(aClient,aSklad,aDiscount);
-	}
-	dataCont nakl;
+class naklTableModel extends AbstractTableModel{
+	private dataCont nakl;
 	private boolean Editable = false;
+	private boolean isReal;
+	public naklTableModel(String aClient, String aSklad, int aDiscount, boolean aIsReal){
+		nakl = new dataCont(aClient,aSklad,aDiscount);
+		isReal=aIsReal;
+	}
 	public void setClient(String aValue){
 		nakl.setNameClient(aValue);
 	}
@@ -74,7 +76,7 @@ class realTableModel extends AbstractTableModel{
 				case 4:
 					return false;
 				case 5:
-					return false;
+					return !isReal;
 				default:
 					return false;
 				}	
@@ -128,6 +130,9 @@ class realTableModel extends AbstractTableModel{
 		}
 		String s = formatter.format(ret);
 		return (new Double(s));
+	}
+	public boolean getAkcia(int pos){
+		return nakl.getAkcia(pos);
 	}
 
 }

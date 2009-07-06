@@ -26,7 +26,7 @@ class NewSaleFrame extends JPanel
 	private JComboBox priceCombo;
 	private JLabel priceLabel;
 	private JLabel itogo;
-	private realTableModel model;
+	private naklTableModel model;
 	private static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
@@ -113,7 +113,7 @@ class NewSaleFrame extends JPanel
 			e.printStackTrace();
 		}
 		
-		model = new realTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc);
+		model = new naklTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc,true);
 		
 		naklTable=new JTable(model);
 //		Font font = new Font("Times New Roman",Font.PLAIN,16);
@@ -544,7 +544,7 @@ class NewSaleFrame extends JPanel
 				}
 				DataSet.UpdateQuery(SQL);
 				for (int i=0;i<model.getRowCount();i++){
-					if (!(model.nakl.getAkcia(i))){
+					if (!(model.getAkcia(i))){
 						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
 							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
 							model.getValueAt(i, 1)+"'";
@@ -573,7 +573,7 @@ class NewSaleFrame extends JPanel
 				}
 				DataSet.UpdateQuery(SQL);
 				for (int i=0;i<model.getRowCount();i++){
-					if (model.nakl.getAkcia(i)){
+					if (model.getAkcia(i)){
 						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
 							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
 							model.getValueAt(i, 1)+"'";
