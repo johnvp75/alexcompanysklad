@@ -81,6 +81,7 @@ class MainFrame extends JFrame
 			
 			if (dialog==null)
 				dialog=new ManagerChooser();
+				dialog.setRul(";2;");
 			if (dialog.showDialog(MainFrame.this, "¬ход в систему")){
 //				newFrame.setVisible(true);
 //				newFrame.requestFocus();

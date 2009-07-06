@@ -14,6 +14,7 @@ class ManagerChooser extends JPanel
 	private boolean ok;
 	private JDialog dialog;
 	private ChangePassword PasswordDialog;
+	private String rul;
 	public ManagerChooser() {
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
@@ -21,17 +22,6 @@ class ManagerChooser extends JPanel
 		panel.setLayout(new GridLayout(2,2));
 		panel.add(new JLabel("Менеджер:"));
 		username=new JComboBox();
-		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%;2;%' order by manager.name",true);
-		try { 
-			rs.next();
-			while (!rs.isAfterLast()){
-				username.addItem(rs.getString("rtrim(manager.name)"));
-				rs.next();
-			}
-			rs.close();
-		}
-		catch (Exception e) { e.printStackTrace();}
-		
 		panel.add(username);
 		panel.add(new JLabel("Пароль:"));
 		panel.add(password=new JPasswordField(""));
@@ -114,10 +104,24 @@ class ManagerChooser extends JPanel
 		dialog.setTitle(title);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setLocationRelativeTo(parent);
+		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%"+rul+"%' order by manager.name",true);
+		username.removeAllItems();
+		try { 
+			rs.next();
+			while (!rs.isAfterLast()){
+				username.addItem(rs.getString("rtrim(manager.name)"));
+				rs.next();
+			}
+			rs.close();
+		}
+		catch (Exception e) { e.printStackTrace();}
 		ClearPassword();
 		password.requestFocus();
 		dialog.setVisible(true);
 		
 		return ok;
+	}
+	public void setRul(String aValue){
+		rul=aValue;
 	}
 }
