@@ -90,13 +90,14 @@ class naklTableModel extends AbstractTableModel{
 	public int getIndDiscount(){
 		return nakl.getIndDiscount();
 	}
-	public void add(String aName, int aCount, double aCost, int aDiscount, int aAkcia){
+	public int add(String aName, int aCount, double aCost, int aDiscount, int aAkcia){
 		boolean b=false;
 		if (aAkcia>0)
 			b=true;
 		
-		nakl.add(aName, aCount, aCost, aDiscount, b);
+		int ret=nakl.add(aName, aCount, aCost, aDiscount, b, isReal);
 		fireTableStructureChanged();
+		return ret;
 		
 	}
 	public void removeAll(){
@@ -213,16 +214,22 @@ class dataCont{
 	public boolean getAkcia(int pos){
 		return ((Boolean)akcia.elementAt(pos)).booleanValue();
 	}
-	public void add(String aName, int aCount, double aCost, int aDiscount, boolean aAkcia){
-		int pr=present(aName);
+	public int add(String aName, int aCount, double aCost, int aDiscount, boolean aAkcia, boolean aReal){
+		int pr;
+		if (aReal)
+			pr=present(aName);
+		else
+			pr=-1;
 		if (pr==-1){
 			newCount(aCount);
 			newName(aName);
 			newCost(aCost);
 			newDiscount(aDiscount);
 			newAkcia(aAkcia);
+			return getSize();
 		}else{
 			setCount((new Integer((Integer)getCount(pr) +aCount)).toString(), pr);
+			return pr;
 		}
 	}
 	/*
