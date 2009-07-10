@@ -66,14 +66,23 @@ public class SerialPortReader
         {
             byte[] buffer = new byte[1024];
             int len = -1;
+            String outStr="";
             try
             {
-                while ( ( len = this.in.read(buffer)) > -1 )
+                while (true)
+                	if ( ( len = this.in.read(buffer)) > -1 )
                 {
                     String str=new String(buffer,0,len);
-//                	System.out.print(str);
-                    ChooserStreamIn.StreamIn(str);
+                	outStr=outStr+str;
+                	
+//                    System.out.print(str);
+                    if (outStr.endsWith("\r\n")){
+                    	outStr=outStr.replace("\r\n", "");
+                    	
+                    	ChooserStreamIn.StreamIn(outStr);
+                    	outStr="";
                     }
+                }
             }
             catch ( IOException e )
             {

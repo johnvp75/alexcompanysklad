@@ -59,9 +59,7 @@ class InputCountTovar extends JPanel{
 		JLabel countLabel = new JLabel("Количество:");
 		count.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				if (count.getText().length()==0)
-					count.setText("0");
-				dialog.setVisible(false);
+				closeDialog();
 			}
 		});
 		DigInput listener =new DigInput();
@@ -181,5 +179,11 @@ class InputCountTovar extends JPanel{
 	}
 	private void setNext(boolean aValue){
 		next=aValue;
+	}
+	public void closeDialog(){
+		if (count.getText().length()==0)
+			count.setText("0");
+		dialog.setVisible(false);
+
 	}
 }

@@ -22,6 +22,7 @@ public class MainWindow
 
 		MainFrame frame = new MainFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		(new Thread(new ChooserStreamIn())).start();
 		frame.setVisible(true);
 	}
 	
