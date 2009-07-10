@@ -204,6 +204,7 @@ class NewSaleFrame extends JPanel
 				}
 				model.removeAll();
 				setVisible(false);
+				ChooserStreamIn.close();
 				parent.closeSaleFrame();
 
 			}
@@ -485,6 +486,7 @@ class NewSaleFrame extends JPanel
 		noteText.setText("");
 		setVisible(true);
 		skladCombo.grabFocus();
+		ChooserStreamIn.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem());
 		
 		
 	}
@@ -585,6 +587,7 @@ class NewSaleFrame extends JPanel
 			DataSet.commit();
 			model.removeAll();
 			setVisible(false);
+			ChooserStreamIn.close();
 			parent.closeSaleFrame();
 		}
 		catch(Exception e){
@@ -593,6 +596,16 @@ class NewSaleFrame extends JPanel
 			 e.printStackTrace();
 		}
 		return ret;
+	}
+	public boolean closeform(){
+		if (model.getRowCount()>0&& JOptionPane.showConfirmDialog(parent, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
+			return false;
+		}
+		model.removeAll();
+		setVisible(false);
+		parent.closeSaleFrame();
+		ChooserStreamIn.close();
+		return true;
 	}
 }
 class JComboBoxFire extends JComboBox{
