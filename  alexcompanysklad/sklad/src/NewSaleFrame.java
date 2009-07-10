@@ -27,7 +27,7 @@ class NewSaleFrame extends JPanel
 	private JLabel priceLabel;
 	private JLabel itogo;
 	private naklTableModel model;
-	private static InputCountTovar formInput = null;
+	public static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
 	private JTable naklTable;
@@ -375,7 +375,7 @@ class NewSaleFrame extends JPanel
 
 		}
 	}
-	private void Input(String aValue){
+	public void Input(String aValue){
 		 if (aValue==null)
 			return;
 		 if (formInput==null)
@@ -486,7 +486,7 @@ class NewSaleFrame extends JPanel
 		noteText.setText("");
 		setVisible(true);
 		skladCombo.grabFocus();
-		ChooserStreamIn.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem());
+		ChooserStreamIn.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
 		
 		
 	}
