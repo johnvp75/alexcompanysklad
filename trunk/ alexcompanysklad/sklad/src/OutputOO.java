@@ -24,7 +24,7 @@ public class OutputOO {
 	private static XComponentContext xRemouteContext = null;
 	private static XMultiComponentFactory xRemouteServiceManager = null;
 	private static XSpreadsheetDocument xSpreadsheetDocument;
-	private static final String oooExeFolder="C:\\JavaProjects\\OpenOffice.org 3\\program\\";
+	private static final String oooExeFolder="C:\\Program Files\\OpenOffice.org 3\\program\\";
 	public OutputOO() {
 		// TODO Auto-generated constructor stub
 	}
@@ -48,7 +48,7 @@ public class OutputOO {
 			loadProps[0] = new PropertyValue();
             loadProps[0].Name = "Hidden";
             loadProps[0].Value = new Boolean(hidden);
-			XComponent xSpreadsheetComponent=xComponentLoader.loadComponentFromURL("file://localhost/C:/Users/Жека/workspace/sklad/Forms/"+DocPath, "_blank", 0, loadProps);
+			XComponent xSpreadsheetComponent=xComponentLoader.loadComponentFromURL("file://localhost/C:/sklad/Forms/"+DocPath, "_blank", 0, loadProps);
 			xSpreadsheetDocument=(XSpreadsheetDocument)UnoRuntime.queryInterface(XSpreadsheetDocument.class, xSpreadsheetComponent);
 		}
 		catch(Exception e){

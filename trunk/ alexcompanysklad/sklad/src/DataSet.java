@@ -17,7 +17,7 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@91.210.177.35:1521:XE", "sklad", "sklad");
 				cn.setAutoCommit(false);
 			}
 			catch (Exception e) { e.printStackTrace();}
