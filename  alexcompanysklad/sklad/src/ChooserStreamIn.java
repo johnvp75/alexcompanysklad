@@ -8,17 +8,23 @@ import java.io.InputStream;
 
 
 public class ChooserStreamIn implements Runnable{
-	private volatile int idStream;
-	private volatile String Sklad;
-	private volatile String Price;
-	private Object parent;
+	private volatile static int idStream;
+	private volatile static String Sklad;
+	private volatile static String Price;
+	private InputStream in;
+	private static Object parent;
 //	private SerialPortReader port=null;
 	private CommPort commPort;
 	public ChooserStreamIn(){
-		
+		try {
+			connect("COM1");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
-	public void setIdStream(int idStream) {
-		idStream = idStream;
+	public void setIdStream(int aidStream) {
+		idStream = aidStream;
 	}
 	public int getIdStream() {
 		return idStream;
@@ -36,12 +42,12 @@ public class ChooserStreamIn implements Runnable{
 		return Price;
 	}
 	public void StreamIn(String cod){
-		switch (MainWindow.Scaner.getIdStream()){
+		switch (getIdStream()){
 		case 1:
 			try {
-					if (!(((NewSaleFrame)MainWindow.Scaner.parent).formInput==null) && ((NewSaleFrame)MainWindow.Scaner.parent).formInput.isVisible())
-						((NewSaleFrame)MainWindow.Scaner.parent).formInput.closeDialog();
-					((NewSaleFrame)MainWindow.Scaner.parent).Input(inputBarcode.newcod(cod, MainWindow.Scaner.getSklad(), MainWindow.Scaner.getPrice()));
+					if (!(((NewSaleFrame)parent).formInput==null) && ((NewSaleFrame)parent).formInput.isVisible())
+						((NewSaleFrame)parent).formInput.closeDialog();
+					((NewSaleFrame)parent).Input(inputBarcode.newcod(cod, getSklad(), getPrice()));
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					Toolkit.getDefaultToolkit().beep();
@@ -56,19 +62,39 @@ public class ChooserStreamIn implements Runnable{
 		setSklad(aSklad);
 		setParent(aparent);
 	}
-	public void setParent(Object parent) {
-		parent = parent;
+	public void setParent(Object aparent) {
+		parent = aparent;
 	}
 	public Object getParent() {
 		return parent;
 	}
 	public void run(){
-		try {
-			connect("COM1");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        byte[] buffer = new byte[1024];
+        int len = -1;
+        String outStr="";
+        try
+        {
+            while ( ( len = in.read(buffer)) > -1 )
+            {
+                String str=new String(buffer,0,len);
+            	outStr=outStr+str;
+            	
+//                System.out.print(str);
+                if (outStr.endsWith("\r\n")){
+                	outStr=outStr.replace("\r\n", "");
+                	
+                	StreamIn(outStr);
+                	outStr="";
+//                	Thread.currentThread().wait(100);
+//                	wait(1000);
+                }
+            }
+        }
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }            
+
 	}
     void connect ( String portName ) throws Exception
     {
@@ -86,36 +112,11 @@ public class ChooserStreamIn implements Runnable{
                 SerialPort serialPort = (SerialPort) commPort;
                 serialPort.setSerialPortParams(9600,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
                 
-                InputStream in = serialPort.getInputStream();
+                in = serialPort.getInputStream();
 //                OutputStream out = serialPort.getOutputStream();
 //                Th1 = new Thread(new SerialReader(in)); 
 //                Th1.start();
 //                (new Thread(new SerialWriter(out))).start();
-                byte[] buffer = new byte[1024];
-                int len = -1;
-                String outStr="";
-                try
-                {
-                    while ( ( len = in.read(buffer)) > -1 )
-                    {
-                        String str=new String(buffer,0,len);
-                    	outStr=outStr+str;
-                    	
-//                        System.out.print(str);
-                        if (outStr.endsWith("\r\n")){
-                        	outStr=outStr.replace("\r\n", "");
-                        	
-                        	StreamIn(outStr);
-                        	outStr="";
-//                        	Thread.currentThread().wait(100);
-//                        	wait(1000);
-                        }
-                    }
-                }
-                catch ( IOException e )
-                {
-                    e.printStackTrace();
-                }            
 
             }
             else
