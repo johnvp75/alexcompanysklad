@@ -204,7 +204,7 @@ class NewSaleFrame extends JPanel
 				}
 				model.removeAll();
 				setVisible(false);
-				ChooserStreamIn.close();
+//				ChooserStreamIn.close();
 				parent.closeSaleFrame();
 
 			}
@@ -486,7 +486,8 @@ class NewSaleFrame extends JPanel
 		noteText.setText("");
 		setVisible(true);
 		skladCombo.grabFocus();
-		ChooserStreamIn.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
+//		MainWindow.ThScaner.
+		MainWindow.Scaner.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
 		
 		
 	}
@@ -587,7 +588,7 @@ class NewSaleFrame extends JPanel
 			DataSet.commit();
 			model.removeAll();
 			setVisible(false);
-			ChooserStreamIn.close();
+//			ChooserStreamIn.close();
 			parent.closeSaleFrame();
 		}
 		catch(Exception e){
@@ -604,7 +605,7 @@ class NewSaleFrame extends JPanel
 		model.removeAll();
 		setVisible(false);
 		parent.closeSaleFrame();
-		ChooserStreamIn.close();
+//		ChooserStreamIn.close();
 		return true;
 	}
 }
