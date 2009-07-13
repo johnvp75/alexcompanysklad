@@ -26,35 +26,20 @@ public class ChooserStreamIn implements Runnable{
 	public void setIdStream(int aidStream) {
 		idStream = aidStream;
 	}
-	public int getIdStream() {
+	public static int getIdStream() {
 		return idStream;
 	}
 	public void setSklad(String sklad) {
 		Sklad = sklad;
 	}
-	public String getSklad() {
+	public static String getSklad() {
 		return Sklad;
 	}
 	public void setPrice(String price) {
 		Price = price;
 	}
-	public String getPrice() {
+	public static String getPrice() {
 		return Price;
-	}
-	public void StreamIn(String cod){
-		switch (getIdStream()){
-		case 1:
-			try {
-					if (!(((NewSaleFrame)parent).formInput==null) && ((NewSaleFrame)parent).formInput.isVisible())
-						((NewSaleFrame)parent).formInput.closeDialog();
-					((NewSaleFrame)parent).Input(inputBarcode.newcod(cod, getSklad(), getPrice()));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					Toolkit.getDefaultToolkit().beep();
-					e.printStackTrace();
-				}
-			return;
-		}
 	}
 	public void init(int aidStream, String aSklad, String aPrice, Object aparent){
 		setIdStream(aidStream);
@@ -65,7 +50,7 @@ public class ChooserStreamIn implements Runnable{
 	public void setParent(Object aparent) {
 		parent = aparent;
 	}
-	public Object getParent() {
+	public static Object getParent() {
 		return parent;
 	}
 	public void run(){
@@ -83,7 +68,7 @@ public class ChooserStreamIn implements Runnable{
                 if (outStr.endsWith("\r\n")){
                 	outStr=outStr.replace("\r\n", "");
                 	
-                	StreamIn(outStr);
+                	(new Thread( new StreamIn(outStr))).start();
                 	outStr="";
 //                	Thread.currentThread().wait(100);
 //                	wait(1000);
@@ -119,10 +104,27 @@ public class ChooserStreamIn implements Runnable{
 //                (new Thread(new SerialWriter(out))).start();
 
             }
-            else
-            {
-                System.out.println("Error: Only serial ports are handled by this example.");
-            }
         }     
     }
 }
+	class StreamIn implements Runnable{
+		private String cod;
+		public StreamIn(String acod){
+			cod=acod;
+		}
+		public void run(){ 
+			switch (ChooserStreamIn.getIdStream()){
+			case 1:
+				try {
+					if (!(((NewSaleFrame)ChooserStreamIn.getParent()).formInput==null) && ((NewSaleFrame)ChooserStreamIn.getParent()).formInput.isVisible())
+						((NewSaleFrame)ChooserStreamIn.getParent()).formInput.closeDialog();
+					((NewSaleFrame)ChooserStreamIn.getParent()).Input(inputBarcode.newcod(cod, ChooserStreamIn.getSklad(), ChooserStreamIn.getPrice()));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					Toolkit.getDefaultToolkit().beep();
+					e.printStackTrace();
+				}
+				return;
+			}
+		}
+	}

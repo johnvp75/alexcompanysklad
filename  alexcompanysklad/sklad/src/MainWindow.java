@@ -11,7 +11,7 @@ import javax.swing.UIManager;
 public class MainWindow 
 {
 	public static ChooserStreamIn Scaner;
-	public static Thread ThScaner; 
+//	public static Thread ThScaner; 
 	public static void main (String[] args) 
 	{
 /*
@@ -23,9 +23,8 @@ public class MainWindow
 */
 		MainFrame frame = new MainFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		Scaner=new ChooserStreamIn();
-		ThScaner=new Thread(Scaner);
-		ThScaner.start();
+//		Scaner = new ChooserStreamIn();
+//		(new Thread(Scaner)).start();
 		frame.setVisible(true);
 	}
 	

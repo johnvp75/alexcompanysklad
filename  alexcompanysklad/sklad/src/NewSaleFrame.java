@@ -6,8 +6,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.*;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+
+
 
 
 //import javax.swing.JComboBox.KeySelectionManager;
@@ -126,6 +132,8 @@ class NewSaleFrame extends JPanel
 		naklTable.getColumnModel().getColumn(4).setMaxWidth(96);
 		naklTable.getColumnModel().getColumn(5).setMaxWidth(58);
 		JScrollPane ScrollTable=new JScrollPane(naklTable);
+		naklTable.setColumnSelectionAllowed(true);
+		naklTable.setRowSelectionAllowed(true);
 		
 		
 		popup = new JPopupMenu();
@@ -255,6 +263,72 @@ class NewSaleFrame extends JPanel
 				}
 			}
 		});
+		naklTable.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent event){
+				if (!editableCheck.isSelected())
+					return;
+				
+/*				if (event.getKeyCode()==event.VK_ENTER){
+					if (naklTable.getEditingColumn()==2 || (naklTable.getEditingColumn()==-1 && naklTable.getSelectedColumn()==2)){
+//						event.setKeyCode(event.VK_UNDEFINED);
+						int row;
+						if ((row = naklTable.getEditingRow())==-1)
+							row=naklTable.getSelectedRow();
+						if (naklTable.getCellEditor() != null) {
+							naklTable.getCellEditor().stopCellEditing();
+					    }
+
+						naklTable.changeSelection(row, 3, false, false);
+						if (naklTable.getCellEditor() != null) {
+							naklTable.getCellEditor().stopCellEditing();
+					    }
+
+//						naklTable.setRowSelectionInterval(row, row);
+//						naklTable.setColumnSelectionInterval(3, 3);
+//						naklTable.editCellAt(row, 3);
+//						((JTextField)naklTable.getEditorComponent()).selectAll();
+						return;
+					}
+					if (naklTable.getEditingColumn()==3 || (naklTable.getEditingColumn()==-1 && naklTable.getSelectedColumn()==3)){
+						event.setKeyCode(event.VK_UNDEFINED);
+//						naklTable.setEditingColumn(-1);
+//						naklTable.setEditingRow(-1);
+						int row=naklTable.getEditingRow();
+						if (row==-1)
+							row=naklTable.getSelectedRow();
+
+//						naklTable.editCellAt(-1, -1);
+//						naklTable.getCellEditor().addCellEditorListener(new cellEdit());
+//						naklTable.editingStopped(null);
+//						naklTable.getSelectionModel().clearSelection();
+						if (naklTable.getCellEditor() != null) {
+							naklTable.getCellEditor().stopCellEditing();
+					    }
+
+//						((JTextField)naklTable.getEditorComponent()).postActionEvent();
+//						naklTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
+//						naklTable.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "check");
+						naklTable.changeSelection(row, 3, false, false);
+//						naklTable.setRowSelectionInterval(row, row);
+//						naklTable.setColumnSelectionInterval(3, 3);
+						return;
+					}
+
+				}
+*/				if ((event.getKeyCode()>=event.VK_0 && event.getKeyCode()<=event.VK_9) || (event.getKeyChar()=='.') || (event.getKeyCode()>=event.VK_NUMPAD0 && event.getKeyCode()<=event.VK_NUMPAD9)){
+					if (naklTable.getEditingColumn()==-1){
+						naklTable.editCellAt(naklTable.getSelectedRow(), naklTable.getSelectedColumn());
+						((JTextField)naklTable.getEditorComponent()).selectAll();
+					}
+				}
+/*				else
+					event.setKeyCode(event.VK_UNDEFINED);
+*/
+			}
+		});
+		SelectionListener listener = new SelectionListener(naklTable);
+	    naklTable.getSelectionModel().addListSelectionListener(listener);
+	    naklTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
 //Добавляем элементы на форму
 		add(saveButton);
 		add(cancelButton);
@@ -441,8 +515,18 @@ class NewSaleFrame extends JPanel
 			aCost=One;
 		}
 		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
-		model.add(aValue, kolTov, aCost, akcia, isakcia);
-//		naklTable.repaint();
+		if (editableCheck.isSelected()){
+			naklTable.requestFocus();
+			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
+			naklTable.editCellAt(row, 2);
+			((JTextField)naklTable.getEditorComponent()).selectAll();
+//			naklTable.changeSelection(row, 2, false, false);
+//			naklTable.setRowSelectionInterval(row, row);
+//			naklTable.setColumnSelectionInterval(2, 2);
+		}else
+			model.add(aValue, kolTov, aCost, akcia, isakcia);
+		if (InputCountTovar.getNext())
+			BarCodeFire();
 		 
 	}
 	private void BarCodeFire(){
@@ -454,8 +538,8 @@ class NewSaleFrame extends JPanel
 			Toolkit.getDefaultToolkit().beep();
 			// Вставить звук
 		}
-		if (InputCountTovar.getNext())
-			BarCodeFire();
+//		if (InputCountTovar.getNext())
+//			BarCodeFire();
 	}
 	public class pressF1 extends KeyAdapter{
 		public void keyPressed(KeyEvent event){
@@ -613,6 +697,28 @@ class JComboBoxFire extends JComboBox{
 	public void fireActionEvent()
 	{
 		super.fireActionEvent();
+	}
+}
+class SelectionListener implements ListSelectionListener {
+	private JTable table;
+	public SelectionListener(JTable table){
+		this.table=table;
+	}
+	public void valueChanged(ListSelectionEvent event){
+		if (table.getEditingColumn()==-1 && table.getSelectedColumn()==2){
+			int row=table.getSelectedRow();
+			table.changeSelection(row, 3, false, false);
+			if (table.getCellEditor() != null) {
+				table.getCellEditor().stopCellEditing();
+		    }
+			return;
+		}
+		if (table.getEditingColumn()==-1 && table.getSelectedColumn()==3){
+			
+			int row=table.getSelectedRow();
+			return;
+		    }
+		
 	}
 }
 
