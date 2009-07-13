@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Program Files/Java/jre6/bin"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="ojdbc14_g.jar"/>
 	<classpathentry kind="lib" path="ojdbc14.jar"/>
 	<classpathentry kind="lib" path="bootstrapconnector.jar"/>
@@ -9,5 +13,10 @@
 	<classpathentry kind="lib" path="jurt.jar"/>
 	<classpathentry kind="lib" path="ridl.jar"/>
 	<classpathentry kind="lib" path="unoil.jar"/>
+	<classpathentry kind="lib" path="RXTXcomm.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="sklad"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

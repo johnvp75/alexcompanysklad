@@ -226,7 +226,7 @@ class dataCont{
 			newCost(aCost);
 			newDiscount(aDiscount);
 			newAkcia(aAkcia);
-			return getSize();
+			return getSize()-1;
 		}else{
 			setCount((new Integer((Integer)getCount(pr) +aCount)).toString(), pr);
 			return pr;
