@@ -36,7 +36,7 @@ class NewSaleFrame extends JPanel
 	public static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
-	private JTable naklTable;
+	private MyTable naklTable;
 	public MainFrame parent;
 	private JCheckBox editableCheck;
 	private String note;
@@ -121,7 +121,7 @@ class NewSaleFrame extends JPanel
 		
 		model = new naklTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc,true);
 		
-		naklTable=new JTable(model);
+		naklTable=new MyTable(model);
 //		Font font = new Font("Times New Roman",Font.PLAIN,16);
 //		naklTable.setFont(font);
 		naklTable.setAutoCreateColumnsFromModel(false);
@@ -326,9 +326,9 @@ class NewSaleFrame extends JPanel
 */
 			}
 		});
-		SelectionListener listener = new SelectionListener(naklTable);
-	    naklTable.getSelectionModel().addListSelectionListener(listener);
-	    naklTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
+//		SelectionListener listener = new SelectionListener(naklTable);
+//	    naklTable.getSelectionModel().addListSelectionListener(listener);
+//	    naklTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
 //Добавляем элементы на форму
 		add(saveButton);
 		add(cancelButton);
@@ -699,7 +699,7 @@ class JComboBoxFire extends JComboBox{
 		super.fireActionEvent();
 	}
 }
-class SelectionListener implements ListSelectionListener {
+/*class SelectionListener implements ListSelectionListener {
 	private JTable table;
 	public SelectionListener(JTable table){
 		this.table=table;
@@ -720,5 +720,7 @@ class SelectionListener implements ListSelectionListener {
 		    }
 		
 	}
-}
 
+
+}
+*/
