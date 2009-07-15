@@ -122,12 +122,13 @@ public class ListChoose extends JPanel {
 	private void initList(int aIndex){
 		modelList.clear();
 		String Query="select trim(name) from (Select distinct tovar.name from kart inner join tovar on kart.id_tovar=tovar.id_tovar where (kart.id_group="+aIndex+") and (kart.id_skl=(Select id_skl from sklad where name='"+Sklad+"')) order by tovar.name)";
-		ResultSet rs=DataSet.QueryExec(Query,true);
+		
 		try {
+			ResultSet rs=DataSet.QueryExec(Query,true);
 			while (rs.next())
 				modelList.addElement(rs.getString(1));
 			rs.close();
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

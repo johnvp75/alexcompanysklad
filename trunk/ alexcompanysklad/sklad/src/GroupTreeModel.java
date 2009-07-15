@@ -22,8 +22,9 @@ class GroupTreeModel implements TreeModel{
 		}else{
 			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
 		}
-		ResultSet rs=DataSet.QueryExec(SQL,true);
+		
 		try{
+			ResultSet rs=DataSet.QueryExec(SQL,true);
 			for(int i=0;i<=index;i++)
 				rs.next();
 //			rs.absolute(index+1);
@@ -40,8 +41,9 @@ class GroupTreeModel implements TreeModel{
 		}else{
 			SQL="select count(*) from groupid where parent_group = "+((DataNode)parent).getIndex();
 		}
-		ResultSet rs=DataSet.QueryExec(SQL,true);
+		
 		try{
+			ResultSet rs=DataSet.QueryExec(SQL,true);
 			if (!(rs==null)){ 
 				rs.next();
 				count=rs.getInt(1);
@@ -64,8 +66,9 @@ class GroupTreeModel implements TreeModel{
 		}else{
 			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
 		}
-		ResultSet rs=DataSet.QueryExec(SQL,true);
+		
 		try{
+			ResultSet rs=DataSet.QueryExec(SQL,true);
 			int i=-1;
 			while (rs.next()){
 				i++;
