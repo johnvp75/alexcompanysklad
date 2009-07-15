@@ -127,10 +127,12 @@ class MainFrame extends JFrame
 	public void print(){
 		if (Printdialog==null)
 			Printdialog=new TovarChooser();
-		ResultSet rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where numb is NULL group by trim(name),document.id_client",true );
+
 		Vector<String> data =new Vector<String>(0);
 		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		ResultSet rs=null;
 		try{
+			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where numb is NULL group by trim(name),document.id_client",true );
 			rs.next();
 			while (!rs.isAfterLast()){
 			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" грн.";
@@ -143,23 +145,31 @@ class MainFrame extends JFrame
 		Printdialog.addTovar(data);
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			String tovar=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
-			DataSet.UpdateQuery("lock table document in exclusive mode");
+
 			int numb=0;
 			int id=0;
 			boolean isOpt=true;
-			rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
+			
 			try{
+				DataSet.UpdateQuery("lock table document in exclusive mode");
+				rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
 				rs.next();
 				if (rs.getInt(1)==2)
 					isOpt=false;
-			}catch (SQLException e) {
-				DataSet.rollback();
+			}catch (Exception e) {
+				try {
+					DataSet.rollback();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 				return;
 			}
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
-			rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
+			
 			try {
+				rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
 				if (rs.next())
 					numb=rs.getInt(1);
 				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
@@ -243,8 +253,13 @@ class MainFrame extends JFrame
 					rs=DataSet.QueryExec(SQL, false);
 				}
 				DataSet.commit();
-			} catch (SQLException e) {
-				DataSet.rollback();
+			} catch (Exception e) {
+				try {
+					DataSet.rollback();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				e.printStackTrace();
 			}
 		}

@@ -216,8 +216,9 @@ public class NewTovar extends JPanel {
 						JOptionPane.showMessageDialog(dialog,"Наименование не может быть пустой строкой! \n Повторите ввод!","Неверное название",JOptionPane.ERROR_MESSAGE);
 						return;
 					}
-					ResultSet rs=DataSet.QueryExec("select count(*) from tovar where name like '%"+TovarNameTextField.getText().trim()+"%'", false);
+					
 					try {
+						ResultSet rs=DataSet.QueryExec("select count(*) from tovar where name like '%"+TovarNameTextField.getText().trim()+"%'", false);
 						rs.next();
 						if (rs.getInt(1)>0){
 							JOptionPane.showMessageDialog(dialog,"Такой товар в базе существует! \n Будьте внимательней!","Повторное название",JOptionPane.ERROR_MESSAGE);
@@ -243,7 +244,7 @@ public class NewTovar extends JPanel {
 							DataSet.commit();
 							dialog.setVisible(false);
 						}
-					} catch (SQLException e1) {
+					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
 					

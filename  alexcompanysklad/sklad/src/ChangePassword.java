@@ -45,7 +45,12 @@ public class ChangePassword extends JPanel {
 					{
 						if(OldPasswordCheck()){
 							if (PasswordCheck()){
-								DataSet.QueryExec("update manager set password = '"+(new String(NewPassword1.getPassword()))+"' where name='"+getUserName()+"'", true);
+								try {
+									DataSet.QueryExec("update manager set password = '"+(new String(NewPassword1.getPassword()))+"' where name='"+getUserName()+"'", true);
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 								dialog.setVisible(false);
 							}
 							else
@@ -87,8 +92,9 @@ public class ChangePassword extends JPanel {
 	private boolean OldPasswordCheck(){
 		boolean ret=false;
 		String SQL="select count(*) from manager where name='"+getUserName()+"' and password='"+(new String(OldPassword.getPassword()))+"'";
-		ResultSet rs = DataSet.QueryExec(SQL,true);
-		try { 
+		
+		try {
+			ResultSet rs = DataSet.QueryExec(SQL,true);
 			rs.next();
 			if (rs.getInt(1)>0){
 				ret=true;
