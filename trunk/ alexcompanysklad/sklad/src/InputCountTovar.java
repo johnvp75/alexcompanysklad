@@ -51,7 +51,12 @@ class InputCountTovar extends JPanel{
 					incase.setText("1");
 				if (incase.getText().equals("0"))
 					incase.setText("1");
-				DataSet.QueryExec("Update tovar set kol="+incase.getText()+" where name='"+name.getText()+"'",true);
+				try {
+					DataSet.QueryExec("Update tovar set kol="+incase.getText()+" where name='"+name.getText()+"'",true);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				((JTextField)event.getSource()).transferFocus();
 			}
 			

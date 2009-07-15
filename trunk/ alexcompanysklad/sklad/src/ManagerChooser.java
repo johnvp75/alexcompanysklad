@@ -71,8 +71,9 @@ class ManagerChooser extends JPanel
 	private boolean PasswordCheck(){
 		boolean ret=false;
 		String SQL="select count(*) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
-		ResultSet rs = DataSet.QueryExec(SQL,true);
-		try { 
+		
+		try {
+			ResultSet rs = DataSet.QueryExec(SQL,true);
 			rs.next();
 			if (rs.getInt(1)>0){
 				ret=true;
@@ -104,9 +105,10 @@ class ManagerChooser extends JPanel
 		dialog.setTitle(title);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setLocationRelativeTo(parent);
-		ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%"+rul+"%' order by manager.name",true);
+		
 		username.removeAllItems();
-		try { 
+		try {
+			ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%"+rul+"%' order by manager.name",true);
 			rs.next();
 			while (!rs.isAfterLast()){
 				username.addItem(rs.getString("rtrim(manager.name)"));
