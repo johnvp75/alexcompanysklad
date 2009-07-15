@@ -122,6 +122,14 @@ class naklTableModel extends AbstractTableModel{
 		String s = formatter.format(ret);
 		return (new Double(s));
 	}
+	public double summvo(){
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		double ret=0;
+		for (int i=0;i<nakl.getSize();i++)
+			ret=ret+((Double)nakl.getValueAt(i, 4));
+		String s = formatter.format(ret);
+		return (new Double(s));
+	}
 	public double summAkcia(){
 		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
 		double ret=0;
