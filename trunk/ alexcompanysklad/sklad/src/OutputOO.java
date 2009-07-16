@@ -24,7 +24,8 @@ public class OutputOO {
 	private static XComponentContext xRemouteContext = null;
 	private static XMultiComponentFactory xRemouteServiceManager = null;
 	private static XSpreadsheetDocument xSpreadsheetDocument;
-	private static final String oooExeFolder="C:\\JavaProjects\\OpenOffice.org 3\\program";
+//	private static final String oooExeFolder="C:\\JavaProjects\\OpenOffice.org 3\\program"; //house
+	private static final String oooExeFolder="C:\\Program Files\\OpenOffice.org 3\\program"; //server
 	public OutputOO() {
 		// TODO Auto-generated constructor stub
 	}
