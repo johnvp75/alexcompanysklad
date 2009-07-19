@@ -1,6 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Frame;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -59,6 +60,7 @@ public class inputBarcode {
 			if (count==1)
 				return rs.getString(1);
 			else{
+				Toolkit.getDefaultToolkit().beep();
 				Vector<String> data =new Vector<String>(0); 
 				if (tovchoose==null)
 					tovchoose=new TovarChooser();
