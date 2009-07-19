@@ -1,6 +1,8 @@
 import java.sql.ResultSet;
+import java.util.EventListener;
 
 import javax.swing.event.EventListenerList;
+import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
@@ -10,6 +12,9 @@ class GroupTreeModel implements TreeModel{
 	private EventListenerList listenerList = new EventListenerList(); 
 	public GroupTreeModel(){
 		root=new DataNode ("Все группы",-2);
+	}
+	public void setRoot(){
+		fireTreeStructureChanged(root);
 	}
 	public Object getRoot(){
 		return root;
@@ -55,9 +60,6 @@ class GroupTreeModel implements TreeModel{
 	public boolean isLeaf(Object node){
 		return false;
 	}
-	public void valueForPathChanged(TreePath path,Object newValue){
-		
-	}
 	public int getIndexOfChild(Object parent,Object child){
 		int count=-1;
 		String SQL; 
@@ -86,6 +88,19 @@ class GroupTreeModel implements TreeModel{
 	}
 	public void removeTreeModelListener(TreeModelListener l){
 		listenerList.remove(TreeModelListener.class, l);
+	}
+	public void update(){
+		
+	}
+	public void valueForPathChanged(TreePath path, Object newValue) {
+		// TODO Auto-generated method stub
+
+	}
+	protected void fireTreeStructureChanged(Object oldRoot){
+		TreeModelEvent event = new TreeModelEvent(this, new Object [] {oldRoot});
+		EventListener[] listeners= listenerList.getListeners(TreeModelListener.class);
+		for (int i=0; i<listeners.length; i++)
+			((TreeModelListener)listeners[i]).treeStructureChanged(event);
 	}
 	
 }

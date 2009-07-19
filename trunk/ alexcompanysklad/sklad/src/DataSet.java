@@ -1,4 +1,5 @@
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,10 +18,13 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@91.210.177.35:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE", "sklad", "sklad");
+//				cn = DriverManager.getConnection("jdbc:oracle:thin:sklad/sklad@194.187.149.33");
 				cn.setAutoCommit(false);
 			}
-			catch (Exception e) { throw e;}
+			catch (Exception e) {
+				e.printStackTrace();
+				throw e;}
 //		Statement st = null;
 //		ResultSet rs = null;
 		if (!(rs==null)){
