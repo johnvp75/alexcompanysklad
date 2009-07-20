@@ -18,7 +18,8 @@ import javax.swing.table.TableModel;
 
 
 public class MyTable extends JTable {
-    public MyTable(TableModel model)   
+    private int oldRow=-1, oldCol=-1;
+	public MyTable(TableModel model)   
     {   
         super(model);   
         putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);   
@@ -32,7 +33,9 @@ public class MyTable extends JTable {
     }   
     
     public void changeSelection(int rowIndex,int columnIndex,boolean toggle,boolean extend){
-    	super.changeSelection(rowIndex, columnIndex, toggle, extend);
+//    	if (getSelectedRow()==rowIndex && getSelectedColumn()==columnIndex)
+    		super.changeSelection(rowIndex, columnIndex, toggle, extend);
+//    	if ()
     }
     private class Renderer implements TableCellRenderer   
     {   
@@ -79,19 +82,25 @@ public class MyTable extends JTable {
     {   
         public void valueChanged(ListSelectionEvent e)   
         {   
-            if(!e.getValueIsAdjusting())   
+            
+        	if(!e.getValueIsAdjusting())   
             {   
-                int row = getSelectedRow(); 
+            	if (!isCellEditable(0, 2))
+            		return;
+            	int row = getEditingRow(); 
                 if (row==-1)
-                	row = getEditingRow();
-                int col = getSelectedColumn();
+                	row = getSelectedRow();
+                int col = getEditingColumn();
                 if (col==-1)
-                	col=getEditingColumn();
+                	col=getSelectedColumn();
                 // Make sure we start with legal values.   
                 while(col < 0) col++;   
-                while(row < 0) row++;   
+                while(row < 0) row++;
+                if (!isCellEditable(row, col)){
+                	col=3;
+                }
                 // Find the next editable cell.
-                while(!isCellEditable(row, col))   
+/*                while(!isCellEditable(row, col))   
                 {   
                     row++;   
                     if(row > getRowCount()-1)   
@@ -100,7 +109,7 @@ public class MyTable extends JTable {
                         col = (col == getColumnCount()-1) ? 1 : col+1;   
                     }   
                 }
-/*                while(!isCellEditable(row, col))   
+                while(!isCellEditable(row, col))   
                 {   
                     col++;   
                     if(col > getColumnCount()-1)   

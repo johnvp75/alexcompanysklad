@@ -32,6 +32,7 @@ class NewSaleFrame extends JPanel
 	private JComboBox priceCombo;
 	private JLabel priceLabel;
 	private JLabel itogo;
+	private JLabel itogowo;
 	private naklTableModel model;
 	public static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
@@ -62,7 +63,7 @@ class NewSaleFrame extends JPanel
 		setLayout(null);
 		JButton saveButton = new JButton("Сохранить");
 		JButton cancelButton = new JButton("Отмена");
-		barcodeButton = new JButton("Штрих-код(F1,+)");
+		barcodeButton = new JButton("Штрих-код(F1)");
 		JButton listButton = new JButton("Выбрать из списка");
 		JButton printButton = new JButton("Печать");
 		JLabel skladLabel = new JLabel("Склад:");
@@ -70,6 +71,7 @@ class NewSaleFrame extends JPanel
 		JLabel noteLabel = new JLabel("Примечание");
 		noteText = new JTextField("");
 		itogo = new JLabel("Итого (учитывая скидку): 0,00");
+		itogowo = new JLabel("Итого (не учитывая скидку): 0,00");
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
@@ -93,7 +95,7 @@ class NewSaleFrame extends JPanel
 		catch (Exception e) { e.printStackTrace();}
 		
 		try {
-			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by name",true);
+			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by upper(name)",true);
 			rs.next();
 			while (!rs.isAfterLast()){
 				clientCombo.addItem(rs.getString("trim(name)"));
@@ -137,7 +139,9 @@ class NewSaleFrame extends JPanel
 		JScrollPane ScrollTable=new JScrollPane(naklTable);
 		naklTable.setColumnSelectionAllowed(true);
 		naklTable.setRowSelectionAllowed(true);
-		
+		naklTable.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT). 
+        put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), 
+            "selectNextColumnCell");
 		
 		popup = new JPopupMenu();
 		JMenuItem del = new JMenuItem("Удалить строку");
@@ -159,7 +163,8 @@ class NewSaleFrame extends JPanel
 		okrLabel.setBounds(457, 28, 86, 22);
 		okrCombo.setBounds(555, 28, 207, 22);	
 		editableCheck.setBounds(555, 58, 207, 22);
-		itogo.setBounds(285, 425, 400, 22);
+		itogo.setBounds(350, 425, 400, 22);
+		itogowo.setBounds(50, 425, 400, 22);
 		noteLabel.setBounds(10, 450, 90, 22);
 		noteText.setBounds(100, 450, 670, 22);
 		
@@ -193,6 +198,7 @@ class NewSaleFrame extends JPanel
 		pressF1 press=new pressF1();
 		addKeyListener(press);
 		skladCombo.addKeyListener(press);
+//		clientCombo.
 		clientCombo.getEditor().getEditorComponent().addKeyListener(press);
 		editableCheck.addKeyListener(press);
 		cancelButton.addKeyListener(press);
@@ -237,6 +243,7 @@ class NewSaleFrame extends JPanel
 		model.addTableModelListener(new TableModelListener(){
 			public void tableChanged(TableModelEvent event){
 				itogo.setText("Итого (учитывая скидку): "+model.summ());
+				itogowo.setText("Итого (не учитывая скидку): "+model.summvo());
 				if (model.getRowCount()==0){
 					skladCombo.setEnabled(true);
 					priceCombo.setEnabled(true);
@@ -330,6 +337,7 @@ class NewSaleFrame extends JPanel
 */
 			}
 		});
+		
 //		SelectionListener listener = new SelectionListener(naklTable);
 //	    naklTable.getSelectionModel().addListSelectionListener(listener);
 //	    naklTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
@@ -350,6 +358,7 @@ class NewSaleFrame extends JPanel
 		add(priceCombo);
 		add(editableCheck);
 		add(itogo);
+		add(itogowo);
 		add(noteLabel);
 		add(noteText);
 		
@@ -557,7 +566,7 @@ class NewSaleFrame extends JPanel
 	public class pressF1 extends KeyAdapter{
 		public void keyPressed(KeyEvent event){
 			int keyCode=event.getKeyCode();
-			if (keyCode==KeyEvent.VK_F1 || keyCode==107){
+			if (keyCode==KeyEvent.VK_F1){
 				event.setKeyCode(KeyEvent.VK_UNDEFINED);
 				naklTable.requestFocus();
 				BarCodeFire();
