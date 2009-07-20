@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
+import java.util.Properties;
 
 
 public class DataSet {
@@ -18,7 +19,13 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@127.0.0.1:1521:XE", "sklad", "sklad");
+				Properties prop = new Properties();
+				prop.put("user", "system");
+				prop.put("password", "masterkey");
+				prop.put("NLS_NCHAR_CHARACTERSET","AL32UTF8");
+//				prop.put("NLS_LANG","AMERICAN_AMERICA.CL8MSWIN1251");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", prop);
+//				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "system", "masterkey");
 //				cn = DriverManager.getConnection("jdbc:oracle:thin:sklad/sklad@194.187.149.33");
 				cn.setAutoCommit(false);
 			}
