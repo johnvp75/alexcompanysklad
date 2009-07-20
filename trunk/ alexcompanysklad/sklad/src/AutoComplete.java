@@ -42,12 +42,13 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 					{
 						JTextField tf = (JTextField)getEditor().getEditorComponent();
 						String text = tf.getText();
-						if (text.equals("+")){
+/*						if (text.equals("+")){
 							tf.setText(previos);
 							return;
 						}else{
 							previos=text;
 						}
+*/
 						ComboBoxModel aModel = getModel();
 						String current;
 						for(int i = 0; i < aModel.getSize(); i++)
@@ -55,9 +56,11 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 							current = aModel.getElementAt(i).toString();
 							if(current.toLowerCase().startsWith(text.toLowerCase()))
 							{
+								((JComboBox)evt.getSource()).setSelectedItem(current);
 								tf.setText(current);
 								tf.setSelectionStart(text.length());
 								tf.setSelectionEnd(current.length());
+								
 								break;
 							}
 						}

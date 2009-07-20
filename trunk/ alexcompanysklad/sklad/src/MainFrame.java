@@ -33,6 +33,8 @@ class MainFrame extends JFrame
 		setJMenuBar(menuBar);
 		saleMenu=new JMenu("Продажа");
 		menuBar.add(saleMenu);
+		JMenuItem newSaleItem=new JMenuItem("Новый документ");
+		saleMenu.add(newSaleItem);
 		editMenu=new JMenu("Редактирование");
 		menuBar.add(editMenu);
 		JMenuItem barcodeItem=new JMenuItem("Штрих-код");
@@ -68,15 +70,16 @@ class MainFrame extends JFrame
 		newFrame.setVisible(false);
 		add(newFrame);
 //		NewSaleAction NewSale=new NewSaleAction();
-		saleMenu.addMenuListener(new NewSaleAction());
+//		saleMenu.addMenuListener(new NewSaleAction());
+		newSaleItem.addActionListener(new NewSaleAction());
 		printWorkDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				print();
 			}
 		});
 	}
-	private class NewSaleAction implements MenuListener{
-		public void menuSelected(MenuEvent event)
+	private class NewSaleAction implements ActionListener{
+		public void actionPerformed(ActionEvent event)
 		{
 			
 			if (dialog==null)
@@ -101,13 +104,6 @@ class MainFrame extends JFrame
 //					saleMenu.set
 				}
 		}
-		public void menuDeselected(MenuEvent event){
-			
-		}
-		public void menuCanceled(MenuEvent event){
-			
-		}
-		
 	}
 	private void SetUserName(String aUserName){
 		UserName=aUserName;
