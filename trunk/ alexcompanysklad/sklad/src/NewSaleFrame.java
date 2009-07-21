@@ -85,10 +85,10 @@ class NewSaleFrame extends JPanel
 		priceCombo=new JComboBox();
 		ResultSet rs=null;
 		try{
-			rs = DataSet.QueryExec("select name from sklad order by name",true);
+			rs = DataSet.QueryExec("select trim(name) from sklad order by name",true);
 			rs.next();
 			while (!rs.isAfterLast()){
-				skladCombo.addItem(rs.getString("name"));
+				skladCombo.addItem(rs.getString(1));
 				rs.next();
 			}
 		}
@@ -98,7 +98,7 @@ class NewSaleFrame extends JPanel
 			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by upper(name)",true);
 			rs.next();
 			while (!rs.isAfterLast()){
-				clientCombo.addItem(rs.getString("trim(name)"));
+				clientCombo.addItem(rs.getString(1));
 				rs.next();
 			}
 		}
@@ -108,7 +108,7 @@ class NewSaleFrame extends JPanel
 			rs = DataSet.QueryExec("select trim(name) from type_price order by name",true);
 			rs.next();
 			while (!rs.isAfterLast()){
-				priceCombo.addItem(rs.getString("trim(name)"));
+				priceCombo.addItem(rs.getString(1));
 				rs.next();
 			}
 		}
@@ -256,8 +256,11 @@ class NewSaleFrame extends JPanel
 		});
 		printButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				if (save())
+				if (save()){
+					setVisible(false);
+					parent.closeSaleFrame();
 					parent.print();
+				}
 			}
 		});
 		del.addActionListener(new ActionListener (){
@@ -450,6 +453,7 @@ class NewSaleFrame extends JPanel
 //			edit.selectAll();
 //			clientCombo.getEditor().selectAll();
 			model.setClient((String)clientCombo.getSelectedItem());
+			itogo.setText("Итого (учитывая скидку): "+model.summ());
 		}
 		private boolean checkClient(){
 			boolean ret=false;
@@ -490,7 +494,7 @@ class NewSaleFrame extends JPanel
 		 Opt=0;
 		 
 		 try{
-			 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=1",true);
+			 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from sklad where name='"+skladCombo.getSelectedItem()+"')",true);
 			 rs.next();
 			 Opt=rs.getFloat(1);
 			 rs.close();
@@ -639,7 +643,8 @@ class NewSaleFrame extends JPanel
 			if (model.summ()>model.summAkcia()){
 				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-					"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&')";
+					"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&') and id_manager=(select id_manager from manager where name='"+parent.GetUserName()+"')" +
+							" and note='-"+getNote()+"'" ;
 				rs1=DataSet.QueryExec(SQL, false);
 				if (rs1.next()){
 					id=rs1.getInt(1);
@@ -668,7 +673,8 @@ class NewSaleFrame extends JPanel
 			if (model.summAkcia()>0){
 				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-					"(disc=0)and (substr(note,1,1)='&')";
+					"(disc=0)and (substr(note,1,1)='&') and id_manager=(select id_manager from manager where name='"+parent.GetUserName()+"')" +
+							" and note='&"+getNote()+"'" ;
 				rs1=DataSet.QueryExec(SQL, false);
 				if (rs1.next()){
 					id=rs1.getInt(1);
@@ -694,9 +700,11 @@ class NewSaleFrame extends JPanel
 			}
 			DataSet.commit();
 			model.removeAll();
-			setVisible(false);
+			noteText.setText("");
+			setNote("");
+//			setVisible(false);
 //			ChooserStreamIn.close();
-			parent.closeSaleFrame();
+//			parent.closeSaleFrame();
 		}
 		catch(Exception e){
 			 try {

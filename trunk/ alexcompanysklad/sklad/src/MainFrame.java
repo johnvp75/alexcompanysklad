@@ -88,7 +88,6 @@ class MainFrame extends JFrame
 			if (dialog.showDialog(MainFrame.this, "¬ход в систему")){
 //				newFrame.setVisible(true);
 //				newFrame.requestFocus();
-				newFrame.showform();
 //				newFrame.setFocusable(true);
 //				newFrame.skladCombo.requestFocus();
 				saleMenu.setSelected(false);
@@ -96,9 +95,8 @@ class MainFrame extends JFrame
 				editMenu.setEnabled(false);
 				printMenu.setEnabled(false);
 				doceditMenu.setEnabled(false);
-				newFrame.requestFocus();
 				SetUserName(dialog.GetManager());
-
+				newFrame.showform();
 			}else{
 					saleMenu.setSelected(false);
 //					saleMenu.set
