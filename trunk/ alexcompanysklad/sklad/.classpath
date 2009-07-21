@@ -16,6 +16,6 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="sklad"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Жека/workspace/sklad/ojdbc5.jar"/>
+	<classpathentry kind="lib" path="ojdbc5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
