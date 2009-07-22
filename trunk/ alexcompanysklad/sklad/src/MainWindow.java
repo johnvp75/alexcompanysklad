@@ -24,8 +24,8 @@ public class MainWindow
 
 		MainFrame frame = new MainFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		Scaner = new ChooserStreamIn();
-//		(new Thread(Scaner)).start();
+		Scaner = new ChooserStreamIn();
+		(new Thread(Scaner)).start();
 		frame.setVisible(true);
 	}
 	
