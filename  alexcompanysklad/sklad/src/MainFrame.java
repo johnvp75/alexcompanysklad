@@ -123,10 +123,10 @@ class MainFrame extends JFrame
 			Printdialog=new TovarChooser();
 
 		Vector<String> data =new Vector<String>(0);
-		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		NumberFormat formatter = new DecimalFormat ( "0.00" );
 		ResultSet rs=null;
 		try{
-			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where numb is NULL group by trim(name),document.id_client",true );
+			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 group by trim(name),document.id_client",true );
 			rs.next();
 			while (!rs.isAfterLast()){
 			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" грн.";

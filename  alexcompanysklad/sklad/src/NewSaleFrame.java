@@ -282,8 +282,10 @@ class NewSaleFrame extends JPanel
 				if (!editableCheck.isSelected())
 					return;
 				
-/*				if (event.getKeyCode()==event.VK_ENTER){
-					if (naklTable.getEditingColumn()==2 || (naklTable.getEditingColumn()==-1 && naklTable.getSelectedColumn()==2)){
+				if (event.getKeyCode()==event.VK_ENTER){
+					return;
+				}
+/*					if (naklTable.getEditingColumn()==2 || (naklTable.getEditingColumn()==-1 && naklTable.getSelectedColumn()==2)){
 //						event.setKeyCode(event.VK_UNDEFINED);
 						int row;
 						if ((row = naklTable.getEditingRow())==-1)
@@ -329,6 +331,7 @@ class NewSaleFrame extends JPanel
 					}
 
 				}
+				
 */				if ((event.getKeyCode()>=event.VK_0 && event.getKeyCode()<=event.VK_9) || (event.getKeyChar()=='.') || (event.getKeyCode()>=event.VK_NUMPAD0 && event.getKeyCode()<=event.VK_NUMPAD9)){
 					if (naklTable.getEditingColumn()==-1){
 						naklTable.editCellAt(naklTable.getSelectedRow(), naklTable.getSelectedColumn());
@@ -338,6 +341,10 @@ class NewSaleFrame extends JPanel
 /*				else
 					event.setKeyCode(event.VK_UNDEFINED);
 */
+			}
+			public void keyTyped(KeyEvent event){
+				if (event.getKeyChar()==',')
+					event.setKeyChar('.');
 			}
 		});
 		
@@ -550,7 +557,11 @@ class NewSaleFrame extends JPanel
 //			naklTable.setRowSelectionInterval(row, row);
 //			naklTable.setColumnSelectionInterval(2, 2);
 		}else
-			model.add(aValue, kolTov, aCost, akcia, isakcia);
+			{
+			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
+			naklTable.setRowSelectionInterval(row, row);
+			naklTable.setColumnSelectionInterval(2, 2);
+			}
 		if (InputCountTovar.getNext())
 			BarCodeFire();
 		 
