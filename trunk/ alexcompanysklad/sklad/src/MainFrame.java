@@ -71,9 +71,10 @@ class MainFrame extends JFrame
 		newFrame.parent=this;
 		newFrame.setVisible(false);
 		add(newFrame);
-		selectFrame = new SelectDoc(1,false);
+/*		selectFrame = new SelectDoc(1,false);
 		selectFrame.setVisible(false);
 		add(selectFrame);
+*/
 //		NewSaleAction NewSale=new NewSaleAction();
 //		saleMenu.addMenuListener(new NewSaleAction());
 		newSaleItem.addActionListener(new NewSaleAction());
@@ -328,8 +329,8 @@ class MainFrame extends JFrame
 		boolean ret=true;
 		if (newFrame.isVisible())
 			ret=false;
-		if (selectFrame.isVisible())
-			ret=false;
+//		if (selectFrame.isVisible())
+//			ret=false;
 		
 		
 		if (!ret)
