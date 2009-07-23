@@ -57,9 +57,11 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 							if(current.toLowerCase().startsWith(text.toLowerCase()))
 							{
 								((JComboBox)evt.getSource()).setSelectedItem(current);
+								fireActionEvent();
 								tf.setText(current);
 								tf.setSelectionStart(text.length());
 								tf.setSelectionEnd(current.length());
+								
 								
 								break;
 							}

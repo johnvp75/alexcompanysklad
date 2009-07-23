@@ -4,6 +4,8 @@ import java.awt.Toolkit;
 import java.awt.event.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
@@ -33,6 +35,7 @@ class NewSaleFrame extends JPanel
 	private JLabel priceLabel;
 	private JLabel itogo;
 	private JLabel itogowo;
+	private JLabel itogoallLabel;
 	private naklTableModel model;
 	public static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
@@ -43,7 +46,10 @@ class NewSaleFrame extends JPanel
 	private String note;
 	private JPopupMenu popup;
 	private int p;
+	private double itogoall=0.0;
 	JTextField noteText;
+	private ActionListener clientlistener;
+	private ActionListener skladlistener;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -72,6 +78,7 @@ class NewSaleFrame extends JPanel
 		noteText = new JTextField("");
 		itogo = new JLabel("Итого (учитывая скидку): 0,00");
 		itogowo = new JLabel("Итого (не учитывая скидку): 0,00");
+		itogoallLabel= new JLabel("Итого по всем накладным: 0,00");
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
@@ -93,6 +100,7 @@ class NewSaleFrame extends JPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
+		skladCombo.setSelectedIndex(0);
 		
 		try {
 			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by upper(name)",true);
@@ -103,7 +111,7 @@ class NewSaleFrame extends JPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
-		
+		clientCombo.setSelectedIndex(0);
 		try {
 			rs = DataSet.QueryExec("select trim(name) from type_price order by name",true);
 			rs.next();
@@ -113,7 +121,7 @@ class NewSaleFrame extends JPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
-		priceCombo.setSelectedItem("Оптовый");
+		
 		int disc=0;
 		try{
 			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
@@ -163,33 +171,22 @@ class NewSaleFrame extends JPanel
 		okrLabel.setBounds(457, 28, 86, 22);
 		okrCombo.setBounds(555, 28, 207, 22);	
 		editableCheck.setBounds(555, 58, 207, 22);
-		itogo.setBounds(350, 425, 400, 22);
+		itogo.setBounds(250, 425, 400, 22);
 		itogowo.setBounds(50, 425, 400, 22);
+		itogoallLabel.setBounds(450, 425, 400, 22);
 		noteLabel.setBounds(10, 450, 90, 22);
 		noteText.setBounds(100, 450, 670, 22);
 		
 //Задаем слушателей
-		clientCombo.addActionListener(new ClientChoose());
+		clientlistener=new ClientChoose();
+		clientCombo.addActionListener(clientlistener);
 		barcodeButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				BarCodeFire();
 			}
 		});
-		skladCombo.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent event){
-				model.setSklad((String)skladCombo.getSelectedItem());
-				
-				try {
-					ResultSet rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
-					rs.next();
-					priceCombo.setSelectedItem(rs.getString(1));
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				clientCombo.fireActionEvent();
-			}
-		});
+		skladlistener=new SkladChoose();
+		skladCombo.addActionListener(skladlistener);
 		editableCheck.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				model.setEditable(((JCheckBox)(event.getSource())).isSelected());
@@ -213,6 +210,9 @@ class NewSaleFrame extends JPanel
 		clientCombo.getEditor().getEditorComponent().addFocusListener(new FocusAdapter(){
 		    public void focusGained(FocusEvent event){
 		        clientCombo.getEditor().selectAll();
+		    }
+		    public void focusLost(FocusEvent event){
+		    	clientChooseMet();
 		    }
 		});
 		cancelButton.addActionListener(new ActionListener(){
@@ -244,6 +244,8 @@ class NewSaleFrame extends JPanel
 			public void tableChanged(TableModelEvent event){
 				itogo.setText("Итого (учитывая скидку): "+model.summ());
 				itogowo.setText("Итого (не учитывая скидку): "+model.summvo());
+				NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+				itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()+getItogoall()));
 				if (model.getRowCount()==0){
 					skladCombo.setEnabled(true);
 					priceCombo.setEnabled(true);
@@ -371,6 +373,7 @@ class NewSaleFrame extends JPanel
 		add(itogowo);
 		add(noteLabel);
 		add(noteText);
+		add(itogoallLabel);
 		
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
@@ -380,104 +383,137 @@ class NewSaleFrame extends JPanel
 	}
 	private class ClientChoose implements ActionListener{
 		public void actionPerformed(ActionEvent event){
-			model.setIndDiscount(0);
-			if (checkClient()){
-			
-			
-			try {
-				ResultSet rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
-				rs.next();
-				if (rs.getInt(1)==1){
-					okrLabel.setVisible(false);
-					okrCombo.setVisible(false);
-					rs.close();
-					rs=DataSet.QueryExec("select count(*) from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
-					rs.next();
-					if (rs.getInt(1)>0){
-						rs.close();
-						rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
-						rs.next();
-						model.setIndDiscount(rs.getInt(1));}
-					else{
-						model.setIndDiscount(0);
-					}
-				}else{
-					okrLabel.setVisible(true);
-					okrCombo.setVisible(true);
-				}
-					
-			}
-			catch (Exception e) { e.printStackTrace();}}
-			else{
-				ResultSet rs;
-				if (newClient==null)
-					newClient=new NewClientDialog();
-				newClient.setClient(((String)clientCombo.getSelectedItem()).trim());
-				if (newClient.showDialog(NewSaleFrame.this, "Ввод нового клиента")){
-					clientCombo.removeAllItems();
-					
-					try {
-						rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",true);
-						rs.next();
-						while (!rs.isAfterLast()){
-							clientCombo.addItem(rs.getString("rtrim(name)"));
-							rs.next();
-						}
-					}
-					catch (Exception e) { e.printStackTrace();}
-					clientCombo.setSelectedItem(newClient.getClient());
-					
-					try {
-						rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
-						rs.next();
-						if (rs.getInt(1)==1){
-							okrLabel.setVisible(false);
-							okrCombo.setVisible(false);
-							priceLabel.setVisible(false);
-							priceCombo.setVisible(false);
-						}
-					}
-					catch (Exception e) { e.printStackTrace();}
-					
-				}else{
-					clientCombo.setSelectedIndex(0);
-					
-					try {
-						rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
-						rs.next();
-						if (rs.getInt(1)==1){
-							okrLabel.setVisible(false);
-							okrCombo.setVisible(false);
-							priceLabel.setVisible(false);
-							priceCombo.setVisible(false);
-						}
-					}
-					catch (Exception e) { e.printStackTrace();}
-
-				}
-			}
-//			ComboBoxEditor edit=clientCombo.getEditor();
-//			edit.selectAll();
-//			clientCombo.getEditor().selectAll();
-			model.setClient((String)clientCombo.getSelectedItem());
-			itogo.setText("Итого (учитывая скидку): "+model.summ());
-		}
-		private boolean checkClient(){
-			boolean ret=false;
-			
-			try {
-				ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'",true);
-				rs.next();
-				if (rs.getInt(1)>0){
-					ret=true;
-				}
-				rs.close();
-			}
-			catch (Exception e) { }
-			return ret;
-
+			if (((JComboBox)event.getSource()).getModel().getSize()==0)
+				return;
+			clientChooseMet();
 		}
 	}
+	private class SkladChoose implements ActionListener{
+		public void actionPerformed(ActionEvent event){
+			if (((JComboBox)event.getSource()).getModel().getSize()==0)
+				return;
+			model.setSklad((String)skladCombo.getSelectedItem());
+			
+			try {
+				ResultSet rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
+				rs.next();
+				priceCombo.setSelectedItem(rs.getString(1));
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			clientCombo.fireActionEvent();
+		}
+	}
+	public void clientChooseMet(){
+		model.setIndDiscount(0);
+		if (checkClient()){
+		try {
+			ResultSet rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+			rs.next();
+			if (rs.getInt(1)==1){
+				okrLabel.setVisible(false);
+				okrCombo.setVisible(false);
+				rs.close();
+				rs=DataSet.QueryExec("select count(*) from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+				rs.next();
+				if (rs.getInt(1)>0){
+					rs.close();
+					rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+					rs.next();
+					model.setIndDiscount(rs.getInt(1));}
+				else{
+					model.setIndDiscount(0);
+				}
+			}else{
+				okrLabel.setVisible(true);
+				okrCombo.setVisible(true);
+			}
+				
+		}
+		catch (Exception e) { e.printStackTrace();}}
+		else{
+			ResultSet rs;
+			if (newClient==null)
+				newClient=new NewClientDialog();
+			newClient.setClient(((String)clientCombo.getSelectedItem()).trim());
+			if (newClient.showDialog(NewSaleFrame.this, "Ввод нового клиента")){
+				clientCombo.removeAllItems();
+				
+				try {
+					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",true);
+					rs.next();
+					while (!rs.isAfterLast()){
+						clientCombo.addItem(rs.getString("rtrim(name)"));
+						rs.next();
+					}
+				}
+				catch (Exception e) { e.printStackTrace();}
+				clientCombo.setSelectedItem(newClient.getClient());
+				
+				try {
+					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+					rs.next();
+					if (rs.getInt(1)==1){
+						okrLabel.setVisible(false);
+						okrCombo.setVisible(false);
+						priceLabel.setVisible(false);
+						priceCombo.setVisible(false);
+					}
+				}
+				catch (Exception e) { e.printStackTrace();}
+				
+			}else{
+				clientCombo.setSelectedIndex(0);
+				
+				try {
+					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+					rs.next();
+					if (rs.getInt(1)==1){
+						okrLabel.setVisible(false);
+						okrCombo.setVisible(false);
+						priceLabel.setVisible(false);
+						priceCombo.setVisible(false);
+					}
+				}
+				catch (Exception e) { e.printStackTrace();}
+
+			}
+		}
+//		ComboBoxEditor edit=clientCombo.getEditor();
+//		edit.selectAll();
+//		clientCombo.getEditor().selectAll();
+		ResultSet rs;
+		try {
+			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
+			rs.next();
+			setItogoall(rs.getDouble(1));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		model.setClient((String)clientCombo.getSelectedItem());
+		itogo.setText("Итого (учитывая скидку): "+model.summ());
+		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()+getItogoall()));
+	}
+	private boolean checkClient(){
+		boolean ret=false;
+		
+		try {
+			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'",true);
+			rs.next();
+			if (rs.getInt(1)>0){
+				ret=true;
+			}
+			rs.close();
+		}
+		catch (Exception e) { }
+		return ret;
+
+	}
+	
+	
 	public void Input(String aValue){
 		 if (aValue==null)
 			return;
@@ -589,19 +625,64 @@ class NewSaleFrame extends JPanel
 		}
 	}
 	public void showform(){
+		ResultSet rs=null;
+		try{
+			rs = DataSet.QueryExec("select trim(name) from sklad order by name",true);
+			rs.next();
+/*			ActionListener[] action ; 
+			action=skladCombo.getActionListeners();
+*/
+			skladCombo.removeActionListener(skladlistener);
+			skladCombo.removeAllItems();
+			
+			while (!rs.isAfterLast()){
+				skladCombo.addItem(rs.getString(1));
+				rs.next();
+			}
+		}
+		catch (Exception e) { e.printStackTrace();}
 		skladCombo.setSelectedIndex(0);
-		clientCombo.setSelectedIndex(0);
-		
+		skladCombo.addActionListener(skladlistener);
+		clientCombo.removeActionListener(clientlistener);
 		try {
-			ResultSet rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
+			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by upper(name)",true);
+			rs.next();
+			clientCombo.removeAllItems();
+			while (!rs.isAfterLast()){
+				clientCombo.addItem(rs.getString(1));
+				rs.next();
+			}
+		}
+		catch (Exception e) { e.printStackTrace();}
+		clientCombo.setSelectedIndex(0);
+		clientCombo.addActionListener(clientlistener);
+		try {
+			rs = DataSet.QueryExec("select trim(name) from type_price order by name",true);
+			rs.next();
+			priceCombo.removeAllItems();
+			while (!rs.isAfterLast()){
+				priceCombo.addItem(rs.getString(1));
+				rs.next();
+			}
+		}
+		catch (Exception e) { e.printStackTrace();}
+		int disc=0;
+		try{
+			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+			if (rs.next()){
+				disc=rs.getInt(1);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		try {
+			rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
 			rs.next();
 			priceCombo.setSelectedItem(rs.getString(1));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 		okrCombo.setSelectedIndex(0);
 		editableCheck.setSelected(false);
 		setNote("");
@@ -711,8 +792,7 @@ class NewSaleFrame extends JPanel
 			}
 			DataSet.commit();
 			model.removeAll();
-			noteText.setText("");
-			setNote("");
+			showform();
 //			setVisible(false);
 //			ChooserStreamIn.close();
 //			parent.closeSaleFrame();
@@ -739,6 +819,13 @@ class NewSaleFrame extends JPanel
 //		ChooserStreamIn.close();
 		return true;
 	}
+	public double getItogoall() {
+		return itogoall;
+	}
+	public void setItogoall(double itogoall) {
+		this.itogoall = itogoall;
+	}
+
 }
 class JComboBoxFire extends JComboBox{
 	public void fireActionEvent()
