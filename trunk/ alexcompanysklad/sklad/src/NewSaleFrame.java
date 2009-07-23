@@ -47,9 +47,11 @@ class NewSaleFrame extends JPanel
 	private JPopupMenu popup;
 	private int p;
 	private double itogoall=0.0;
-	JTextField noteText;
+	private JTextField noteText;
 	private ActionListener clientlistener;
 	private ActionListener skladlistener;
+	private boolean Changed;
+	private int id_doc;
 	public NewSaleFrame()
 	{
 //		setTitle("¬вод накладной");
@@ -824,6 +826,18 @@ class NewSaleFrame extends JPanel
 	}
 	public void setItogoall(double itogoall) {
 		this.itogoall = itogoall;
+	}
+	public boolean isChanged() {
+		return Changed;
+	}
+	public void setChanged(boolean changed) {
+		Changed = changed;
+	}
+	public int getId_doc() {
+		return id_doc;
+	}
+	public void setId_doc(int idDoc) {
+		id_doc = idDoc;
 	}
 
 }

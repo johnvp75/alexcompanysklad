@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -23,6 +24,7 @@ class MainFrame extends JFrame
 	private JMenu doceditMenu;
 	private JMenu printMenu;
 	private NewSaleFrame newFrame;
+	private SelectDoc selectFrame;
 	private ManagerChooser dialog=null;
 	private TovarChooser Printdialog=null;
 	private String UserName ="";
@@ -69,9 +71,13 @@ class MainFrame extends JFrame
 		newFrame.parent=this;
 		newFrame.setVisible(false);
 		add(newFrame);
+		selectFrame = new SelectDoc(1,false);
+		selectFrame.setVisible(false);
+		add(selectFrame);
 //		NewSaleAction NewSale=new NewSaleAction();
 //		saleMenu.addMenuListener(new NewSaleAction());
 		newSaleItem.addActionListener(new NewSaleAction());
+		nonregdocItem.addActionListener(new editNonRegAction());
 		printWorkDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				print();
@@ -81,7 +87,8 @@ class MainFrame extends JFrame
 	private class NewSaleAction implements ActionListener{
 		public void actionPerformed(ActionEvent event)
 		{
-			
+			if (!anyVisible())
+				return;
 			if (dialog==null)
 				dialog=new ManagerChooser();
 				dialog.setRul(";2;");
@@ -101,6 +108,35 @@ class MainFrame extends JFrame
 					saleMenu.setSelected(false);
 //					saleMenu.set
 				}
+		}
+	}
+	private class editNonRegAction implements ActionListener{
+		public void actionPerformed(ActionEvent event)
+		{
+			if (!anyVisible())
+				return;
+			if (dialog==null)
+				dialog=new ManagerChooser();
+				dialog.setRul(";2;");
+			if (dialog.showDialog(MainFrame.this, "Вход в систему")){
+//				newFrame.setVisible(true);
+//				newFrame.requestFocus();
+//				newFrame.setFocusable(true);
+//				newFrame.skladCombo.requestFocus();
+				saleMenu.setSelected(false);
+				saleMenu.setEnabled(false);
+				editMenu.setEnabled(false);
+				printMenu.setEnabled(false);
+				doceditMenu.setEnabled(false);
+				SetUserName(dialog.GetManager());
+				selectFrame.setType_doc(1);
+				selectFrame.setRegister(false);
+				selectFrame.setVisible(true);
+			}else{
+					saleMenu.setSelected(false);
+//					saleMenu.set
+				}
+
 		}
 	}
 	private void SetUserName(String aUserName){
@@ -145,7 +181,19 @@ class MainFrame extends JFrame
 			boolean isOpt=true;
 			
 			try{
-				DataSet.UpdateQuery("lock table document in exclusive mode");
+//				DataSet.UpdateQuery("lock table document in exclusive mode");
+				try{
+					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+tovar+"')" +
+						" and numb is null for update nowait", false);
+				}catch(Exception e){
+					JOptionPane.showMessageDialog(this, "Одна из накладных редактируеться, печать не возможна! \n Попробуйте позже!", "Ошибка блокировки!", JOptionPane.INFORMATION_MESSAGE);
+					return;
+				}
+				if (!rs.next()){
+					JOptionPane.showMessageDialog(this, "Накладные уже напечатаны другим пользователем!", "Ошибка блокировки!", JOptionPane.INFORMATION_MESSAGE);
+					DataSet.rollback();
+					return;
+				}
 				rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
 				rs.next();
 				if (rs.getInt(1)==2)
@@ -275,6 +323,18 @@ class MainFrame extends JFrame
 		case 12:return "декабря";
 		default: return "";
 		}
+	}
+	private boolean anyVisible(){
+		boolean ret=true;
+		if (newFrame.isVisible())
+			ret=false;
+		if (selectFrame.isVisible())
+			ret=false;
+		
+		
+		if (!ret)
+			JOptionPane.showMessageDialog(this, "Сначала закройте все окна!", "Ошибка!", JOptionPane.INFORMATION_MESSAGE);
+		return ret;
 	}
 	
 }
