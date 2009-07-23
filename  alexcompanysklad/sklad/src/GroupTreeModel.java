@@ -23,9 +23,9 @@ class GroupTreeModel implements TreeModel{
 		String SQL; 
 		DataNode child=null;
 		if (((DataNode)parent).getIndex()==-2){
-			SQL="select trim(name),id_group from groupid where parent_group is NULL order by name";
+			SQL="select trim(name),id_group from groupid where parent_group is NULL order by upper(name)";
 		}else{
-			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
+			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by upper(name)";
 		}
 		
 		try{
@@ -64,9 +64,9 @@ class GroupTreeModel implements TreeModel{
 		int count=-1;
 		String SQL; 
 		if (((DataNode)parent).getIndex()==-2){
-			SQL="select trim(name),id_group from groupid where parent_group is NULL order by name";
+			SQL="select trim(name),id_group from groupid where parent_group is NULL order by upper(name)";
 		}else{
-			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by name";
+			SQL="select trim(name),id_group from groupid where parent_group = "+((DataNode)parent).getIndex()+" order by upper(name)";
 		}
 		
 		try{
