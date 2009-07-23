@@ -117,6 +117,7 @@ class NewClientDialog extends JPanel {
 			DataSet.QueryExec(query,true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(this, "Ошибка записи!");
 			e.printStackTrace();
 		}
 //		DataSet.QueryExec("commit");

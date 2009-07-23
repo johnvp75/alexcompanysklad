@@ -85,7 +85,7 @@ public class MyTable extends JTable {
             
         	if(!e.getValueIsAdjusting())   
             {   
-            	if (!isCellEditable(0, 2))
+            	if (!((naklTableModel)getModel()).getEditable())
             		return;
             	int row = getEditingRow(); 
                 if (row==-1)
