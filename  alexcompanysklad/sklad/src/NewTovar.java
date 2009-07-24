@@ -17,6 +17,8 @@ import java.awt.GridBagLayout;
 import javax.swing.JButton;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -31,6 +33,8 @@ public class NewTovar extends JPanel {
 	private JCheckBox AkciaCheckBox = null;
 	private JLabel DiscLabel = null;
 	private JTextField DiscTextField = null;
+	private JLabel CostLabel = null;
+	private JTextField CostTextField = null;
 	private JPanel ButtonPanel = null;
 	private JButton BarCodeButton = null;
 	private JButton okButton = null;
@@ -75,6 +79,16 @@ public class NewTovar extends JPanel {
 			inBoxLabel = new JLabel();
 			inBoxLabel.setBounds(new Rectangle(7, 53, 136, 22));
 			inBoxLabel.setText("Кол-во шт. в упаковке");
+			CostLabel=new JLabel("Цена:");
+			CostLabel.setBounds(7, 110, 80, 22);
+			CostTextField=new JTextField("0.00");
+			CostTextField.setBounds(new Rectangle(37, 110, 56, 22));
+			CostTextField.addKeyListener(new KeyAdapter(){
+				public void keyTyped(KeyEvent event){
+					if (event.getKeyChar()==',')
+						event.setKeyChar('.');
+				}
+			});
 			jPanel = new JPanel();
 			jPanel.setLayout(null);
 			jPanel.add(inBoxLabel, null);
@@ -84,6 +98,8 @@ public class NewTovar extends JPanel {
 			jPanel.add(getAkciaCheckBox(), null);
 			jPanel.add(DiscLabel, null);
 			jPanel.add(getDiscTextField(), null);
+			jPanel.add(CostLabel, null);
+			jPanel.add(CostTextField, null);
 			jPanel.setBounds(0, 0, 582, 150);
 		}
 		return jPanel;
@@ -152,7 +168,7 @@ public class NewTovar extends JPanel {
 			DiscTextField.setText("0");
 			DiscTextField.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
-					BarCodeButton.requestFocus();
+					CostTextField.requestFocus();
 				}
 			});
 		}
@@ -238,7 +254,7 @@ public class NewTovar extends JPanel {
 							int isakcia=0;
 							if (AkciaCheckBox.isSelected())
 								isakcia=1;
-							SQL="insert into price (id_tovar, cost, akciya, isakcia, id_skl, id_price) select "+id_tovar+" ,0, "+DiscTextField.getText()+", "+isakcia+", (select id_skl from sklad where name='"+Sklad+"'), id_price from type_price where name='"+Price+"'";
+							SQL="insert into price (id_tovar, cost, akciya, isakcia, id_skl, id_price) select "+id_tovar+" , "+CostTextField.getText()+", "+DiscTextField.getText()+", "+isakcia+", (select id_skl from sklad where name='"+Sklad+"'), id_price from type_price where name='"+Price+"'";
 							DataSet.UpdateQuery(SQL);
 							ok=true;
 							DataSet.commit();
@@ -303,6 +319,7 @@ public class NewTovar extends JPanel {
 		inBoxTextField.setText("1");
 		DiscTextField.setText("0");
 		AkciaCheckBox.setSelected(false);
+		
 	}
 	public void setSklad(String aValue){
 		Sklad=aValue;

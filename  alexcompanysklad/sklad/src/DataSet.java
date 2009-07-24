@@ -25,7 +25,7 @@ public class DataSet {
 				prop.put("NLS_NCHAR_CHARACTERSET","AL32UTF8");
 //				prop.put("NLS_LANG","AMERICAN_AMERICA.CL8MSWIN1251");
 				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", prop);*/
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@194.187.149.33:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "sklad", "sklad");
 //				cn = DriverManager.getConnection("jdbc:oracle:thin:sklad/sklad@194.187.149.33");
 				cn.setAutoCommit(false);
 			}
@@ -68,7 +68,7 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@194.187.149.33:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "sklad", "sklad");
 				cn.setAutoCommit(false);
 			}
 			catch (Exception e) { e.printStackTrace();}
