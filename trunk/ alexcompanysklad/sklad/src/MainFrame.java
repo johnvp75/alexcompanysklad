@@ -182,8 +182,8 @@ class MainFrame extends JFrame
 			boolean isOpt=true;
 			
 			try{
-//				DataSet.UpdateQuery("lock table document in exclusive mode");
-				try{
+				DataSet.UpdateQuery("lock table document in exclusive mode");
+/*				try{
 					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+tovar+"')" +
 						" and numb is null for update nowait", false);
 				}catch(Exception e){
@@ -195,6 +195,7 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
+*/
 				rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
 				rs.next();
 				if (rs.getInt(1)==2)
