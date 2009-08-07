@@ -19,8 +19,8 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-//				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "sklad", "sklad");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@194.187.149.33:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "sklad", "sklad");
+//				cn = DriverManager.getConnection("jdbc:oracle:thin:@194.187.149.33:1521:XE", "sklad", "sklad");
 				cn.setAutoCommit(false);
 			}
 			catch (Exception e) {
@@ -62,8 +62,8 @@ public class DataSet {
 			try {
 				Locale.setDefault(Locale.ENGLISH);
 				Class.forName("oracle.jdbc.driver.OracleDriver");
-//				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "sklad", "sklad");
-				cn = DriverManager.getConnection("jdbc:oracle:thin:@194.187.149.33:1521:XE", "sklad", "sklad");
+				cn = DriverManager.getConnection("jdbc:oracle:thin:@192.168.1.2:1521:XE", "sklad", "sklad");
+//				cn = DriverManager.getConnection("jdbc:oracle:thin:@194.187.149.33:1521:XE", "sklad", "sklad");
 				cn.setAutoCommit(false);
 			}
 			catch (Exception e) { e.printStackTrace();}
