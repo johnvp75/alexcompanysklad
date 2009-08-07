@@ -29,7 +29,7 @@ public class ChooserStreamIn implements Runnable{
 	public static int getIdStream() {
 		return idStream;
 	}
-	public void setSklad(String sklad) {
+	public static void setSklad(String sklad) {
 		Sklad = sklad;
 	}
 	public static String getSklad() {

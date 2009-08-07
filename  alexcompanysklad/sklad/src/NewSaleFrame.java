@@ -395,7 +395,7 @@ class NewSaleFrame extends JPanel
 			if (((JComboBox)event.getSource()).getModel().getSize()==0)
 				return;
 			model.setSklad((String)skladCombo.getSelectedItem());
-			
+			ChooserStreamIn.setSklad((String)skladCombo.getSelectedItem());
 			try {
 				ResultSet rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
 				rs.next();
@@ -588,12 +588,11 @@ class NewSaleFrame extends JPanel
 		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
 		if (editableCheck.isSelected()){
 			naklTable.requestFocus();
+			if (!(((JTextField)naklTable.getEditorComponent())==null))
+				((JTextField)naklTable.getEditorComponent()).postActionEvent();
 			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
 			naklTable.editCellAt(row, 2);
 			((JTextField)naklTable.getEditorComponent()).selectAll();
-//			naklTable.changeSelection(row, 2, false, false);
-//			naklTable.setRowSelectionInterval(row, row);
-//			naklTable.setColumnSelectionInterval(2, 2);
 		}else
 			{
 			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
@@ -611,6 +610,7 @@ class NewSaleFrame extends JPanel
 		}
 		catch (Exception e) {
 			Toolkit.getDefaultToolkit().beep();
+			e.printStackTrace();
 			// Вставить звук
 		}
 //		if (InputCountTovar.getNext())
