@@ -124,6 +124,9 @@ public class ChooserStreamIn implements Runnable{
 					Toolkit.getDefaultToolkit().beep();
 					e.printStackTrace();
 				}
+			case 2:{
+				((NewBarCode)ChooserStreamIn.getParent()).inputCod(cod);
+			}
 				return;
 			}
 		}

@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Vector;
 
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -84,6 +85,7 @@ class MainFrame extends JFrame
 				print();
 			}
 		});
+		barcodeItem.addActionListener(new EditBarCode());
 	}
 	private class NewSaleAction implements ActionListener{
 		public void actionPerformed(ActionEvent event)
@@ -338,6 +340,35 @@ class MainFrame extends JFrame
 			JOptionPane.showMessageDialog(this, "Сначала закройте все окна!", "Ошибка!", JOptionPane.INFORMATION_MESSAGE);
 		return ret;
 	}
-	
+	private class EditBarCode implements ActionListener{
+		public void actionPerformed(ActionEvent event){
+			if (!anyVisible())
+				return;
+			JComboBox skladCombo=new JComboBox();
+			try{
+				ResultSet rs=DataSet.QueryExec("select trim(name) from sklad order by name", false);
+				while (rs.next()){
+					skladCombo.addItem(rs.getString(1));
+				}
+				if (skladCombo.getItemCount()>0)
+					skladCombo.setSelectedIndex(0);
+				else 
+					return;
+				JOptionPane.showInputDialog(skladCombo);
+				String sklad=(String)skladCombo.getSelectedItem();
+				ListChoose formGroup= new ListChoose();
+				NewBarCode window;
+				while (formGroup.showDialog(null, "Выбор товара",sklad)){
+					window =new NewBarCode(sklad,formGroup.getTovar());
+					window.setVisible(true);
+				}
+					
+
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+		}
+	}
 }
 
