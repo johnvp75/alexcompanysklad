@@ -22,7 +22,7 @@ import javax.swing.JList;
 
 public class NewBarCode extends JDialog {
 
-	private static final long serialVersionUID = 1L;
+	private final long serialVersionUID = 1L;
 	private JPanel jContentPane = null;  //  @jve:decl-index=0:visual-constraint="18,36"
 	private JPanel jPanel = null;
 	private JLabel jLabel = null;
@@ -45,6 +45,17 @@ public class NewBarCode extends JDialog {
 		setSklad(sklad);
 		setTovar(tovar);
 		initialize();
+		try{
+			ResultSet rs=DataSet.QueryExec("select bar_code from bar_code where id_tovar=(select id_tovar from tovar where name='"+getTovar()+
+					"') and id_skl=(select id_skl from sklad where name='"+getSklad()+"') order by bar_code", false);
+			while (rs.next()){
+				((DataListModel)CodeList.getModel()).add(rs.getString(1));
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		setTitle(tovar);
+		MainWindow.Scaner.init(2, "", "", this);
 	}
 
 
@@ -56,6 +67,7 @@ public class NewBarCode extends JDialog {
 	 */
 	private void initialize() {
 		this.setSize(595, 338);
+		this.setModal(true);
 		this.setContentPane(getJPanel());
 		this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
@@ -131,10 +143,11 @@ public class NewBarCode extends JDialog {
 						ResultSet rs=DataSet.QueryExec("Select id_skl from sklad where name='"+getSklad()+"'", false);
 						rs.next();
 						int skl=rs.getInt(1);
-						rs=DataSet.QueryExec("Select id_tovar from rovar where name='"+getTovar()+"'", false);
+						rs=DataSet.QueryExec("Select id_tovar from tovar where name='"+getTovar()+"'", false);
 						rs.next();
 						int id=rs.getInt(1);
 						DataSet.UpdateQuery("savepoint point1");
+						DataSet.UpdateQuery("delete from bar_code where id_tovar="+id+" and id_skl="+skl);
 						for (int i=0;i<((DataListModel)CodeList.getModel()).getSize();i++)
 							DataSet.UpdateQuery("insert into bar_code (id_tovar,id_skl,bar_code) values ("+id+", "+skl+", '"+((DataListModel)CodeList.getModel()).getElementAt(i)+"')");
 						close();
@@ -159,7 +172,7 @@ public class NewBarCode extends JDialog {
             ResultSet rs=DataSet.QueryExec("Select count(*) from bar_code where bar_code='"+kod.trim()+"' and id_skl=(select id_skl from sklad where name='"+getSklad()+"')", false);
             rs.next();
             if (rs.getInt(1)>0)
-                if (JOptionPane.showConfirmDialog(this, "Такой штрих-код имееться в базе для этого склада, ввести повторный?", "Повторный штрих-код", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
+                if (JOptionPane.showConfirmDialog(null, "Такой штрих-код имееться в базе для этого склада, ввести повторный?", "Повторный штрих-код", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
                     return;
         }
         catch(Exception e){
@@ -187,7 +200,7 @@ public class NewBarCode extends JDialog {
 	 */
 	private JList getCodeList() {
 		if (CodeList == null) {
-			CodeList = new JList();
+			CodeList = new JList(new DataListModel());
 			CodeList.setBounds(new Rectangle(20, 60, 411, 187));
 		}
 		return CodeList;
