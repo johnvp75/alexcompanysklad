@@ -52,6 +52,7 @@ class NewSaleFrame extends JPanel
 	private ActionListener skladlistener;
 	private boolean Changed;
 	private int id_doc;
+	private JButton infoButton;
 	public NewSaleFrame()
 	{
 //		setTitle("Ввод накладной");
@@ -87,6 +88,7 @@ class NewSaleFrame extends JPanel
 		okrCombo.addItem("Без округления");
 		okrCombo.addItem("До 0,1");
 		okrCombo.addItem("До 1");
+		infoButton = new JButton("Информация");
 		editableCheck = new JCheckBox("Редактировать в ячейке");
 		skladCombo = new JComboBoxFire();
 		clientCombo = new AutoComplete();
@@ -167,6 +169,7 @@ class NewSaleFrame extends JPanel
 		skladCombo.setBounds(79, 28, 207, 22);
 		clientLabel.setBounds(10, 58, 61, 22);
 		clientCombo.setBounds(79, 58, 207, 22);
+		infoButton.setBounds(296, 58, 104, 22);
 		ScrollTable.setBounds(6, 89, 769, 335);
 		priceLabel.setBounds(457, 1, 86, 22);
 		priceCombo.setBounds(555, 1, 207, 22);
@@ -365,6 +368,7 @@ class NewSaleFrame extends JPanel
 		add(skladCombo);
 		add(clientLabel);
 		add(clientCombo);
+		add(infoButton);
 		add(ScrollTable);
 		add(okrLabel);
 		add(okrCombo);
