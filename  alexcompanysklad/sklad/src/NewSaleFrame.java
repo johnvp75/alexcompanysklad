@@ -208,6 +208,7 @@ class NewSaleFrame extends JPanel
 		printButton.addKeyListener(press);
 		saveButton.addKeyListener(press);
 		barcodeButton.addKeyListener(press);
+		infoButton.addKeyListener(press);
 		okrCombo.addKeyListener(press);
 		priceCombo.addKeyListener(press);
 		naklTable.addKeyListener(press);
@@ -354,6 +355,41 @@ class NewSaleFrame extends JPanel
 					event.setKeyChar('.');
 			}
 		});
+		infoButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				ResultSet rs;
+				if (newClient==null)
+					newClient=new NewClientDialog();
+				newClient.setClient(((String)clientCombo.getSelectedItem()).trim());
+				if (newClient.showDialog(NewSaleFrame.this, "¬вод нового клиента",true) && !((String)clientCombo.getSelectedItem()).trim().equals(newClient.getClient())){
+					clientCombo.removeActionListener(clientlistener);
+					clientCombo.removeAllItems();
+					try {
+						rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",true);
+						rs.next();
+						while (!rs.isAfterLast()){
+							clientCombo.addItem(rs.getString("rtrim(name)"));
+							rs.next();
+						}
+					}
+					catch (Exception e) { e.printStackTrace();}
+					clientCombo.setSelectedItem(newClient.getClient());
+					
+					try {
+						rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+						rs.next();
+						if (rs.getInt(1)==1){
+							okrLabel.setVisible(false);
+							okrCombo.setVisible(false);
+							priceLabel.setVisible(false);
+							priceCombo.setVisible(false);
+						}
+					}
+					catch (Exception e) { e.printStackTrace();}
+					clientCombo.addActionListener(clientlistener);
+				}				
+			}
+		});
 		
 //		SelectionListener listener = new SelectionListener(naklTable);
 //	    naklTable.getSelectionModel().addListSelectionListener(listener);
@@ -443,7 +479,7 @@ class NewSaleFrame extends JPanel
 			if (newClient==null)
 				newClient=new NewClientDialog();
 			newClient.setClient(((String)clientCombo.getSelectedItem()).trim());
-			if (newClient.showDialog(NewSaleFrame.this, "¬вод нового клиента")){
+			if (newClient.showDialog(NewSaleFrame.this, "¬вод нового клиента",false)){
 				clientCombo.removeAllItems();
 				
 				try {
