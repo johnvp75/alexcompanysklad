@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.event.*;
 import java.sql.ResultSet;
@@ -15,6 +16,10 @@ class NewClientDialog extends JPanel {
 	private JRadioButton opt;
 	private boolean ok;
 	private JDialog dialog;
+	private boolean info;
+	private String old;
+	private JButton editButton;
+	private JRadioButton roz;
 	public NewClientDialog(){
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
@@ -26,9 +31,10 @@ class NewClientDialog extends JPanel {
 		clientname=new JTextField("");
 		address=new JTextField("");
 		phone = new JTextArea("");
+		phone.setFont(new Font(Font.SERIF,Font.PLAIN,12));
 		ButtonGroup type = new ButtonGroup();
 		opt=new JRadioButton("Оптовый",true);
-		JRadioButton roz=new JRadioButton("Розничный",false);
+		roz=new JRadioButton("Розничный",false);
 		type.add(opt);
 		type.add(roz);
 		
@@ -76,6 +82,16 @@ class NewClientDialog extends JPanel {
 				}
 			}
 		});
+		editButton=new JButton("Редактировать");
+		editButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				clientname.setEditable(true);
+				address.setEditable(true);
+				phone.setEditable(true);
+				roz.setEnabled(true);
+				opt.setEnabled(true);
+			}
+		});
 		JButton cancelButton = new JButton("Отмена");
 		cancelButton.addActionListener(new 
 				ActionListener()
@@ -87,6 +103,7 @@ class NewClientDialog extends JPanel {
 				});
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.add(okButton);
+		buttonPanel.add(editButton);
 		buttonPanel.add(cancelButton);
 		add(buttonPanel,BorderLayout.SOUTH);
 
@@ -94,7 +111,8 @@ class NewClientDialog extends JPanel {
 	}
 	public boolean CheckClient(){
 		boolean ret=false;
-		
+		if (info && getClient().equals(old))
+			return true;
 		try {
 			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name like '%"+clientname.getText().trim()+"%'",true);
 			rs.next();
@@ -112,7 +130,11 @@ class NewClientDialog extends JPanel {
 		if (opt.isSelected()){
 			typeChoose=1;
 		}
-		String query="insert into client (name,adres,phone,type) values ('"+clientname.getText().trim()+"','"+address.getText().trim()+"','"+phone.getText().trim()+"',"+typeChoose+")";
+		String query;
+		if (info)
+			query="update client set name='"+getClient()+"', adres='"+address.getText().trim()+"', phone='"+phone.getText().trim()+"', type="+typeChoose+", day=sysdate where name='"+old+"'";
+		else
+			query="insert into client (name,adres,phone,type,day) values ('"+clientname.getText().trim()+"','"+address.getText().trim()+"','"+phone.getText().trim()+"',"+typeChoose+", sysdate)";
 		try {
 			DataSet.QueryExec(query,true);
 		} catch (Exception e) {
@@ -127,9 +149,11 @@ class NewClientDialog extends JPanel {
 	}
 	public void setClient(String value){
 		clientname.setText(value);
+		old=value;
 	}
-	public boolean showDialog(Component parent, String title){
+	public boolean showDialog(Component parent, String title, boolean Info){
 		ok=false;
+		info=Info;
 		Frame owner = null;
 		if (parent instanceof Frame)
 			owner = (Frame)parent;
@@ -144,8 +168,38 @@ class NewClientDialog extends JPanel {
 		dialog.setTitle(title);
 		dialog.setBounds(118, 150, 564, 299);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
-		address.setText("");
-		phone.setText("");
+		if (Info)
+			try{
+				ResultSet rs=DataSet.QueryExec("Select adres, phone, type from client where name='"+getClient()+"'", false);
+				if (rs.next()){
+					address.setText(rs.getString(1).trim());
+					phone.setText(rs.getString(2).trim());
+					if (rs.getInt(3)==2)
+						roz.setSelected(true);
+					else
+						opt.setSelected(true);
+				}
+				editButton.setEnabled(true);
+				address.setEditable(false);
+				clientname.setEditable(false);
+				phone.setEditable(false);
+				roz.setEnabled(false);
+				opt.setEnabled(false);
+				okButton.setText("Принять");
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			else{
+				address.setText("");
+				phone.setText("");
+				editButton.setEnabled(false);
+				address.setEditable(true);
+				clientname.setEditable(true);
+				phone.setEditable(true);
+				roz.setEnabled(true);
+				opt.setEnabled(true);
+				okButton.setText("Добавить");
+			}
 		dialog.setLocationRelativeTo(parent);
 		dialog.setVisible(true);
 		return ok;
