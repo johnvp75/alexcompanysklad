@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -6,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.GregorianCalendar;
 
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
@@ -251,7 +253,16 @@ class NewSaleFrame extends JPanel
 				itogo.setText("Итого (учитывая скидку): "+model.summ());
 				itogowo.setText("Итого (не учитывая скидку): "+model.summvo());
 				NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
-				itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()+getItogoall()));
+				double curs=1;
+				try{
+					ResultSet rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+					if (rs.next())
+						curs=rs.getDouble(1);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				
+				itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
 				if (model.getRowCount()==0){
 					skladCombo.setEnabled(true);
 					priceCombo.setEnabled(true);
@@ -451,8 +462,15 @@ class NewSaleFrame extends JPanel
 		model.setIndDiscount(0);
 		if (checkClient()){
 		try {
-			ResultSet rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+			ResultSet rs=DataSet.QueryExec("Select type, trunc(months_between(sysdate, day)) from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 			rs.next();
+//			GregorianCalendar lastEdit = new GregorianCalendar();
+//			lastEdit.setTime(rs.getDate(2));
+			if (rs.getInt(2)>3)
+				infoButton.setBackground(Color.RED);
+			else
+				infoButton.setBackground(barcodeButton.getBackground());
+			
 			if (rs.getInt(1)==1){
 				okrLabel.setVisible(false);
 				okrCombo.setVisible(false);
@@ -536,8 +554,17 @@ class NewSaleFrame extends JPanel
 		}
 		model.setClient((String)clientCombo.getSelectedItem());
 		itogo.setText("Итого (учитывая скидку): "+model.summ());
+		double curs=1;
+		try{
+			rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+			if (rs.next())
+				curs=rs.getDouble(1);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+
 		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
-		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()+getItogoall()));
+		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
 	}
 	private boolean checkClient(){
 		boolean ret=false;
