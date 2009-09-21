@@ -170,7 +170,7 @@ class NewClientDialog extends JPanel {
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		if (Info)
 			try{
-				ResultSet rs=DataSet.QueryExec("Select adres, phone, type from client where name='"+getClient()+"'", false);
+				ResultSet rs=DataSet.QueryExec("Select nvl(adres,' '), nvl(phone,' '), type from client where name='"+getClient()+"'", false);
 				if (rs.next()){
 					address.setText(rs.getString(1).trim());
 					phone.setText(rs.getString(2).trim());
