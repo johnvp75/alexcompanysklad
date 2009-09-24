@@ -801,7 +801,8 @@ class NewSaleFrame extends JPanel
 			if (rs1.next())
 				id=rs1.getInt(1)+1;
 			
-			if (model.summ()>model.summAkcia()){
+//			if (model.summ()>model.summAkcia()){
+			if (model.getRowCount()-presentAkcia()>0){
 				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
 					"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&') and id_manager=(select id_manager from manager where name='"+parent.GetUserName()+"')" +
@@ -831,7 +832,7 @@ class NewSaleFrame extends JPanel
 				if (rs1.next())
 					id=rs1.getInt(1)+1;
 			}
-			if (model.summAkcia()>0){
+			if (presentAkcia()>0){
 				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
 					"(disc=0)and (substr(note,1,1)='&') and id_manager=(select id_manager from manager where name='"+parent.GetUserName()+"')" +
@@ -861,7 +862,9 @@ class NewSaleFrame extends JPanel
 			}
 			DataSet.commit();
 			model.removeAll();
+			String name= (String)clientCombo.getSelectedItem();
 			showform();
+			clientCombo.setSelectedItem(name);
 //			setVisible(false);
 //			ChooserStreamIn.close();
 //			parent.closeSaleFrame();
@@ -876,6 +879,13 @@ class NewSaleFrame extends JPanel
 			 ret=false;
 			 e.printStackTrace();
 		}
+		return ret;
+	}
+	private int presentAkcia(){
+		int ret=0;
+		for (int i=0;i<model.getRowCount();i++)
+			if (model.getAkcia(i))
+				ret++;
 		return ret;
 	}
 	public boolean closeform(){

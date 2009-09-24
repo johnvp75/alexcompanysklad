@@ -111,7 +111,7 @@ class InputCountTovar extends JPanel{
 	}
 	class DigInput extends KeyAdapter{
 		public void keyTyped(KeyEvent event){
-			if (!( String.valueOf(event.getKeyChar())).matches("[0-9]"))
+			if (!(( String.valueOf(event.getKeyChar())).matches("[0-9]") || (event.getKeyChar()=='-' && (count.getText().length()==0 || ( !(count.getSelectedText()==null) && count.getSelectedText().equals(count.getText())))))) 
 //				event.setKeyCode(0);
 				event.setKeyChar(KeyEvent.CHAR_UNDEFINED);
 		}
