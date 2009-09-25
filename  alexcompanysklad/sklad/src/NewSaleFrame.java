@@ -593,7 +593,7 @@ class NewSaleFrame extends JPanel
 		 int inBox=1;
 		 ResultSet rs;
 		 try{
-			 rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'",true);
+			 rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'",false);
 			 rs.next();
 			 inBox=rs.getInt(1);
 			 rs.close();
@@ -606,7 +606,7 @@ class NewSaleFrame extends JPanel
 		 Opt=0;
 		 
 		 try{
-			 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from sklad where name='"+skladCombo.getSelectedItem()+"')",true);
+			 rs=DataSet.QueryExec("select cost from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from sklad where name='"+skladCombo.getSelectedItem()+"')",false);
 			 rs.next();
 			 Opt=rs.getFloat(1);
 			 rs.close();
@@ -619,7 +619,7 @@ class NewSaleFrame extends JPanel
 		 if (res==-1){
 			 
 			 try{
-				 rs=DataSet.QueryExec("select cost,akciya,isakcia from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')",true);
+				 rs=DataSet.QueryExec("select cost,akciya,isakcia from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')",false);
 				 rs.next();
 				 Box=rs.getFloat(1);
 				 akcia=rs.getInt(2);
