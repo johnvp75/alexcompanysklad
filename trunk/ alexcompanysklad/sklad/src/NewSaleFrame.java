@@ -255,7 +255,7 @@ class NewSaleFrame extends JPanel
 				NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
 				double curs=1;
 				try{
-					ResultSet rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+					ResultSet rs=DataSet.QueryExec1("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
 					if (rs.next())
 						curs=rs.getDouble(1);
 				}catch(Exception e){
@@ -545,7 +545,7 @@ class NewSaleFrame extends JPanel
 //		clientCombo.getEditor().selectAll();
 		ResultSet rs;
 		try {
-			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
+			rs = DataSet.QueryExec1("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
 			rs.next();
 			setItogoall(rs.getDouble(1));
 		} catch (Exception e) {
@@ -556,7 +556,7 @@ class NewSaleFrame extends JPanel
 		itogo.setText("Итого (учитывая скидку): "+model.summ());
 		double curs=1;
 		try{
-			rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+			rs=DataSet.QueryExec1("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
 			if (rs.next())
 				curs=rs.getDouble(1);
 		}catch(Exception e){
