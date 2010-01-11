@@ -127,7 +127,7 @@ class InputCountTovar extends JPanel{
 		
 	}
 
-	public int showDialog(Component parent, String title, double Box, double Opt, double One, String aName, int ainCase, boolean aRoz){
+	public int showDialog(Component parent, String title, double Box, double Opt, double One, String aName, int ainCase,int acount, boolean aRoz){
 		Frame owner = null;
 		if (parent instanceof Frame)
 			owner = (Frame)parent;
@@ -148,7 +148,7 @@ class InputCountTovar extends JPanel{
 		setCost(Box,Opt,One);
 		setNameTov(aName);
 		setinCase(ainCase);
-		setCount();
+		setCount(acount);
 		dialog.setBounds(200, 150, 400, 299);
 //		dialog.setLocation(400-dialog.getWidth()/2, 300-dialog.getHeight()/2);
 		dialog.setLocationRelativeTo(parent);
@@ -175,8 +175,8 @@ class InputCountTovar extends JPanel{
 	private void setinCase(int ainCase){
 		incase.setText(ainCase+"");
 	}
-	private void setCount(){
-		count.setText("1");
+	private void setCount(int aValue){
+		count.setText(((Integer)aValue).toString());
 		count.selectAll();
 	}
 	public static boolean getNext(){

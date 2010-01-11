@@ -613,7 +613,7 @@ class NewSaleFrame extends JPanel
 		if (roz){
 			aCost=One;
 		}
-		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox, roz);
+		int kolTov=formInput.showDialog(this, "Количество", Box, Opt, One, aValue, inBox,aCount, roz);
 		if (editableCheck.isSelected()){
 			naklTable.requestFocus();
 			if (!(((JTextField)naklTable.getEditorComponent())==null))
@@ -633,7 +633,8 @@ class NewSaleFrame extends JPanel
 	}
 	private void BarCodeFire(){
 		try{
-			Input(inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem(),(String)priceCombo.getSelectedItem()));
+			RetBarCode cod=inputBarcode.newcod(JOptionPane.showInputDialog("Введите штрих-код"),(String)skladCombo.getSelectedItem(),(String)priceCombo.getSelectedItem());
+			Input(cod.Name,cod.Count);
 			
 		}
 		catch (Exception e) {
