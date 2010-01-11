@@ -22,7 +22,8 @@ import javax.swing.SwingUtilities;
 public class inputBarcode {
 	private static TovarChooser tovchoose=null;
 	private static NewTovar newTovar;
-	public static String newcod(String cod, String sklad, String price) throws IOException{
+	public static RetBarCode newcod(String cod, String sklad, String price) throws IOException{
+		
 		int count=0;
 		if (cod==null)
 			throw new IOException();
@@ -35,7 +36,7 @@ public class inputBarcode {
 			newTovar.setPrice(price);
 			newTovar.setTovar(cod.substring(1));
 			if (newTovar.showDialog(null, "Новый товар"))
-				return newTovar.getTovar();
+				return new RetBarCode(newTovar.getTovar(),1);
 			else
 				throw new IOException();
 		}
@@ -53,7 +54,7 @@ public class inputBarcode {
 		if (count==0) throw new IOException();
 		try {
 			if (cod.charAt(0)=='*')
-				rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
+				rs=DataSet.QueryExec("select trim(name), 1 as count from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
 			else
 				rs=DataSet.QueryExec("select trim(name) from (select distinct tovar.name from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
 			rs.next();

@@ -240,7 +240,7 @@ class NewSaleFrame extends JPanel
 				if (formGroup==null)
 					formGroup= new ListChoose();
 				if (formGroup.showDialog(parent, "Выбор товара",skladCombo.getSelectedItem().toString()))
-					Input(formGroup.getTovar());
+					Input(formGroup.getTovar(),1);
 			}
 		});
 		saveButton.addActionListener(new ActionListener(){
@@ -294,6 +294,16 @@ class NewSaleFrame extends JPanel
 					popup.show(naklTable, event.getX(), event.getY());
 					p=event.getY();
 				}
+				if (event.getButton()==MouseEvent.BUTTON1 && event.getClickCount()==2){
+					if (!(((JTextField)naklTable.getEditorComponent())==null)){
+						((JTextField)naklTable.getEditorComponent()).addKeyListener(new KeyAdapter(){
+							public void keyTyped(KeyEvent event){
+								if (event.getKeyChar()==',')
+									event.setKeyChar('.');
+							}
+						});
+					}
+				}
 			}
 		});
 		naklTable.addKeyListener(new KeyAdapter(){
@@ -304,62 +314,13 @@ class NewSaleFrame extends JPanel
 				if (event.getKeyCode()==event.VK_ENTER){
 					return;
 				}
-/*					if (naklTable.getEditingColumn()==2 || (naklTable.getEditingColumn()==-1 && naklTable.getSelectedColumn()==2)){
-//						event.setKeyCode(event.VK_UNDEFINED);
-						int row;
-						if ((row = naklTable.getEditingRow())==-1)
-							row=naklTable.getSelectedRow();
-						if (naklTable.getCellEditor() != null) {
-							naklTable.getCellEditor().stopCellEditing();
-					    }
-
-						naklTable.changeSelection(row, 3, false, false);
-						if (naklTable.getCellEditor() != null) {
-							naklTable.getCellEditor().stopCellEditing();
-					    }
-
-//						naklTable.setRowSelectionInterval(row, row);
-//						naklTable.setColumnSelectionInterval(3, 3);
-//						naklTable.editCellAt(row, 3);
-//						((JTextField)naklTable.getEditorComponent()).selectAll();
-						return;
-					}
-					if (naklTable.getEditingColumn()==3 || (naklTable.getEditingColumn()==-1 && naklTable.getSelectedColumn()==3)){
-						event.setKeyCode(event.VK_UNDEFINED);
-//						naklTable.setEditingColumn(-1);
-//						naklTable.setEditingRow(-1);
-						int row=naklTable.getEditingRow();
-						if (row==-1)
-							row=naklTable.getSelectedRow();
-
-//						naklTable.editCellAt(-1, -1);
-//						naklTable.getCellEditor().addCellEditorListener(new cellEdit());
-//						naklTable.editingStopped(null);
-//						naklTable.getSelectionModel().clearSelection();
-						if (naklTable.getCellEditor() != null) {
-							naklTable.getCellEditor().stopCellEditing();
-					    }
-
-//						((JTextField)naklTable.getEditorComponent()).postActionEvent();
-//						naklTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-//						naklTable.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "check");
-						naklTable.changeSelection(row, 3, false, false);
-//						naklTable.setRowSelectionInterval(row, row);
-//						naklTable.setColumnSelectionInterval(3, 3);
-						return;
-					}
-
-				}
-				
-*/				if ((event.getKeyCode()>=event.VK_0 && event.getKeyCode()<=event.VK_9) || (event.getKeyChar()=='.') || (event.getKeyCode()>=event.VK_NUMPAD0 && event.getKeyCode()<=event.VK_NUMPAD9)){
+				if ((event.getKeyCode()>=event.VK_0 && event.getKeyCode()<=event.VK_9) || (event.getKeyChar()=='.') || (event.getKeyCode()>=event.VK_NUMPAD0 && event.getKeyCode()<=event.VK_NUMPAD9)){
 					if (naklTable.getEditingColumn()==-1){
 						naklTable.editCellAt(naklTable.getSelectedRow(), naklTable.getSelectedColumn());
 						((JTextField)naklTable.getEditorComponent()).selectAll();
 					}
 				}
-/*				else
-					event.setKeyCode(event.VK_UNDEFINED);
-*/
+
 			}
 			public void keyTyped(KeyEvent event){
 				if (event.getKeyChar()==',')
@@ -583,7 +544,7 @@ class NewSaleFrame extends JPanel
 	}
 	
 	
-	public void Input(String aValue){
+	public void Input(String aValue, int aCount){
 		 if (aValue==null)
 			return;
 		 if (formInput==null)
@@ -924,6 +885,8 @@ class JComboBoxFire extends JComboBox{
 		super.fireActionEvent();
 	}
 }
+
+
 /*class SelectionListener implements ListSelectionListener {
 	private JTable table;
 	public SelectionListener(JTable table){
@@ -948,4 +911,5 @@ class JComboBoxFire extends JComboBox{
 
 
 }
+
 */

@@ -59,9 +59,11 @@ class MainFrame extends JFrame
 		printMenu = new JMenu("Печать");
 		JMenuItem printWorkDoc = new JMenuItem("Документы в обработке");
 		JMenuItem printOldDoc = new JMenuItem("Проведенные документы");
+		JMenuItem viewOldDoc = new JMenuItem("Просмотр проведенных документов");
 		menuBar.add(printMenu);
 		printMenu.add(printWorkDoc);
 		printMenu.add(printOldDoc);
+		printMenu.add(viewOldDoc);
 		JMenu windowMenu = new JMenu("Окно");
 		menuBar.add(windowMenu);
 		JMenuItem windowcloseItem = new JMenuItem("Закрыть текущее окно");
@@ -83,10 +85,18 @@ class MainFrame extends JFrame
 		printOldDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				int numb=new Integer(JOptionPane.showInputDialog("Введите номер"));
-				printold(numb);
+				printold(numb,false);
 				
 			}
 		});
+		viewOldDoc.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				int numb=new Integer(JOptionPane.showInputDialog("Введите номер"));
+				printold(numb,true);
+				
+			}
+		});
+
 		printWorkDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				print();
@@ -318,7 +328,7 @@ class MainFrame extends JFrame
 		}
 		
 	}
-	public void printold(int numb){
+	public void printold(int numb, boolean view){
 		Vector<String> data =new Vector<String>(0);
 		NumberFormat formatter = new DecimalFormat ( "0.00" );
 		ResultSet rs=null;
@@ -381,7 +391,7 @@ class MainFrame extends JFrame
 					int size=OutData.size();
 					if (isOpt) 
 						{
-						OutputOO.OpenDoc("nakl_opt.ots",true);
+						OutputOO.OpenDoc("nakl_opt.ots",!view);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1);
 						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
 						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
@@ -399,7 +409,7 @@ class MainFrame extends JFrame
 						}
 					else
 						{
-						OutputOO.OpenDoc("nakl_roz.ots",true);
+						OutputOO.OpenDoc("nakl_roz.ots",!view);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1);
 						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
 						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
@@ -411,8 +421,10 @@ class MainFrame extends JFrame
 
 						}
 					OutputOO.Insert(1, 9, OutData);
-					OutputOO.print(2);
-					OutputOO.CloseDoc();
+					if (!view){
+						OutputOO.print(2);
+						OutputOO.CloseDoc();
+					}
 					
 				}
 				DataSet.commit();
