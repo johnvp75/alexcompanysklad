@@ -30,7 +30,7 @@ public class OutputOO {
 		// TODO Auto-generated constructor stub
 	}
 	private static void connect() {
-		if (xRemouteContext==null)
+//		if (xRemouteContext==null)
 		try{
 			xRemouteContext=BootstrapSocketConnector.bootstrap(oooExeFolder);
 			xRemouteServiceManager=xRemouteContext.getServiceManager();
