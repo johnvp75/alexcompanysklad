@@ -56,7 +56,7 @@ public class inputBarcode {
 			if (cod.charAt(0)=='*')
 				rs=DataSet.QueryExec("select trim(name), 1 as count from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
 			else
-				rs=DataSet.QueryExec("select trim(name),count from (select distinct tovar.name,bar_code.count from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
+				rs=DataSet.QueryExec("select trim(name), nvl(count,1) from (select distinct tovar.name,bar_code.count from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",true);
 			rs.next();
 			if (count==1)
 				return new RetBarCode(rs.getString(1),rs.getInt(2));
@@ -72,9 +72,12 @@ public class inputBarcode {
 				}
 				tovchoose.addTovar(data);
 				if (tovchoose.showDialog(null, "Выбор товара")){
-					rs=DataSet.QueryExec("select b.count from bar b,tovar t_code where t.name='"+tovchoose.getTovar()+"'and t.id_tovar=b.id_tovar and b.bar_code='"+cod+"' and b.id_skl = (select id_skl from SKLAD where name='"+sklad+"')", false);
-					rs.next();
-					return new RetBarCode(tovchoose.getTovar(),rs.getInt(1));
+					String SQL="select nvl(b.count,1) from bar_code b,tovar t where t.name='"+tovchoose.getTovar().trim()+"'and t.id_tovar=b.id_tovar and b.bar_code='"+cod+"' and b.id_skl = (select id_skl from SKLAD where name='"+sklad+"')";
+					rs=DataSet.QueryExec(SQL, false);
+					int in =1;
+					if (rs.next())
+						in=rs.getInt(1);
+					return new RetBarCode(tovchoose.getTovar(),in);
 				}else throw new IOException();
 
 			}
