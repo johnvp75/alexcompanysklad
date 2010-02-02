@@ -349,7 +349,7 @@ class MainFrame extends JFrame
 			
 			try {
 				{
-					rs=DataSet.QueryExec("select id_doc from document where numb="+numb+" and id_type_doc=2", false);
+					rs=DataSet.QueryExec("select id_doc from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", false);
 					rs.next();
 					id=rs.getInt(1);
 					if (isOpt)
