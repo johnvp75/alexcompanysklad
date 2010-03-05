@@ -72,12 +72,18 @@ class ManagerChooser extends JPanel
 		if ((new String(password.getPassword())).equals("masterkey"))
 			return true;
 		boolean ret=false;
-		String SQL="select count(*) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
+		String SQL="select decode(to_char(sysdate, 'DD.MM.YYYY'),to_char(day,'DD.MM.YYYY'),1,0),complete,trim(text) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
 		
 		try {
 			ResultSet rs = DataSet.QueryExec(SQL,true);
-			rs.next();
-			if (rs.getInt(1)>0){
+			
+			if (rs.next()){
+				
+				if (rs.getInt(1)==1 && rs.getInt(2)==0){
+					JOptionPane.showMessageDialog(null, rs.getString(3),"С Праздником!",JOptionPane.INFORMATION_MESSAGE);
+					DataSet.UpdateQuery1("update manager set complete=1 where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'");
+					DataSet.commit1();
+				}
 				ret=true;
 			}
 			rs.close();
