@@ -181,7 +181,12 @@ class MainFrame extends JFrame
 		Vector<String> data =new Vector<String>(0);
 		NumberFormat formatter = new DecimalFormat ( "0.00" );
 		ResultSet rs=null;
+		String curs_USD="";
 		try{
+			rs=DataSet.QueryExec("Select curs from curs_now where id_val=22", false);
+			
+			if (rs.next())
+				curs_USD= formatter.format(rs.getDouble(1));
 			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 group by trim(name),document.id_client",true );
 			rs.next();
 			while (!rs.isAfterLast()){
@@ -195,7 +200,7 @@ class MainFrame extends JFrame
 		Printdialog.addTovar(data);
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			String tovar=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
-
+			String Suma=Printdialog.getTovar().substring(Printdialog.getTovar().indexOf(" на сумму: ")+11);
 			int numb=0;
 			int id=0;
 			boolean isOpt=true;
@@ -237,9 +242,12 @@ class MainFrame extends JFrame
 					numb=rs.getInt(1);
 				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
 				rs=DataSet.QueryExec(SQL, false);
+				int Doc_count=0;
 				while (rs.next()){
+					Doc_count++;
 					numb++;
 					id=rs.getInt(1);
+					boolean last=!rs.next();
 					DataSet.UpdateQuery("update document set numb="+numb+", day=sysdate where id_doc="+id);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
@@ -295,6 +303,8 @@ class MainFrame extends JFrame
 						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2);
 						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2);
 						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4);
+						if (last) 
+							OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma+" (курс USD="+curs_USD+")",10,true,2,9+size+6);
 						}
 					else
 						{
