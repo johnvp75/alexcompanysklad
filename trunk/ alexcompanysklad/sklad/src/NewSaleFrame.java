@@ -229,7 +229,8 @@ class NewSaleFrame extends JPanel
 					return;
 				}
 				model.removeAll();
-				setVisible(false);
+//				setVisible(false);
+				parent.showFrame("noVisible");
 //				ChooserStreamIn.close();
 				parent.closeSaleFrame();
 
@@ -276,7 +277,8 @@ class NewSaleFrame extends JPanel
 		printButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				if (save()){
-					setVisible(false);
+//					setVisible(false);
+					parent.showFrame("noVisible");
 					parent.closeSaleFrame();
 					parent.print();
 				}
@@ -718,7 +720,8 @@ class NewSaleFrame extends JPanel
 		editableCheck.setSelected(false);
 		setNote("");
 		noteText.setText("");
-		setVisible(true);
+//		setVisible(true);
+		parent.showFrame("SaleFrame");
 		skladCombo.grabFocus();
 //		MainWindow.ThScaner.
 		MainWindow.Scaner.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
@@ -855,7 +858,8 @@ class NewSaleFrame extends JPanel
 			return false;
 		}
 		model.removeAll();
-		setVisible(false);
+//		setVisible(false);
+		parent.showFrame("noVisible");
 		parent.closeSaleFrame();
 //		ChooserStreamIn.close();
 		return true;
