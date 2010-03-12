@@ -1,3 +1,4 @@
+import java.awt.CardLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
@@ -14,6 +15,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -29,6 +31,9 @@ class MainFrame extends JFrame
 	private ManagerChooser dialog=null;
 	private TovarChooser Printdialog=null;
 	private String UserName ="";
+	private JPanel parentFrame;
+	private CardLayout Switch;
+	private String visibleFrame="noVisible";
 	public MainFrame(){
 		setTitle("Склад 4.0");
 		setSize(800, 600);
@@ -70,14 +75,18 @@ class MainFrame extends JFrame
 		JMenuItem windowcloseallItem = new JMenuItem("Закрыть все окна");
 		windowMenu.add(windowcloseItem);
 		windowMenu.add(windowcloseallItem);
+		parentFrame = new JPanel(new CardLayout());
+		add(parentFrame);
+		Switch=(CardLayout)parentFrame.getLayout();
 		newFrame = new NewSaleFrame();
 		newFrame.parent=this;
-		newFrame.setVisible(false);
-		add(newFrame);
-/*		selectFrame = new SelectDoc(1,false);
-		selectFrame.setVisible(false);
-		add(selectFrame);
-*/
+//		newFrame.setVisible(false);
+		parentFrame.add(newFrame,"SaleFrame");
+		selectFrame = new SelectDoc(2,false);
+//		selectFrame.setVisible(false);
+		parentFrame.add(selectFrame,"SelectFrame");
+		parentFrame.setVisible(false);
+//		setGlassPane(selectFrame);
 //		NewSaleAction NewSale=new NewSaleAction();
 //		saleMenu.addMenuListener(new NewSaleAction());
 		newSaleItem.addActionListener(new NewSaleAction());
@@ -149,9 +158,10 @@ class MainFrame extends JFrame
 				printMenu.setEnabled(false);
 				doceditMenu.setEnabled(false);
 				SetUserName(dialog.GetManager());
-				selectFrame.setType_doc(1);
+				selectFrame.setType_doc(2);
 				selectFrame.setRegister(false);
-				selectFrame.setVisible(true);
+				showFrame("SelectFrame");
+//				selectFrame.setVisible(true);
 			}else{
 					saleMenu.setSelected(false);
 //					saleMenu.set
@@ -468,9 +478,9 @@ class MainFrame extends JFrame
 		}
 	}
 	private boolean anyVisible(){
-		boolean ret=true;
-		if (newFrame.isVisible())
-			ret=false;
+		boolean ret=getvisibleFrame().equals("noVisible");
+//		if (newFrame.isVisible())
+//			ret=false;
 //		if (selectFrame.isVisible())
 //			ret=false;
 		
@@ -508,6 +518,24 @@ class MainFrame extends JFrame
 			}
 			
 		}
+	}
+	public void showFrame(String nameLayout){
+		if (nameLayout.equals("noVisible"))
+			
+			parentFrame.setVisible(false);
+		else
+		{
+			parentFrame.setVisible(true);
+			Switch.show(parentFrame, nameLayout);
+		}
+		setvisibleFrame(nameLayout);
+	}
+	private void setvisibleFrame(String aValue){
+		visibleFrame=aValue;
+	}
+	
+	private String getvisibleFrame(){
+		return visibleFrame;
 	}
 }
 
