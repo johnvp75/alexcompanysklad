@@ -10,7 +10,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 
-public class SelectDoc extends JPanel {
+public class SelectDoc extends MyPanel {
 	private int id_doc;
 	private int type_doc;
 	private GregorianCalendar startDate=new GregorianCalendar();
