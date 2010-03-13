@@ -211,13 +211,13 @@ class MainFrame extends JFrame
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			String tovar=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
 			String Suma=Printdialog.getTovar().substring(Printdialog.getTovar().indexOf(" на сумму: ")+11);
-			int numb=0;
+//			int numb=0;
 			int id=0;
 			boolean isOpt=true;
 			
 			try{
-				DataSet.UpdateQuery("lock table document in exclusive mode");
-/*				try{
+//				DataSet.UpdateQuery("lock table document in exclusive mode");
+				try{
 					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+tovar+"')" +
 						" and numb is null for update nowait", false);
 				}catch(Exception e){
@@ -229,7 +229,7 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
-*/
+
 				rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
 				rs.next();
 				if (rs.getInt(1)==2)
@@ -247,18 +247,23 @@ class MainFrame extends JFrame
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
 			try {
+//				rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
 				rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
-				if (rs.next())
-					numb=rs.getInt(1);
+				if (!rs.next()){
+//					numb=rs.getInt(1);
+					DataSet.UpdateQuery1("drop sequence numb_real");
+					DataSet.UpdateQuery1("CREATE SEQUENCE   numb_real  MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE NOORDER");
+					DataSet.commit1();
+				}
 				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
 				rs=DataSet.QueryExec(SQL, false);
 				int Doc_count=0;
 				while (rs.next()){
 					Doc_count++;
-					numb++;
+//					numb++;
 					id=rs.getInt(1);
 					boolean last=!rs.next();
-					DataSet.UpdateQuery("update document set numb="+numb+", day=sysdate where id_doc="+id);
+					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else
@@ -287,7 +292,7 @@ class MainFrame extends JFrame
 						OutData.add(Row);
 					}
 //					String SQL1=;
-					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name) from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
+					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name),numb from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
 							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
 					String pref="";
 					rs.next();
@@ -300,7 +305,7 @@ class MainFrame extends JFrame
 						{
 						OutputOO.OpenDoc("nakl_opt.ots",true);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1);
-						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
+						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2);
 						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
 						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7);
@@ -320,7 +325,7 @@ class MainFrame extends JFrame
 						{
 						OutputOO.OpenDoc("nakl_roz.ots",true);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1);
-						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
+						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2);
 						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
 						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7);
