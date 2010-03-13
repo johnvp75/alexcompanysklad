@@ -26,7 +26,7 @@ import javax.swing.event.TableModelListener;
 
 
 
-class NewSaleFrame extends JPanel
+class NewSaleFrame extends MyPanel
 {
 	private JLabel okrLabel;
 	private JComboBox okrCombo;
@@ -721,7 +721,7 @@ class NewSaleFrame extends JPanel
 		setNote("");
 		noteText.setText("");
 //		setVisible(true);
-		parent.showFrame("SaleFrame");
+		parent.showFrame("newFrame");
 		skladCombo.grabFocus();
 //		MainWindow.ThScaner.
 		MainWindow.Scaner.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
@@ -853,6 +853,7 @@ class NewSaleFrame extends JPanel
 				ret++;
 		return ret;
 	}
+	@Override
 	public boolean closeform(){
 		if (model.getRowCount()>0&& JOptionPane.showConfirmDialog(parent, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
 			return false;
@@ -882,6 +883,7 @@ class NewSaleFrame extends JPanel
 	public void setId_doc(int idDoc) {
 		id_doc = idDoc;
 	}
+	
 
 }
 class JComboBoxFire extends JComboBox{
