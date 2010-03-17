@@ -721,7 +721,7 @@ class NewSaleFrame extends MyPanel
 		setNote("");
 		noteText.setText("");
 //		setVisible(true);
-		parent.showFrame("newFrame");
+		parent.showFrame("SaleFrame");
 		skladCombo.grabFocus();
 //		MainWindow.ThScaner.
 		MainWindow.Scaner.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
