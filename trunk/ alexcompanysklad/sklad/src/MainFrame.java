@@ -81,7 +81,7 @@ class MainFrame extends JFrame
 		newFrame = new NewSaleFrame();
 		newFrame.parent=this;
 //		newFrame.setVisible(false);
-		parentFrame.add(newFrame,"newFrame");
+		parentFrame.add(newFrame,"SaleFrame");
 		selectFrame = new SelectDoc(2,false);
 //		selectFrame.setVisible(false);
 		parentFrame.add(selectFrame,"SelectFrame");
@@ -114,14 +114,10 @@ class MainFrame extends JFrame
 		barcodeItem.addActionListener(new EditBarCode());
 		windowcloseallItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				if (getvisibleFrame().equals("SaleForm")){
-					newFrame.closeform();
-				}
-				if (((MyPanel)parentFrame.getComponent(getvisibleFrame())).closeform()){
+				if (getvisibleFrame().equals("SaleFrame") && newFrame.closeform())
 					showFrame("noVisible");
-				}
-				
-				
+				if (getvisibleFrame().equals("SelectFrame")&&newFrame.closeform())
+					showFrame("noVisible");
 			}
 		});
 	}
