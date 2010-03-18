@@ -1,4 +1,5 @@
 import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -11,7 +12,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import com.sun.star.awt.MouseEvent;
+
 
 
 public class SelectDoc extends MyPanel {
@@ -22,7 +23,9 @@ public class SelectDoc extends MyPanel {
 	private boolean register;
 	private JTable docTable;
 	private Vector<Integer> Id_doc;
-	public SelectDoc(int Type_doc, boolean Register) {
+	private NewSaleFrame saleFrame;
+	public SelectDoc(int Type_doc, boolean Register,NewSaleFrame saleframe) {
+		saleFrame=saleframe;
 		setType_doc(Type_doc);
 		setRegister(Register);
 		setLayout(null);
@@ -71,10 +74,17 @@ public class SelectDoc extends MyPanel {
 		add(ScrollTable);
 		docTable.addMouseListener(new MouseAdapter(){
 			public void mouseClicked(MouseEvent e){
-				if (e.ClickCount==2 && docTable.getSelectedRow()>-1){
-					
+				if (e.getClickCount()==2 && docTable.getSelectedRow()>-1){
+					saleFrame.showform(Id_doc.elementAt(docTable.getSelectedRow()));
 				}
 			}
+/*			public void mousePressed(MouseEvent e){
+				if (e.getButton()==MouseEvent.BUTTON1 && e.ClickCount==2 && docTable.getSelectedRow()>-1){
+					saleFrame.showform(Id_doc.elementAt(docTable.getSelectedRow()));
+				}
+				
+			}
+*/
 		});
 	}
 	public int getId_doc() {

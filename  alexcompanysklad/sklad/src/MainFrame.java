@@ -82,7 +82,7 @@ class MainFrame extends JFrame
 		newFrame.parent=this;
 //		newFrame.setVisible(false);
 		parentFrame.add(newFrame,"SaleFrame");
-		selectFrame = new SelectDoc(2,false);
+		selectFrame = new SelectDoc(2,false,newFrame);
 //		selectFrame.setVisible(false);
 		parentFrame.add(selectFrame,"SelectFrame");
 		parentFrame.setVisible(false);
