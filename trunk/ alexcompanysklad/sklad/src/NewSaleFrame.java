@@ -662,9 +662,6 @@ class NewSaleFrame extends MyPanel
 		try{
 			rs = DataSet.QueryExec("select trim(name) from sklad order by name",true);
 			rs.next();
-/*			ActionListener[] action ; 
-			action=skladCombo.getActionListeners();
-*/
 			skladCombo.removeActionListener(skladlistener);
 			skladCombo.removeAllItems();
 			
@@ -720,13 +717,23 @@ class NewSaleFrame extends MyPanel
 		editableCheck.setSelected(false);
 		setNote("");
 		noteText.setText("");
-//		setVisible(true);
 		parent.showFrame("SaleFrame");
 		skladCombo.grabFocus();
-//		MainWindow.ThScaner.
 		MainWindow.Scaner.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
-		
-		
+	}
+	public void showform(int id_doc){
+		this.showform();
+		ResultSet rs=null;
+		String SQL;
+		try{
+			SQL=String.format("Select trim(c.name), trim(s.name), d.id_val, d.sum, d.note, d.disc from document d, sklad s, client c where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl", id_doc);
+			rs=DataSet.QueryExec(SQL, false);
+			if (rs.next()){
+				skladCombo.setSelectedItem(rs.getString(2));
+				clientCombo.setSelectedItem(rs.getString(1));
+				
+			}
+		}
 	}
 	private void setNote(String aValue){
 		note=aValue;
