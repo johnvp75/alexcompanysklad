@@ -249,31 +249,7 @@ class NewSaleFrame extends MyPanel
 				save();
 			}
 		});
-		model.addTableModelListener(new TableModelListener(){
-			public void tableChanged(TableModelEvent event){
-				itogo.setText("Итого (учитывая скидку): "+model.summ());
-				itogowo.setText("Итого (не учитывая скидку): "+model.summvo());
-				NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
-				double curs=1;
-				try{
-					ResultSet rs=DataSet.QueryExec1("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
-					if (rs.next())
-						curs=rs.getDouble(1);
-				}catch(Exception e){
-					e.printStackTrace();
-				}
-				
-				itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
-				if (model.getRowCount()==0){
-					skladCombo.setEnabled(true);
-					priceCombo.setEnabled(true);
-				}
-				else{
-					skladCombo.setEnabled(false);
-					priceCombo.setEnabled(false);
-				}
-			}
-		});
+		model.addTableModelListener(modlis);
 		printButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				if (save()){
@@ -506,7 +482,7 @@ class NewSaleFrame extends MyPanel
 //		ComboBoxEditor edit=clientCombo.getEditor();
 //		edit.selectAll();
 //		clientCombo.getEditor().selectAll();
-		ResultSet rs;
+/*		ResultSet rs;
 		try {
 			rs = DataSet.QueryExec1("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
 			rs.next();
@@ -515,8 +491,10 @@ class NewSaleFrame extends MyPanel
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+*/
 		model.setClient((String)clientCombo.getSelectedItem());
-		itogo.setText("Итого (учитывая скидку): "+model.summ());
+		
+/*		itogo.setText("Итого (учитывая скидку): "+model.summ());
 		double curs=1;
 		try{
 			rs=DataSet.QueryExec1("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
@@ -528,6 +506,7 @@ class NewSaleFrame extends MyPanel
 
 		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
 		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
+*/
 	}
 	private boolean checkClient(){
 		boolean ret=false;
@@ -670,7 +649,7 @@ class NewSaleFrame extends MyPanel
 		initcombo();
 		ResultSet rs=null;
 		String SQL;
-		
+		model.removeTableModelListener(modlis);
 		try{
 			SQL=String.format("Select trim(c.name), trim(s.name),trim(p.name), d.note, d.disc from document d, sklad s, client c, type_price p where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl and p.id_price=d.id_price", id_doc);
 			rs=DataSet.QueryExec1(SQL, false);
@@ -683,7 +662,7 @@ class NewSaleFrame extends MyPanel
 				setNote(rs.getString(4).substring(1));
 				noteText.setText(getNote());
 				int isakciya=(rs.getString(4).charAt(0)=='&'?1:0);
-				SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc from lines l, tovar t where l.id_doc=%s and i.id_tovar=t.id_tovar", id_doc);
+				SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
 				rs=DataSet.QueryExec1(SQL, false);
 				while (rs.next()){
 					model.add(rs.getString(1), rs.getInt(2), rs.getDouble(3), rs.getInt(4), isakciya);
@@ -696,6 +675,7 @@ class NewSaleFrame extends MyPanel
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		model.addTableModelListener(modlis);
 		
 	}
 	private void setNote(String aValue){
@@ -917,6 +897,31 @@ class NewSaleFrame extends MyPanel
 		okrCombo.setSelectedIndex(0);
 		editableCheck.setSelected(false);
 	}
+	private TableModelListener modlis=new TableModelListener(){
+		public void tableChanged(TableModelEvent event){
+			itogo.setText("Итого (учитывая скидку): "+model.summ());
+			itogowo.setText("Итого (не учитывая скидку): "+model.summvo());
+			NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+			double curs=1;
+			try{
+				ResultSet rs=DataSet.QueryExec1("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+				if (rs.next())
+					curs=rs.getDouble(1);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+			itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
+			if (model.getRowCount()==0){
+				skladCombo.setEnabled(true);
+				priceCombo.setEnabled(true);
+			}
+			else{
+				skladCombo.setEnabled(false);
+				priceCombo.setEnabled(false);
+			}
+		}
+	};
 
 }
 class JComboBoxFire extends JComboBox{

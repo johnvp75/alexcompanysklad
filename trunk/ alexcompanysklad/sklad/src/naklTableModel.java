@@ -1,6 +1,8 @@
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Vector;
+
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 
 
@@ -14,12 +16,15 @@ class naklTableModel extends AbstractTableModel{
 	}
 	public void setClient(String aValue){
 		nakl.setNameClient(aValue);
+		fireTableChanged(new TableModelEvent(this));
 	}
 	public void setSklad(String aValue){
 		nakl.setNameSklad(aValue);
+		fireTableStructureChanged();
 	}
 	public void setIndDiscount(int aValue){
 		nakl.setIndDiscount(aValue);
+		fireTableChanged(new TableModelEvent(this));
 	}
 	public boolean getEditable(){
 		return Editable;
