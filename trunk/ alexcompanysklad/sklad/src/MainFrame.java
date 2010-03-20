@@ -168,6 +168,7 @@ class MainFrame extends JFrame
 				SetUserName(dialog.GetManager());
 				selectFrame.setType_doc(2);
 				selectFrame.setRegister(false);
+				selectFrame.initform();
 				showFrame("SelectFrame");
 //				selectFrame.setVisible(true);
 			}else{

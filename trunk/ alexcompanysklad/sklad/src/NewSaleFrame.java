@@ -52,7 +52,7 @@ class NewSaleFrame extends MyPanel
 	private JTextField noteText;
 	private ActionListener clientlistener;
 	private ActionListener skladlistener;
-	private boolean Changed;
+	
 	private int id_doc;
 	private JButton infoButton;
 	public NewSaleFrame()
@@ -96,7 +96,7 @@ class NewSaleFrame extends MyPanel
 		clientCombo = new AutoComplete();
 		clientCombo.setEditable(true);
 		priceCombo=new JComboBox();
-		ResultSet rs=null;
+/*		ResultSet rs=null;
 		try{
 			rs = DataSet.QueryExec("select trim(name) from sklad order by name",true);
 			rs.next();
@@ -137,8 +137,9 @@ class NewSaleFrame extends MyPanel
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		
-		model = new naklTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc,true);
+	*/	
+//		model = new naklTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc,true);
+		model = new naklTableModel("","",0,true);
 		
 		naklTable=new MyTable(model);
 //		Font font = new Font("Times New Roman",Font.PLAIN,16);
@@ -225,9 +226,11 @@ class NewSaleFrame extends MyPanel
 		});
 		cancelButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				if (model.getRowCount()>0&& JOptionPane.showConfirmDialog(parent, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
+				if (getId_doc()==0&&model.getRowCount()>0&& JOptionPane.showConfirmDialog(parent, "Внимание! Все введенные данные будут удалены! Продолжить?","Удаление",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION ){
 					return;
 				}
+				if (getId_doc()!=0&&model.isChanged()&&JOptionPane.showConfirmDialog(parent, "Внимание! Все изменения будут удалены! Продолжить?","Отмена",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION)
+					return;
 				model.removeAll();
 //				setVisible(false);
 				parent.showFrame("noVisible");
@@ -482,22 +485,23 @@ class NewSaleFrame extends MyPanel
 //		ComboBoxEditor edit=clientCombo.getEditor();
 //		edit.selectAll();
 //		clientCombo.getEditor().selectAll();
-/*		ResultSet rs;
+		ResultSet rs;
 		try {
-			rs = DataSet.QueryExec1("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
+			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
 			rs.next();
+			
 			setItogoall(rs.getDouble(1));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-*/
+
 		model.setClient((String)clientCombo.getSelectedItem());
 		
-/*		itogo.setText("Итого (учитывая скидку): "+model.summ());
+		itogo.setText("Итого (учитывая скидку): "+model.summ());
 		double curs=1;
 		try{
-			rs=DataSet.QueryExec1("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+			rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
 			if (rs.next())
 				curs=rs.getDouble(1);
 		}catch(Exception e){
@@ -505,8 +509,23 @@ class NewSaleFrame extends MyPanel
 		}
 
 		NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
+		if (getId_doc()!=0){
+			try{
+				String SQL=String.format("Select trim(c.name) from client c,document d where d.id_doc=%s and d.id_client=c.id_client", getId_doc());
+				rs=DataSet.QueryExec(SQL, false);
+				
+				if (rs.next()&&clientCombo.getSelectedItem().equals(rs.getString(1))){
+					SQL=String.format("Select sum*(1-disc/100) from document where id_doc=%s", getId_doc());
+					rs=DataSet.QueryExec(SQL, false);
+					rs.next();
+					setItogoall(getItogoall()-rs.getDouble(1)*curs);
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
-*/
+
 	}
 	private boolean checkClient(){
 		boolean ret=false;
@@ -643,6 +662,8 @@ class NewSaleFrame extends MyPanel
 		noteText.setText("");
 		parent.showFrame("SaleFrame");
 		skladCombo.grabFocus();
+		model.fireTableDataChanged();
+		model.setChanged(false);
 		MainWindow.Scaner.init(1, (String)skladCombo.getSelectedItem(), (String)priceCombo.getSelectedItem(), this);
 	}
 	public void showform(int id_doc){
@@ -651,7 +672,7 @@ class NewSaleFrame extends MyPanel
 		String SQL;
 		model.removeTableModelListener(modlis);
 		try{
-			SQL=String.format("Select trim(c.name), trim(s.name),trim(p.name), d.note, d.disc from document d, sklad s, client c, type_price p where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl and p.id_price=d.id_price", id_doc);
+			SQL=String.format("Select trim(c.name), trim(s.name),trim(p.name), trim(d.note), d.disc, c.type from document d, sklad s, client c, type_price p where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl and p.id_price=d.id_price", id_doc);
 			rs=DataSet.QueryExec1(SQL, false);
 			if (rs.next()){
 				setId_doc(id_doc);
@@ -662,7 +683,10 @@ class NewSaleFrame extends MyPanel
 				setNote(rs.getString(4).substring(1));
 				noteText.setText(getNote());
 				int isakciya=(rs.getString(4).charAt(0)=='&'?1:0);
-				SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
+				if (rs.getInt(6)==2)
+					SQL=String.format("Select trim(t.name), l.kol*t.kol, l.cost/t.kol, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
+				else
+					SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
 				rs=DataSet.QueryExec1(SQL, false);
 				while (rs.next()){
 					model.add(rs.getString(1), rs.getInt(2), rs.getDouble(3), rs.getInt(4), isakciya);
@@ -676,10 +700,12 @@ class NewSaleFrame extends MyPanel
 			e.printStackTrace();
 		}
 		model.addTableModelListener(modlis);
-		
+		model.fireTableDataChanged();
+		model.setChanged(false);
 	}
 	private void setNote(String aValue){
 		note=aValue;
+		model.setChanged(true);
 	}
 	private String getNote(){
 		return note;
@@ -702,6 +728,29 @@ class NewSaleFrame extends MyPanel
 		// Записываем шапку
 		String SQL;
 		ResultSet rs1;
+		if (getId_doc()!=0&&!model.isChanged()){
+			model.removeAll();
+			String name= (String)clientCombo.getSelectedItem();
+			showform();
+			clientCombo.setSelectedItem(name);
+			return true;
+		}
+		if (getId_doc()!=0){
+			try{
+				SQL =String.format("delete from lines where id_doc=%s", getId_doc());
+				DataSet.UpdateQuery(SQL);
+				SQL =String.format("delete from document where id_doc=%s", getId_doc());
+				DataSet.UpdateQuery(SQL);
+
+			}catch(Exception e){
+				e.printStackTrace();
+				try{
+					DataSet.rollback();
+				}catch(Exception exp){
+					exp.printStackTrace();
+				}
+			}
+		}
 		int roz=0;
 //		SQL="lock table document in exclusive mode";
 		SQL=String.format("Select * from document where id_client=(select max(id_client) from client where name='%s') and numb is null for update nowait",(String)clientCombo.getSelectedItem());
@@ -825,12 +874,6 @@ class NewSaleFrame extends MyPanel
 	}
 	public void setItogoall(double itogoall) {
 		this.itogoall = itogoall;
-	}
-	public boolean isChanged() {
-		return Changed;
-	}
-	public void setChanged(boolean changed) {
-		Changed = changed;
 	}
 	public int getId_doc() {
 		return id_doc;
