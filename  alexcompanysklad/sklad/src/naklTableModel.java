@@ -10,20 +10,24 @@ class naklTableModel extends AbstractTableModel{
 	private dataCont nakl;
 	private boolean Editable = false;
 	private boolean isReal;
+	private boolean changed=false;
 	public naklTableModel(String aClient, String aSklad, int aDiscount, boolean aIsReal){
 		nakl = new dataCont(aClient,aSklad,aDiscount);
 		isReal=aIsReal;
 	}
 	public void setClient(String aValue){
 		nakl.setNameClient(aValue);
+		setChanged(true);
 		fireTableChanged(new TableModelEvent(this));
 	}
 	public void setSklad(String aValue){
 		nakl.setNameSklad(aValue);
+		setChanged(true);
 		fireTableStructureChanged();
 	}
 	public void setIndDiscount(int aValue){
 		nakl.setIndDiscount(aValue);
+		setChanged(true);
 		fireTableChanged(new TableModelEvent(this));
 	}
 	public boolean getEditable(){
@@ -61,6 +65,7 @@ class naklTableModel extends AbstractTableModel{
 	}	
 	public void setValueAt(Object aValue, int row, int column){
 		nakl.setValueAt(aValue, row, column);
+		setChanged(true);
 //		fireTableCellUpdated(row, column);
 		fireTableRowsUpdated(row, row);
 	}
@@ -99,7 +104,7 @@ class naklTableModel extends AbstractTableModel{
 		boolean b=false;
 		if (aAkcia>0)
 			b=true;
-		
+		setChanged(true);
 		int ret=nakl.add(aName, aCount, aCost, aDiscount, b, isReal);
 		fireTableStructureChanged();
 		return ret;
@@ -113,6 +118,7 @@ class naklTableModel extends AbstractTableModel{
 	}
 	public void removeRow(int aRow){
 		nakl.remove(aRow);
+		setChanged(true);
 		fireTableRowsUpdated(aRow, nakl.getSize());
 	}
 	public double summ(){
@@ -147,6 +153,12 @@ class naklTableModel extends AbstractTableModel{
 	}
 	public boolean getAkcia(int pos){
 		return nakl.getAkcia(pos);
+	}
+	public boolean isChanged() {
+		return changed;
+	}
+	public void setChanged(boolean changed) {
+		this.changed = changed;
 	}
 
 }

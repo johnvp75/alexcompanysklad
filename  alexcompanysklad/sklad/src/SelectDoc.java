@@ -30,39 +30,7 @@ public class SelectDoc extends MyPanel {
 		setRegister(Register);
 		setLayout(null);
 		JLabel docLab=new JLabel("Выберите документ для редактирования");
-		String SQL="select trim(client.name), document.sum, trim(val.name), trim(sklad.name), trim (document.note), document.id_doc from ((document inner join client on document.id_client=client.id_client) " +
-				"inner join val on document.id_val=val.id_val) inner join sklad on document.id_skl=sklad.id_skl where id_type_doc="+getType_doc();
-		if (!isRegister())
-			SQL=SQL+" and (numb is null)";
-		SQL=SQL+" order by UPPER(CLIENT.name), UPPER(Sklad.name), sum";
-		Id_doc=new Vector<Integer>(0);
-		Vector<Vector<String>> Rows=new Vector<Vector<String>>(0); 
-		try {
-			ResultSet rs=DataSet.QueryExec(SQL, false);
-			while (rs.next()){
-				Id_doc.add(rs.getInt(6));
-				Vector<String> item = new Vector<String>(0);
-				item.add(rs.getString(4));
-				item.add(rs.getString(1));
-				item.add(rs.getString(2));
-				item.add(rs.getString(3));
-				item.add(rs.getString(5));
-				Rows.add(item);
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		Vector<String> Column=new Vector<String>(0);
-		Column.add("Склад");
-		Column.add("Клиент");
-		Column.add("Сумма");
-		Column.add("Валюта");
-		Column.add("Примечание");
-		docTable = new JTable(new DefaultTableModel(Rows,Column){
-			public boolean isCellEditable(int row, int column){
-				return false;
-			}
-		});
+		docTable = new JTable();
 		docTable.setCellSelectionEnabled(false);
 		docTable.setColumnSelectionAllowed(false);
 		docTable.setRowSelectionAllowed(true);
@@ -116,6 +84,42 @@ public class SelectDoc extends MyPanel {
 	}
 	public void setRegister(boolean register) {
 		this.register = register;
+	}
+	public void initform(){
+		String SQL="select trim(client.name), document.sum, trim(val.name), trim(sklad.name), trim(document.note), document.id_doc from ((document inner join client on document.id_client=client.id_client) " +
+			"inner join val on document.id_val=val.id_val) inner join sklad on document.id_skl=sklad.id_skl where id_type_doc="+getType_doc();
+		if (!isRegister())
+			SQL=SQL+" and (numb is null)";
+		SQL=SQL+" order by UPPER(CLIENT.name), UPPER(Sklad.name), sum";
+		Id_doc=new Vector<Integer>(0);
+		Vector<Vector<String>> Rows=new Vector<Vector<String>>(0); 
+		try {
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			while (rs.next()){
+				Id_doc.add(rs.getInt(6));
+				Vector<String> item = new Vector<String>(0);
+				item.add(rs.getString(4));
+				item.add(rs.getString(1));
+				item.add(rs.getString(2));
+				item.add(rs.getString(3));
+				item.add(rs.getString(5).substring(1));
+				Rows.add(item);
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		Vector<String> Column=new Vector<String>(0);
+		Column.add("Склад");
+		Column.add("Клиент");
+		Column.add("Сумма");
+		Column.add("Валюта");
+		Column.add("Примечание");
+		docTable.setModel(new DefaultTableModel(Rows,Column){
+			public boolean isCellEditable(int row, int column){
+				return false;
+			}
+		});
+
 	}
 	
 
