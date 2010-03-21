@@ -746,8 +746,12 @@ class NewSaleFrame extends MyPanel
 				e.printStackTrace();
 				try{
 					DataSet.rollback();
+					JOptionPane.showMessageDialog(null, "Ошибка записи, повторите попытку!", "Ошибка", JOptionPane.ERROR_MESSAGE);
+					return false;
 				}catch(Exception exp){
 					exp.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Критическая ошибка. Обратитесь к администратору!/n(ERROR-01)", "Ошибка", JOptionPane.ERROR_MESSAGE);
+					return false;
 				}
 			}
 		}
@@ -843,7 +847,9 @@ class NewSaleFrame extends MyPanel
 				DataSet.rollback();
 			} catch (SQLException e1) {
 				// TODO Auto-generated catch block
+				JOptionPane.showMessageDialog(null, "Критическая ошибка. Обратитесь к администратору!/n (ERROR-02)", "Ошибка", JOptionPane.ERROR_MESSAGE);
 				e1.printStackTrace();
+				ret=false;
 			}
 			 ret=false;
 			 e.printStackTrace();
