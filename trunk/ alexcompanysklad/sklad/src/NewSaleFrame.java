@@ -409,9 +409,13 @@ class NewSaleFrame extends MyPanel
 //			GregorianCalendar lastEdit = new GregorianCalendar();
 //			lastEdit.setTime(rs.getDate(2));
 			if (rs.getInt(2)>3)
-				infoButton.setBackground(Color.RED);
+				{infoButton.setBackground(Color.RED);
+				infoButton.setForeground(Color.RED);
+				}
 			else
-				infoButton.setBackground(barcodeButton.getBackground());
+				{infoButton.setBackground(barcodeButton.getBackground());
+				infoButton.setForeground(barcodeButton.getForeground());
+				}
 			
 			if (rs.getInt(1)==1){
 				okrLabel.setVisible(false);
@@ -625,7 +629,7 @@ class NewSaleFrame extends MyPanel
 			{
 			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
 			naklTable.setRowSelectionInterval(row, row);
-			naklTable.setColumnSelectionInterval(2, 2);
+//			naklTable.setColumnSelectionInterval(2, 2);
 			}
 		if (InputCountTovar.getNext())
 			BarCodeFire();
