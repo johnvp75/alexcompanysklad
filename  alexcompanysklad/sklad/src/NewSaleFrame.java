@@ -231,6 +231,11 @@ class NewSaleFrame extends MyPanel
 				}
 				if (getId_doc()!=0&&model.isChanged()&&JOptionPane.showConfirmDialog(parent, "Внимание! Все изменения будут удалены! Продолжить?","Отмена",JOptionPane.YES_NO_OPTION)==JOptionPane.NO_OPTION)
 					return;
+				try{
+					DataSet.rollback1();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 				model.removeAll();
 //				setVisible(false);
 				parent.showFrame("noVisible");
@@ -249,12 +254,20 @@ class NewSaleFrame extends MyPanel
 		});
 		saveButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
+				if (isOld()){
+					JOptionPane.showMessageDialog(null, "Информация устарела. \n Пока не обновите работать не будет!", "Информация", JOptionPane.ERROR_MESSAGE);
+					return;
+					}
 				save();
 			}
 		});
 		model.addTableModelListener(modlis);
 		printButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
+				if (isOld()){
+					JOptionPane.showMessageDialog(null, "Информация устарела. \n Пока не обновите работать не будет!", "Информация", JOptionPane.ERROR_MESSAGE);
+					return;
+					}
 				if (save()){
 //					setVisible(false);
 					parent.showFrame("noVisible");
@@ -542,9 +555,25 @@ class NewSaleFrame extends MyPanel
 			}
 			rs.close();
 		}
-		catch (Exception e) { }
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		return ret;
 
+	}
+	private boolean isOld(){
+		try{
+			ResultSet rs=DataSet.QueryExec("Select trunc(months_between(sysdate, day)) from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+			rs.next();
+			if (rs.getInt(1)>3) 
+				return true;
+			else
+				return false;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
 	}
 	
 	
@@ -676,6 +705,13 @@ class NewSaleFrame extends MyPanel
 		String SQL;
 		model.removeTableModelListener(modlis);
 		try{
+			try{
+				SQL=String.format("Select d.*,l.* from document d,lines l where d.id_doc=%s and l.id_doc=d.id_doc for update nowait", id_doc);
+				DataSet.QueryExec1(SQL, false);
+			}catch(Exception e){
+				JOptionPane.showMessageDialog(null, "Документ заблокирован другим пользователем! Попробуйте позже.", "Ошибка блокировки", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
 			SQL=String.format("Select trim(c.name), trim(s.name),trim(p.name), trim(d.note), d.disc, c.type from document d, sklad s, client c, type_price p where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl and p.id_price=d.id_price", id_doc);
 			rs=DataSet.QueryExec1(SQL, false);
 			if (rs.next()){
@@ -741,6 +777,7 @@ class NewSaleFrame extends MyPanel
 		}
 		if (getId_doc()!=0){
 			try{
+				DataSet.commit1();
 				SQL =String.format("delete from lines where id_doc=%s", getId_doc());
 				DataSet.UpdateQuery(SQL);
 				SQL =String.format("delete from document where id_doc=%s", getId_doc());
