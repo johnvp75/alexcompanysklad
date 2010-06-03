@@ -15,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import javax.swing.JButton;
@@ -31,6 +32,7 @@ public class NewBarCode extends JDialog {
 	private String sklad;  //  @jve:decl-index=0:
 	private String tovar;
 	private JList CodeList = null;
+	private JScrollPane ScrollList= null;
 	private JButton DeleteButton = null;
 	private void setSklad(String sklad) {
 		this.sklad = sklad;
@@ -135,7 +137,7 @@ public class NewBarCode extends JDialog {
 	private JButton getOKButton() {
 		if (oKButton == null) {
 			oKButton = new JButton();
-			oKButton.setBounds(new Rectangle(135, 267, 149, 23));
+			oKButton.setBounds(new Rectangle(133, 278, 149, 23));
 			oKButton.setText("OK!");
 			oKButton.addActionListener(new java.awt.event.ActionListener() {
 				public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -198,12 +200,16 @@ public class NewBarCode extends JDialog {
 	 * 	
 	 * @return javax.swing.JList	
 	 */
-	private JList getCodeList() {
+	private JScrollPane getCodeList() {
 		if (CodeList == null) {
+//		if (ScrollList == null) {
 			CodeList = new JList(new DataListModel());
-			CodeList.setBounds(new Rectangle(20, 60, 411, 187));
+			ScrollList=new JScrollPane(CodeList);
+			ScrollList.setBounds(new Rectangle(11, 48, 420, 220));
+//			CodeList.setBounds(new Rectangle(9, 68, 367, 225));
+//			ScrollList.setViewportView(CodeList);
 		}
-		return CodeList;
+		return ScrollList;
 	}
 
 	/**
