@@ -52,6 +52,7 @@ class NewSaleFrame extends MyPanel
 	private JTextField noteText;
 	private ActionListener clientlistener;
 	private ActionListener skladlistener;
+	private boolean Checking=false;
 	
 	private int id_doc;
 	private JButton infoButton;
@@ -407,14 +408,16 @@ class NewSaleFrame extends MyPanel
 				rs.next();
 				priceCombo.setSelectedItem(rs.getString(1));
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			clientCombo.fireActionEvent();
 		}
 	}
 	public void clientChooseMet(){
+		if (Checking)
+			return;
 		model.setIndDiscount(0);
+		
 		if (checkClient()){
 		try {
 			ResultSet rs=DataSet.QueryExec("Select type, trunc(months_between(sysdate, day)) from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
@@ -451,7 +454,9 @@ class NewSaleFrame extends MyPanel
 				
 		}
 		catch (Exception e) { e.printStackTrace();}}
-		else{
+		else {
+			Checking=true;
+			if(JOptionPane.showConfirmDialog(NewSaleFrame.this, "Ввести нового клиента?", "Ввод нового клиента", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.YES_OPTION && JOptionPane.showConfirmDialog(NewSaleFrame.this, "Вы уверены что нужно ввести нового клиента?", "Ввод нового клиента", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.YES_OPTION){
 			ResultSet rs;
 			if (newClient==null)
 				newClient=new NewClientDialog();
@@ -460,7 +465,7 @@ class NewSaleFrame extends MyPanel
 				clientCombo.removeAllItems();
 				
 				try {
-					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",true);
+					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",false);
 					rs.next();
 					while (!rs.isAfterLast()){
 						clientCombo.addItem(rs.getString("rtrim(name)"));
@@ -471,7 +476,7 @@ class NewSaleFrame extends MyPanel
 				clientCombo.setSelectedItem(newClient.getClient());
 				
 				try {
-					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",false);
 					rs.next();
 					if (rs.getInt(1)==1){
 						okrLabel.setVisible(false);
@@ -486,7 +491,7 @@ class NewSaleFrame extends MyPanel
 				clientCombo.setSelectedIndex(0);
 				
 				try {
-					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",false);
 					rs.next();
 					if (rs.getInt(1)==1){
 						okrLabel.setVisible(false);
@@ -498,13 +503,17 @@ class NewSaleFrame extends MyPanel
 				catch (Exception e) { e.printStackTrace();}
 
 			}
+		}else{
+			clientCombo.setSelectedIndex(0);
 		}
+			}
+		Checking=false;
 //		ComboBoxEditor edit=clientCombo.getEditor();
 //		edit.selectAll();
 //		clientCombo.getEditor().selectAll();
 		ResultSet rs;
 		try {
-			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",true );
+			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",false );
 			rs.next();
 			
 			setItogoall(rs.getDouble(1));
@@ -548,7 +557,7 @@ class NewSaleFrame extends MyPanel
 		boolean ret=false;
 		
 		try {
-			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'",true);
+			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name = '"+(String)clientCombo.getSelectedItem()+"'",false);
 			rs.next();
 			if (rs.getInt(1)>0){
 				ret=true;
@@ -563,7 +572,7 @@ class NewSaleFrame extends MyPanel
 	}
 	private boolean isOld(){
 		try{
-			ResultSet rs=DataSet.QueryExec("Select trunc(months_between(sysdate, day)) from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+			ResultSet rs=DataSet.QueryExec("Select trunc(months_between(sysdate, day)) from client where name='"+(String)clientCombo.getSelectedItem()+"'",false);
 			rs.next();
 			if (rs.getInt(1)>3) 
 				return true;

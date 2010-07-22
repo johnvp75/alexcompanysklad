@@ -414,7 +414,7 @@ class MainFrame extends JFrame
 						OutData.add(Row);
 					}
 //					String SQL1=;
-					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name), to_char(day,'DD.MM.YYYY') from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
+					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name), to_char(document.day,'DD.MM.YYYY') from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
 							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
 					String pref="";
 					rs.next();
@@ -426,7 +426,7 @@ class MainFrame extends JFrame
 					if (isOpt) 
 						{
 						OutputOO.OpenDoc("nakl_opt.ots",!view);
-						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 1)+"\" "+Month(new Integer(rs.getString(7).substring(3, 4))-1)+" "+rs.getString(7).substring(6, 9)+"г.", 10, true, 5,1);
+						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 5,1);
 						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
 						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
@@ -444,7 +444,7 @@ class MainFrame extends JFrame
 					else
 						{
 						OutputOO.OpenDoc("nakl_roz.ots",!view);
-						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 1)+"\" "+Month(new Integer(rs.getString(7).substring(3, 4))-1)+" "+rs.getString(7).substring(6, 9)+"г.", 10, true, 3,1);
+						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 3,1);
 						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
 						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
