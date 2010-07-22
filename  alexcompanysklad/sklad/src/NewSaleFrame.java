@@ -314,7 +314,7 @@ class NewSaleFrame extends MyPanel
 						naklTable.editCellAt(naklTable.getSelectedRow(), naklTable.getSelectedColumn());
 						((JTextField)naklTable.getEditorComponent()).selectAll();
 					}
-				}
+				}// else event.setKeyCode(event.);
 
 			}
 			public void keyTyped(KeyEvent event){
@@ -661,13 +661,17 @@ class NewSaleFrame extends MyPanel
 			if (!(((JTextField)naklTable.getEditorComponent())==null))
 				((JTextField)naklTable.getEditorComponent()).postActionEvent();
 			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
+			naklTable.setRowSelectionInterval(row, row);
+			naklTable.setColumnSelectionInterval(2, 2);
 			naklTable.editCellAt(row, 2);
 			((JTextField)naklTable.getEditorComponent()).selectAll();
+			naklTable.scrollRectToVisible(naklTable.getCellRect(row, 2, false));
 		}else
 			{
 			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
 			naklTable.setRowSelectionInterval(row, row);
-//			naklTable.setColumnSelectionInterval(2, 2);
+			naklTable.setColumnSelectionInterval(2, 2);
+			naklTable.scrollRectToVisible(naklTable.getCellRect(row, 2, false));
 			}
 		if (InputCountTovar.getNext())
 			BarCodeFire();
