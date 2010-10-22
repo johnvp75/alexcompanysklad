@@ -26,6 +26,7 @@ class MainFrame extends JFrame
 	private JMenu editMenu;
 	private JMenu doceditMenu;
 	private JMenu printMenu;
+	private JMenu exportMenu;
 	private NewSaleFrame newFrame;
 	private SelectDoc selectFrame;
 	private ManagerChooser dialog=null;
@@ -69,6 +70,10 @@ class MainFrame extends JFrame
 		printMenu.add(printWorkDoc);
 		printMenu.add(printOldDoc);
 		printMenu.add(viewOldDoc);
+		exportMenu = new JMenu ("Ёкспорт");
+		menuBar.add(exportMenu);
+		JMenuItem rozexport=new JMenuItem("Ёкспорт розничной накладной");
+		exportMenu.add(rozexport);
 		JMenu windowMenu = new JMenu("ќкно");
 		menuBar.add(windowMenu);
 		JMenuItem windowcloseItem = new JMenuItem("«акрыть текущее окно");
@@ -91,6 +96,14 @@ class MainFrame extends JFrame
 //		saleMenu.addMenuListener(new NewSaleAction());
 		newSaleItem.addActionListener(new NewSaleAction());
 		nonregdocItem.addActionListener(new editNonRegAction());
+		rozexport.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				int numb=new Integer(JOptionPane.showInputDialog("¬ведите номер"));
+				export(numb,true);
+				
+			}
+		});
+
 		printOldDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				int numb=new Integer(JOptionPane.showInputDialog("¬ведите номер"));
@@ -363,7 +376,7 @@ class MainFrame extends JFrame
 		
 	}
 	public void printold(int numb, boolean view){
-		Vector<String> data =new Vector<String>(0);
+//		Vector<String> data =new Vector<String>(0);
 		NumberFormat formatter = new DecimalFormat ( "0.00" );
 		ResultSet rs=null;
 			int id=0;
@@ -550,6 +563,41 @@ class MainFrame extends JFrame
 	
 	private String getvisibleFrame(){
 		return visibleFrame;
+	}
+	private void export( int numb, boolean roz){
+		if (roz){
+			try{
+				ResultSet rs=DataSet.QueryExec(String.format("select type from client where id_client = (select id_client " +
+						"from document where numb=%s and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY'))", numb), false);
+				rs.next();
+				if (rs.getInt(1)!=2){
+					JOptionPane.showMessageDialog(null, "Ёто не розничный документ!!!", "ќшибка!", JOptionPane.ERROR_MESSAGE);
+					return ;
+				}
+				NumberFormat formatter = new DecimalFormat ( "0.00" );
+				Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
+				rs=DataSet.QueryExec(String.format("select id_doc from document where numb=%s and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", numb), false);
+				rs.next();
+				int id=rs.getInt(1);
+				rs=DataSet.QueryExec(String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol", id), false);
+				for (int i=0; i<OutData.size();i++)
+					OutData.get(i).clear();
+				OutData.clear();
+				while (rs.next()){
+					Vector<String> Row=new Vector<String>(0);
+					Row.add(rs.getString(1));
+					Row.add(rs.getString(2));
+					Row.add(rs.getString(3));
+					Row.add(formatter.format(rs.getDouble(4)));
+					OutData.add(Row);
+				}
+				OutputOO.OpenDoc("export_roz.ots",false);
+				OutputOO.Insert(1, 2, OutData);
+			
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 	}
 }
 
