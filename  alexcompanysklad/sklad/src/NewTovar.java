@@ -234,7 +234,7 @@ public class NewTovar extends JPanel {
 					}
 					
 					try {
-						ResultSet rs=DataSet.QueryExec("select count(*) from tovar where name like '%"+TovarNameTextField.getText().trim()+"%'", false);
+						ResultSet rs=DataSet.QueryExec("select count(*) from tovar where upper(name)='"+TovarNameTextField.getText().trim().toUpperCase()+"'", false);
 						rs.next();
 						if (rs.getInt(1)>0){
 							JOptionPane.showMessageDialog(dialog,"Такой товар в базе существует! \n Будьте внимательней!","Повторное название",JOptionPane.ERROR_MESSAGE);
@@ -256,6 +256,44 @@ public class NewTovar extends JPanel {
 								isakcia=1;
 							SQL="insert into price (id_tovar, cost, akciya, isakcia, id_skl, id_price) select "+id_tovar+" , "+CostTextField.getText()+", "+DiscTextField.getText()+", "+isakcia+", (select id_skl from sklad where name='"+Sklad+"'), id_price from type_price where name='"+Price+"'";
 							DataSet.UpdateQuery(SQL);
+
+							if (Price.trim().equals("Розница Бижутерия")){
+// Штрих-код
+					            int group=1310000;
+								SQL=String.format("select max(substr(bar_code,%s,5)) from bar_code where bar_code like '%s%s'", (new Integer(group)).toString().length()+1,group,"%");
+					            rs=DataSet.QueryExec(SQL, false);
+					            int num=1;
+					            if (rs.next())
+					                num=rs.getInt(1);
+					            String code=String.format("%s%05d", group,num+1);
+					            String code_sum=String.format("%07d%05d", group,num+1);
+					            Integer sum=new Integer(0);
+					            for (int i=2;i<13;i=i+2)
+					                sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
+					            sum=sum*3;
+					            for (int i=1;i<12;i=i+2)
+					                sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
+					            sum=10-((Double)((((sum.doubleValue()/10)-sum/10)*10)+0.1)).intValue();
+					            code=code+sum.toString().substring(sum.toString().length()-1);
+					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count) values (%s, 8, '%s', 1)", id_tovar, code);
+					            DataSet.UpdateQuery(SQL);
+					            Double cost=((new Double(CostTextField.getText())*10));
+					            String grname="%"+TovarNameTextField.getText().trim().substring(TovarNameTextField.getText().trim().indexOf(" ")+1).toUpperCase()+"%";
+					            SQL=String.format("select name from groupid where upper(name) like '%s' and parent_group=1310000", grname);
+					            rs=DataSet.QueryExec(SQL, false);
+					            if (!rs.next()){
+					            	JOptionPane.showInternalMessageDialog(null, "Неправильное имя", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+					            	DataSet.rollback();
+					            	return;
+					            }
+					            String prefix="0"+rs.getString(1).substring(0, rs.getString(1).indexOf(" ")).trim();
+					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count) values (%s, 8, '%s%s', 1)", id_tovar, prefix, cost.intValue());
+					            DataSet.UpdateQuery(SQL);
+					            
+//Конец штрих-кода
+//insert into bar_code (id_tovar, id_skl, bar_code, count) select id_tovar, 8, '2000000002804', 1 from tovar where NAME='17 Бигуди';
+					            
+							}
 							ok=true;
 							DataSet.commit();
 							dialog.setVisible(false);
