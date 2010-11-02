@@ -232,7 +232,8 @@ class MainFrame extends JFrame
 		Printdialog.addTovar(data);
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			String tovar=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
-			String Suma=Printdialog.getTovar().substring(Printdialog.getTovar().indexOf(" на сумму: ")+11);
+//			String Suma=Printdialog.getTovar().substring(Printdialog.getTovar().indexOf(" на сумму: ")+11);
+			String Suma="";
 //			int numb=0;
 			int id=0;
 			boolean isOpt=true;
@@ -251,7 +252,9 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
-				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",tovar),true );
+				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",tovar),false );
+				rs.next();
+				Suma=formatter.format(rs.getDouble(2))+" грн.";
 				rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
 				rs.next();
 				if (rs.getInt(1)==2)
