@@ -280,19 +280,20 @@ class MainFrame extends JFrame
 					DataSet.UpdateQuery1("CREATE SEQUENCE   numb_real  MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE NOORDER");
 					DataSet.commit1();
 				}
-				String SQL="Select id_doc from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
+				String SQL="Select id_doc, id_skl from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
 				rs=DataSet.QueryExec(SQL, false);
 				int Doc_count=0;
 				while (rs.next()){
 					Doc_count++;
 //					numb++;
 					id=rs.getInt(1);
+					int skl=rs.getInt(2);
 					boolean last=!rs.next();
 					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else
-						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by tovar.name", false);
+						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')"), false);
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
 					OutData.clear();
@@ -399,13 +400,14 @@ class MainFrame extends JFrame
 			
 			try {
 				{
-					rs=DataSet.QueryExec("select id_doc from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", false);
+					rs=DataSet.QueryExec("select id_doc, id_skl from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", false);
 					rs.next();
 					id=rs.getInt(1);
+					int skl=rs.getInt(2);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else
-						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by tovar.name", false);
+						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')"), false);
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
 					OutData.clear();
@@ -591,7 +593,7 @@ class MainFrame extends JFrame
 					Row.add(rs.getString(1));
 					Row.add(rs.getString(2));
 					Row.add(rs.getString(3));
-					Row.add(formatter.format(rs.getDouble(4)));
+					Row.add((formatter.format(rs.getDouble(4))).replace('.', ','));
 					OutData.add(Row);
 				}
 				OutputOO.OpenDoc("export_roz.ots",false);
