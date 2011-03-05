@@ -924,6 +924,7 @@ class NewSaleFrame extends MyPanel
 		}
 		model.removeAll();
 //		setVisible(false);
+		parent.initBackground();
 		parent.showFrame("noVisible");
 		parent.closeSaleFrame();
 //		ChooserStreamIn.close();

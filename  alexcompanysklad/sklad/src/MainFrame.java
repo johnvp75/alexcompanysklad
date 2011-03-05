@@ -1,6 +1,10 @@
 import java.awt.CardLayout;
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -9,6 +13,7 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Vector;
 
+import javax.imageio.ImageIO;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -20,7 +25,7 @@ import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
 
-class MainFrame extends JFrame
+class MainFrame extends JFrame 
 {
 	private JMenu saleMenu;
 	private JMenu editMenu;
@@ -35,7 +40,15 @@ class MainFrame extends JFrame
 	private JPanel parentFrame;
 	private CardLayout Switch;
 	private String visibleFrame="noVisible";
-	public MainFrame(){
+	private Image backgroundImage;
+	
+	public void paint( Graphics g ) { 
+	    super.paint(g);
+	    g.drawImage(backgroundImage, 10, 53, null);
+	}
+	public MainFrame() {
+
+		initBackground();
 		setTitle("Склад 4.0");
 		setSize(800, 600);
 		JMenuBar menuBar= new JMenuBar();
@@ -127,12 +140,21 @@ class MainFrame extends JFrame
 		barcodeItem.addActionListener(new EditBarCode());
 		windowcloseallItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
+				initBackground();
 				if (getvisibleFrame().equals("SaleFrame") && newFrame.closeform())
 					showFrame("noVisible");
 				if (getvisibleFrame().equals("SelectFrame")&&newFrame.closeform())
 					showFrame("noVisible");
 			}
 		});
+	}
+	public void initBackground(){
+		try {
+			backgroundImage=ImageIO.read(new File("pic16.jpg"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	private class NewSaleAction implements ActionListener{
 		public void actionPerformed(ActionEvent event)
@@ -147,6 +169,7 @@ class MainFrame extends JFrame
 //				newFrame.requestFocus();
 //				newFrame.setFocusable(true);
 //				newFrame.skladCombo.requestFocus();
+				backgroundImage=null;
 				saleMenu.setSelected(false);
 				saleMenu.setEnabled(false);
 				editMenu.setEnabled(false);
@@ -199,6 +222,8 @@ class MainFrame extends JFrame
 		return UserName;
 	}
 	public void closeSaleFrame(){
+		initBackground();
+		this.repaint();
 		saleMenu.setEnabled(true);
 		editMenu.setEnabled(true);
 		doceditMenu.setEnabled(true);
@@ -605,6 +630,9 @@ class MainFrame extends JFrame
 				e.printStackTrace();
 			}
 		}
+	}
+	public void setBackgroundImage(Image backgroundImage) {
+		this.backgroundImage = backgroundImage;
 	}
 }
 

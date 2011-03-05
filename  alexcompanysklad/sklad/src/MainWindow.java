@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
@@ -22,7 +24,8 @@ public class MainWindow
 			e.printStackTrace();
 		}
 
-		MainFrame frame = new MainFrame();
+		MainFrame frame;
+		frame = new MainFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Scaner = new ChooserStreamIn();
 		(new Thread(Scaner)).start();
