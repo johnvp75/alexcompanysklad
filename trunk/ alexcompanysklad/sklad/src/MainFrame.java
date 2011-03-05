@@ -292,8 +292,10 @@ class MainFrame extends JFrame
 					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
-					else
-						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')"), false);
+					else{
+						SQL="select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')");
+						rs=DataSet.QueryExec(SQL, false);
+					}
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
 					OutData.clear();
