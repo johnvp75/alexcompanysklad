@@ -47,7 +47,7 @@ class MainFrame extends JFrame
 	    GregorianCalendar day=new GregorianCalendar();
 	    GregorianCalendar holyday=(GregorianCalendar)day.clone();
 	    holyday.set(2011, 2, 7);
-//	    if (day.equals(holyday))
+	    if (day.equals(holyday))
 	    	g.drawImage(backgroundImage, 10, 53, null);
 	}
 	public MainFrame() {
@@ -145,6 +145,7 @@ class MainFrame extends JFrame
 		windowcloseallItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				initBackground();
+				repaint();
 				if (getvisibleFrame().equals("SaleFrame") && newFrame.closeform())
 					showFrame("noVisible");
 				if (getvisibleFrame().equals("SelectFrame")&&newFrame.closeform())
@@ -154,7 +155,7 @@ class MainFrame extends JFrame
 	}
 	public void initBackground(){
 		try {
-			backgroundImage=ImageIO.read(new File("pic3.jpg"));
+			backgroundImage=ImageIO.read(new File("image.jpg"));
 		} catch (IOException e) {
 			backgroundImage=null;
 		}
