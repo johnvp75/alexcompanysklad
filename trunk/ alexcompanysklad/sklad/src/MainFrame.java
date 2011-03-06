@@ -44,7 +44,11 @@ class MainFrame extends JFrame
 	
 	public void paint( Graphics g ) { 
 	    super.paint(g);
-	    g.drawImage(backgroundImage, 10, 53, null);
+	    GregorianCalendar day=new GregorianCalendar();
+	    GregorianCalendar holyday=(GregorianCalendar)day.clone();
+	    holyday.set(2011, 2, 7);
+//	    if (day.equals(holyday))
+	    	g.drawImage(backgroundImage, 10, 53, null);
 	}
 	public MainFrame() {
 
@@ -150,10 +154,9 @@ class MainFrame extends JFrame
 	}
 	public void initBackground(){
 		try {
-			backgroundImage=ImageIO.read(new File("pic16.jpg"));
+			backgroundImage=ImageIO.read(new File("pic3.jpg"));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			backgroundImage=null;
 		}
 	}
 	private class NewSaleAction implements ActionListener{
