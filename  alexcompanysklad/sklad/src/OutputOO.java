@@ -56,6 +56,23 @@ public class OutputOO {
 			e.printStackTrace();
 			}
 	}
+	public static void OpenDoc(String DocPath, boolean hidden, boolean full) {
+		try{
+			connect();
+			Object desktop=xRemouteServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", xRemouteContext);
+			XComponentLoader xComponentLoader=(XComponentLoader)UnoRuntime.queryInterface(XComponentLoader.class, desktop);
+			PropertyValue[] loadProps=new PropertyValue[1];
+			loadProps[0] = new PropertyValue();
+            loadProps[0].Name = "Hidden";
+            loadProps[0].Value = new Boolean(hidden);
+			XComponent xSpreadsheetComponent=xComponentLoader.loadComponentFromURL(DocPath, "_blank", 0, loadProps);
+			xSpreadsheetDocument=(XSpreadsheetDocument)UnoRuntime.queryInterface(XSpreadsheetDocument.class, xSpreadsheetComponent);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+			}
+	}
+
 	public static void CloseDoc () {
 		XCloseable xCloseable =(XCloseable)UnoRuntime.queryInterface(XCloseable.class, xSpreadsheetDocument);
 		try{

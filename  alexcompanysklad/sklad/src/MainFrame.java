@@ -117,7 +117,7 @@ class MainFrame extends JFrame
 			public void actionPerformed(ActionEvent event){
 				int numb=new Integer(JOptionPane.showInputDialog("¬ведите номер"));
 				export(numb,true);
-				
+				repaint();
 			}
 		});
 
@@ -322,8 +322,8 @@ class MainFrame extends JFrame
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else{
-						SQL="select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')");
-						rs=DataSet.QueryExec(SQL, false);
+						String SQLr="select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999.99')");
+						rs=DataSet.QueryExec(SQLr, false);
 					}
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
@@ -398,6 +398,7 @@ class MainFrame extends JFrame
 					rs=DataSet.QueryExec(SQL, false);
 				}
 				DataSet.commit();
+				
 			} catch (Exception e) {
 				try {
 					DataSet.rollback();
@@ -407,8 +408,9 @@ class MainFrame extends JFrame
 				}
 				e.printStackTrace();
 			}
+			
 		}
-		
+		this.repaint();
 	}
 	public void printold(int numb, boolean view){
 //		Vector<String> data =new Vector<String>(0);
@@ -511,6 +513,7 @@ class MainFrame extends JFrame
 					
 				}
 				DataSet.commit();
+				
 			} catch (Exception e) {
 				try {
 					DataSet.rollback();
@@ -520,6 +523,7 @@ class MainFrame extends JFrame
 				}
 				e.printStackTrace();
 			}
+			this.repaint();
 		}
 		
 	
@@ -574,13 +578,15 @@ class MainFrame extends JFrame
 					window =new NewBarCode(sklad,formGroup.getTovar());
 					window.setVisible(true);
 				}
+				
 					
 
 			}catch(Exception e){
 				e.printStackTrace();
 			}
-			
+			repaint();
 		}
+		
 	}
 	public void showFrame(String nameLayout){
 		if (nameLayout.equals("noVisible"))
@@ -634,9 +640,13 @@ class MainFrame extends JFrame
 				e.printStackTrace();
 			}
 		}
+		this.repaint();
 	}
 	public void setBackgroundImage(Image backgroundImage) {
 		this.backgroundImage = backgroundImage;
+	}
+	private void repaintform(){
+		this.repaint();
 	}
 }
 
