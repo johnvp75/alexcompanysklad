@@ -114,7 +114,8 @@ class NewClientDialog extends JPanel {
 		if (info && getClient().equals(old))
 			return true;
 		try {
-			ResultSet rs=DataSet.QueryExec("Select count(*) from client where name like '%"+clientname.getText().trim()+"%'",true);
+			//ResultSet rs=DataSet.QueryExec("Select count(*) from client where name like '%"+clientname.getText().trim()+"%'",true);
+			ResultSet rs=DataSet.QueryExec("Select count(*) from client where trim(name)='"+clientname.getText().trim()+"'",true);
 			rs.next();
 			if (rs.getInt(1)==0){
 				ret=true;

@@ -275,7 +275,7 @@ public class NewTovar extends JPanel {
 					                sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
 					            sum=10-((Double)((((sum.doubleValue()/10)-sum/10)*10)+0.1)).intValue();
 					            code=code+sum.toString().substring(sum.toString().length()-1);
-					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count) values (%s, 8, '%s', 1)", id_tovar, code);
+					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar, code);
 					            DataSet.UpdateQuery(SQL);
 					            Double cost=((new Double(CostTextField.getText())*10));
 					            String grname="%"+TovarNameTextField.getText().trim().substring(TovarNameTextField.getText().trim().indexOf(" ")+1).toUpperCase()+"%";
