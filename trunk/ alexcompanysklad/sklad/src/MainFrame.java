@@ -11,6 +11,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
@@ -621,7 +622,8 @@ class MainFrame extends JFrame
 				rs=DataSet.QueryExec(String.format("select id_doc from document where numb=%s and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", numb), false);
 				rs.next();
 				int id=rs.getInt(1);
-				rs=DataSet.QueryExec(String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol", id), false);
+				GenerateBarCodeForMissing(id);
+				rs=DataSet.QueryExec(String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code where for_shops=1 group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol", id), false);
 				for (int i=0; i<OutData.size();i++)
 					OutData.get(i).clear();
 				OutData.clear();
@@ -647,6 +649,87 @@ class MainFrame extends JFrame
 	}
 	private void repaintform(){
 		this.repaint();
+	}
+	private void GenerateBarCodeForMissing(int IdDocumentForWork){
+		String SQL=String.format("select id_tovar, (select max(id_skl)  from document where id_doc=%1$s) as id_skl from(select l.id_tovar,b.bar_code from lines l  left join (select id_tovar, bar_code from bar_code where for_shops=1 and id_skl=(select id_skl from document where id_doc=%1$s)) b on l.id_tovar=b.id_tovar where l.id_doc=%1$s) where bar_code is null",IdDocumentForWork);
+		try{
+			int idSklad=0;
+			ResultSet TableIdTovarWhithNullShopsBarcode=DataSet.QueryExec(SQL, false);
+			if (TableIdTovarWhithNullShopsBarcode.next()){
+				idSklad=TableIdTovarWhithNullShopsBarcode.getInt(2);
+			}
+			else
+				return;
+			do{
+				int idTovarForGenerated=TableIdTovarWhithNullShopsBarcode.getInt(1);
+				if (!IsFixExistentCodeForShopsBarcode(idTovarForGenerated, idSklad)){
+					BarCode barCodeForSave=new BarCode(GenerateBarcode(idTovarForGenerated, idSklad),idTovarForGenerated, idSklad,1,true);
+					SaveBarCodeInDatabase(barCodeForSave);
+				}
+			}while(TableIdTovarWhithNullShopsBarcode.next());
+			DataSet.commit1();
+		}catch(Exception e){
+			JOptionPane.showMessageDialog(null, "Ошибка при работе с TableIdTovarWhithNullShopsBarcode");
+			e.printStackTrace();
+			try{
+				DataSet.rollback1();
+			}catch(Exception er){
+				er.printStackTrace();
+			}
+		}
+	}
+	private String GenerateBarcode(int idTovar, int idSklad){
+		String generatedBarcode="";
+		try{
+        	String SQL=String.format("Select distinct id_group from kart where id_tovar=%s and id_skl=%s", idTovar,idSklad);
+        	ResultSet resultwithIdGroupForTovar=DataSet.QueryExec1(SQL, false);
+        	int idGroupIncludingTovar=0;
+        	if (resultwithIdGroupForTovar.next())
+        		idGroupIncludingTovar=resultwithIdGroupForTovar.getInt(1);
+        	else
+        		return null;
+        	resultwithIdGroupForTovar.close();
+        	SQL=String.format("select max(substr(bar_code,%s,5)) from bar_code where bar_code like '%s%s'", (new Integer(idGroupIncludingTovar)).toString().length()+1,idGroupIncludingTovar,"%");
+        	ResultSet resultWithMaximumBarcodeForThisGroup=DataSet.QueryExec1(SQL, false);
+        	int maximumBarcodeForThisGroup=1;
+        	if (resultWithMaximumBarcodeForThisGroup.next())
+        		maximumBarcodeForThisGroup=resultWithMaximumBarcodeForThisGroup.getInt(1);
+        	generatedBarcode=String.format("%s%05d", idGroupIncludingTovar,maximumBarcodeForThisGroup+1);
+        	String copyGeneratedBarcodeForCalculateCheckSum=String.format("%07d%05d", idGroupIncludingTovar,maximumBarcodeForThisGroup+1);
+        	Integer checksumForGeneratedBarcode=new Integer(0);
+        	for (int i=2;i<13;i=i+2)
+        		checksumForGeneratedBarcode=checksumForGeneratedBarcode+(Integer.valueOf(copyGeneratedBarcodeForCalculateCheckSum.substring(i-1, i)));
+        	checksumForGeneratedBarcode=checksumForGeneratedBarcode*3;
+        	for (int i=1;i<12;i=i+2)
+        		checksumForGeneratedBarcode=checksumForGeneratedBarcode+(Integer.valueOf(copyGeneratedBarcodeForCalculateCheckSum.substring(i-1, i)));
+        	checksumForGeneratedBarcode=10-((Double)((((checksumForGeneratedBarcode.doubleValue()/10)-checksumForGeneratedBarcode/10)*10)+0.1)).intValue();
+        	generatedBarcode=generatedBarcode+checksumForGeneratedBarcode.toString().substring(checksumForGeneratedBarcode.toString().length()-1);
+        }
+        catch(Exception e){
+        	JOptionPane.showMessageDialog(null, "Ошибка генерации штрих-кода", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+        	e.printStackTrace();
+        	return null;
+        }
+        return generatedBarcode;
+	}
+	private Boolean IsFixExistentCodeForShopsBarcode(int idTovarForCheck, int idSklad){
+		int madeReplacement=0;
+		try{
+			String SQL=String.format("update bar_code set for_shops=1 where id_tovar=%s and id_skl=%s and length(trim(bar_code)) between 12 and 14 and instr(regexp_replace(trim(bar_code),'[^[:digit:]]','&'),'&')=0", idTovarForCheck,idSklad);
+			madeReplacement=DataSet.UpdateQuery1(SQL);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return madeReplacement>0;
+	}
+	private void SaveBarCodeInDatabase(BarCode savingBarcode){
+		try{
+			String SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, %s, '%s', %s, %s)", savingBarcode.getIdTovar(),savingBarcode.getIdSklad(),savingBarcode.getCode(),savingBarcode.getCountTovarForOneCode(),savingBarcode.getBarcodeForShops()?1:null);
+			DataSet.UpdateQuery1(SQL);
+		}catch(Exception e){
+			JOptionPane.showMessageDialog(null, "Ошибка зыписи штрих-кода", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+			e.printStackTrace();
+		}
 	}
 }
 
