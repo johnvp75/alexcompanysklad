@@ -160,7 +160,12 @@ class naklTableModel extends AbstractTableModel{
 	public void setChanged(boolean changed) {
 		this.changed = changed;
 	}
-
+	public String getCommaName(){
+		return nakl.getCommaName();
+	}
+	public Double getSumByName(String name){
+		return nakl.getSumByName(name);
+	}
 }
 class dataCont{
 	private Vector name, count,cost,discount,akcia;
@@ -233,9 +238,6 @@ class dataCont{
 	private void newAkcia(boolean aAkcia){
 		akcia.add(new Boolean(aAkcia));
 	}
-/*	private void setAkcia(boolean aAkcia, int pos){
-		akcia.setElementAt(new Boolean(aAkcia), pos);
-	}*/
 	public boolean getAkcia(int pos){
 		return ((Boolean)akcia.elementAt(pos)).booleanValue();
 	}
@@ -257,19 +259,6 @@ class dataCont{
 			return pr;
 		}
 	}
-	/*
-	public Boolean set(String aName, int aCount, double aCost, double aDiscount,int pos){
-		if (getSize()<pos){
-			return false;
-		}else{
-			setCount(aCount, pos);
-			setName(aName, pos);
-			setCost(aCost,pos);
-			setDiscount(aDiscount, pos);
-			return true;
-		}
-	}
-	*/
 	public boolean remove(int pos){
 		if (getSize()<pos){
 			return false;
@@ -331,5 +320,18 @@ class dataCont{
 			if ((getName(i)).equals(aName))
 				ret=i;
 		return ret;	
+	}
+	public String getCommaName(){
+		String commaText="";
+		for (int i=0;i<name.size();i++ ){
+			if ((Integer)discount.get(i)==0)
+				commaText=commaText+", '"+name.get(i)+"'";
+		}
+		if (commaText.length()>0) 
+			commaText=commaText.substring(2);
+		return commaText;
+	}
+	public Double getSumByName(String aname){
+		return  (Double)(((Integer)getCount(name.indexOf(aname))).intValue()*((Double)getCost(name.indexOf(aname))).doubleValue()); 
 	}
 }

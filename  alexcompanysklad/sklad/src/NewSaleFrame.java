@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.GregorianCalendar;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
@@ -28,6 +29,7 @@ import javax.swing.event.TableModelListener;
 
 class NewSaleFrame extends MyPanel
 {
+	
 	private JLabel okrLabel;
 	private JComboBox okrCombo;
 	private AutoComplete clientCombo;
@@ -38,6 +40,7 @@ class NewSaleFrame extends MyPanel
 	private JLabel itogo;
 	private JLabel itogowo;
 	private JLabel itogoallLabel;
+	private JButton sumForSale;
 	private naklTableModel model;
 	public static InputCountTovar formInput = null;
 	private static ListChoose formGroup=null;
@@ -53,25 +56,12 @@ class NewSaleFrame extends MyPanel
 	private ActionListener clientlistener;
 	private ActionListener skladlistener;
 	private boolean Checking=false;
+	private Double sumForSaleInOtherDoc=0.0;
 	
 	private int id_doc;
 	private JButton infoButton;
 	public NewSaleFrame()
 	{
-//		setTitle("Ввод накладной");
-//		setMaximizable(true);
-//		setClosable(true);
-//		setResizable(true);
-//		setExtendedState(Frame.MAXIMIZED_BOTH);
-/*		Connection cn = null;
-		try {
-			Class.forName("oracle.jdbc.driver.OracleDriver");
-			cn = DriverManager.getConnection("jdbc:oracle:thin:@91.210.177.35:1521:XE", "sklad", "sklad");
-		}
-		catch (Exception e) { e.printStackTrace();}
-		Statement st = null;
-		ResultSet rs = null;
-*/
 		setLayout(null);
 		JButton saveButton = new JButton("Сохранить");
 		JButton cancelButton = new JButton("Отмена");
@@ -85,6 +75,8 @@ class NewSaleFrame extends MyPanel
 		itogo = new JLabel("Итого (учитывая скидку): 0,00");
 		itogowo = new JLabel("Итого (не учитывая скидку): 0,00");
 		itogoallLabel= new JLabel("Итого по всем накладным: 0,00");
+		sumForSale=new JButton("Сумма по акции");
+		sumForSale.setVisible(parent.isSale());
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
@@ -97,48 +89,6 @@ class NewSaleFrame extends MyPanel
 		clientCombo = new AutoComplete();
 		clientCombo.setEditable(true);
 		priceCombo=new JComboBox();
-/*		ResultSet rs=null;
-		try{
-			rs = DataSet.QueryExec("select trim(name) from sklad order by name",true);
-			rs.next();
-			while (!rs.isAfterLast()){
-				skladCombo.addItem(rs.getString(1));
-				rs.next();
-			}
-		}
-		catch (Exception e) { e.printStackTrace();}
-		skladCombo.setSelectedIndex(0);
-		
-		try {
-			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by upper(name)",true);
-			rs.next();
-			while (!rs.isAfterLast()){
-				clientCombo.addItem(rs.getString(1));
-				rs.next();
-			}
-		}
-		catch (Exception e) { e.printStackTrace();}
-		clientCombo.setSelectedIndex(0);
-		try {
-			rs = DataSet.QueryExec("select trim(name) from type_price order by name",true);
-			rs.next();
-			while (!rs.isAfterLast()){
-				priceCombo.addItem(rs.getString(1));
-				rs.next();
-			}
-		}
-		catch (Exception e) { e.printStackTrace();}
-		
-		int disc=0;
-		try{
-			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
-			if (rs.next()){
-				disc=rs.getInt(1);
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	*/	
 //		model = new naklTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc,true);
 		model = new naklTableModel("","",0,true);
 		
@@ -175,14 +125,15 @@ class NewSaleFrame extends MyPanel
 		clientCombo.setBounds(79, 58, 207, 22);
 		infoButton.setBounds(296, 58, 104, 22);
 		ScrollTable.setBounds(6, 89, 769, 335);
-		priceLabel.setBounds(457, 1, 86, 22);
-		priceCombo.setBounds(555, 1, 207, 22);
-		okrLabel.setBounds(457, 28, 86, 22);
-		okrCombo.setBounds(555, 28, 207, 22);	
+		priceLabel.setBounds(407, 1, 86, 22);
+		priceCombo.setBounds(505, 1, 207, 22);
+		okrLabel.setBounds(407, 28, 86, 22);
+		okrCombo.setBounds(505, 28, 207, 22);	
 		editableCheck.setBounds(555, 58, 207, 22);
-		itogo.setBounds(250, 425, 400, 22);
-		itogowo.setBounds(50, 425, 400, 22);
-		itogoallLabel.setBounds(450, 425, 400, 22);
+		itogo.setBounds(220, 425, 200, 22);
+		itogowo.setBounds(10, 425, 210, 22);
+		itogoallLabel.setBounds(420, 425, 200, 22);
+		sumForSale.setBounds(650, 425, 120, 22);
 		noteLabel.setBounds(10, 450, 90, 22);
 		noteText.setBounds(100, 450, 670, 22);
 		
@@ -223,6 +174,7 @@ class NewSaleFrame extends MyPanel
 		    }
 		    public void focusLost(FocusEvent event){
 		    	clientChooseMet();
+		    	
 		    }
 		});
 		cancelButton.addActionListener(new ActionListener(){
@@ -260,6 +212,13 @@ class NewSaleFrame extends MyPanel
 					return;
 					}
 				save();
+			}
+		});
+		sumForSale.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(null, String.format("Сумма по акции: %s", parent.CalcSumForSale((String)clientCombo.getSelectedItem())+getSumForSaleInCurrentDoc()), "Акция!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		model.addTableModelListener(modlis);
@@ -380,6 +339,7 @@ class NewSaleFrame extends MyPanel
 		add(editableCheck);
 		add(itogo);
 		add(itogowo);
+		add(sumForSale);
 		add(noteLabel);
 		add(noteText);
 		add(itogoallLabel);
@@ -523,8 +483,12 @@ class NewSaleFrame extends MyPanel
 		}
 
 		model.setClient((String)clientCombo.getSelectedItem());
-		
 		itogo.setText("Итого (учитывая скидку): "+model.summ());
+		if (!parent.isSale()){
+			sumForSale.setVisible(false);
+		}else{
+			sumForSale.setVisible(true);
+		}
 		double curs=1;
 		try{
 			rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
@@ -686,10 +650,7 @@ class NewSaleFrame extends MyPanel
 		catch (Exception e) {
 			Toolkit.getDefaultToolkit().beep();
 			e.printStackTrace();
-			// Вставить звук
 		}
-//		if (InputCountTovar.getNext())
-//			BarCodeFire();
 	}
 	public class pressF1 extends KeyAdapter{
 		public void keyPressed(KeyEvent event){
@@ -1005,6 +966,14 @@ class NewSaleFrame extends MyPanel
 		public void tableChanged(TableModelEvent event){
 			itogo.setText("Итого (учитывая скидку): "+model.summ());
 			itogowo.setText("Итого (не учитывая скидку): "+model.summvo());
+/*			String sumForSale_asString=parent.CalcSumForSale((String)clientCombo.getSelectedItem());
+			if (sumForSale_asString==null || okrCombo.isVisible()){
+				sumForSale.setVisible(false);
+			}else{
+				sumForSale.setText(String.format("Сумма по акции: %s", sumForSale_asString));
+				sumForSale.setVisible(true);
+			}
+*/
 			NumberFormat formatter = new DecimalFormat ( "0.00" ) ;
 			double curs=1;
 			try{
@@ -1026,6 +995,20 @@ class NewSaleFrame extends MyPanel
 			}
 		}
 	};
+	private Double getSumForSaleInOtherDoc() {
+		return sumForSaleInOtherDoc;
+	}
+	private void setSumForSaleInOtherDoc(Double sumForSaleInOtherDoc) {
+		this.sumForSaleInOtherDoc = sumForSaleInOtherDoc;
+	}
+	private Double getSumForSaleInCurrentDoc(){
+		Double sumInDocument=0.0;
+		Vector<String> listOfName=parent.ChooseNameForSale(model.getCommaName(), (String)skladCombo.getSelectedItem());
+		for (int i=0; i<listOfName.size();i++){
+			sumInDocument=sumInDocument+model.getSumByName(listOfName.get(i));
+		}
+		return sumInDocument;
+	}
 
 }
 class JComboBoxFire extends JComboBox{
@@ -1036,29 +1019,3 @@ class JComboBoxFire extends JComboBox{
 }
 
 
-/*class SelectionListener implements ListSelectionListener {
-	private JTable table;
-	public SelectionListener(JTable table){
-		this.table=table;
-	}
-	public void valueChanged(ListSelectionEvent event){
-		if (table.getEditingColumn()==-1 && table.getSelectedColumn()==2){
-			int row=table.getSelectedRow();
-			table.changeSelection(row, 3, false, false);
-			if (table.getCellEditor() != null) {
-				table.getCellEditor().stopCellEditing();
-		    }
-			return;
-		}
-		if (table.getEditingColumn()==-1 && table.getSelectedColumn()==3){
-			
-			int row=table.getSelectedRow();
-			return;
-		    }
-		
-	}
-
-
-}
-
-*/
