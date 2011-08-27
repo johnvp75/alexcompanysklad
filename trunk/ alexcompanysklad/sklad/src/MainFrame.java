@@ -28,6 +28,15 @@ import javax.swing.event.MenuListener;
 
 class MainFrame extends JFrame 
 {
+	private static final boolean SALE=true;
+	private static final GregorianCalendar STARTDATE=new GregorianCalendar(2011,7,25,0,0);
+	private static final GregorianCalendar ENDDATE=new GregorianCalendar(2011,8,15,23,59);
+	private static final double MIN_SUM_FOR_SALE=500.00;
+	private static final int DISCOUNT_FOR_SALE=5;
+	private static final int GROUP_FOR_SALE[]={120000,130000,80000,480000,540000};
+	private static final int SKLAD_FOR_SALE=4;
+
+	
 	private JMenu saleMenu;
 	private JMenu editMenu;
 	private JMenu doceditMenu;
@@ -261,17 +270,16 @@ class MainFrame extends JFrame
 		}
 		Printdialog.addTovar(data);
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
-			String tovar=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
-//			String Suma=Printdialog.getTovar().substring(Printdialog.getTovar().indexOf(" на сумму: ")+11);
+			String clientName=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
+			int id_client;
 			String Suma="";
-//			int numb=0;
+			double sum=0;
 			int id=0;
 			boolean isOpt=true;
 			
 			try{
-//				DataSet.UpdateQuery("lock table document in exclusive mode");
 				try{
-					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+tovar+"')" +
+					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+clientName+"')" +
 						" and numb is null for update nowait", false);
 				}catch(Exception e){
 					JOptionPane.showMessageDialog(this, "Одна из накладных редактируеться, печать не возможна! \n Попробуйте позже!", "Ошибка блокировки!", JOptionPane.INFORMATION_MESSAGE);
@@ -282,11 +290,13 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
-				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",tovar),false );
+				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
 				rs.next();
-				Suma=formatter.format(rs.getDouble(1))+" грн.";
-				rs=DataSet.QueryExec("select type from client where name='"+tovar+"'", false);
+				sum=rs.getDouble(1);
+				Suma=formatter.format(sum)+" грн.";
+				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
 				rs.next();
+				id_client=rs.getInt(2);
 				if (rs.getInt(1)==2)
 					isOpt=false;
 			}catch (Exception e) {
@@ -299,27 +309,32 @@ class MainFrame extends JFrame
 				e.printStackTrace();
 				return;
 			}
+			double amountOfDiscount=0;
+			if (isOpt && SALE)
+				amountOfDiscount=CalcSale(id_client);
+			if (amountOfDiscount<0)
+				return;
+			Suma=formatter.format(sum-amountOfDiscount)+" грн.";
+			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" грн.";
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
 			try {
-//				rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
 				rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
 				if (!rs.next()){
-//					numb=rs.getInt(1);
 					DataSet.UpdateQuery1("drop sequence numb_real");
 					DataSet.UpdateQuery1("CREATE SEQUENCE   numb_real  MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE NOORDER");
 					DataSet.commit1();
 				}
-				String SQL="Select id_doc, id_skl from document where (numb is NULL) and (id_client=(select id_client from client where name='"+tovar+"'))";
+				String SQL="Select id_doc, id_skl from document where (numb is NULL) and (id_client=(select id_client from client where name='"+clientName+"'))";
 				rs=DataSet.QueryExec(SQL, false);
 				int Doc_count=0;
 				while (rs.next()){
 					Doc_count++;
-//					numb++;
 					id=rs.getInt(1);
 					int skl=rs.getInt(2);
 					boolean last=!rs.next();
 					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
+//					DataSet.UpdateQuery("update document set numb=-1, day=sysdate where id_doc="+id);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else{
@@ -349,7 +364,6 @@ class MainFrame extends JFrame
 						}
 						OutData.add(Row);
 					}
-//					String SQL1=;
 					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name),numb from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
 							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
 					String pref="";
@@ -364,7 +378,7 @@ class MainFrame extends JFrame
 						OutputOO.OpenDoc("nakl_opt.ots",true);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1);
 						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
+						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
 						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7);
 						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7);
@@ -376,15 +390,18 @@ class MainFrame extends JFrame
 						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2);
 						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2);
 						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4);
-						if (last) 
+						if (last) {
 							OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma+" (курс USD="+curs_USD+")",10,true,2,9+size+6);
+							if (SALE && amountOfDiscount>0)
+								OutputOO.InsertOne(messageDiscount,10,true,2,9+size+8);
+						}
 						}
 					else
 						{
 						OutputOO.OpenDoc("nakl_roz.ots",true);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1);
 						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
+						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4);
 						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
 						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7);
 						OutputOO.InsertOne("Итого:",10,false,2,9+size);
@@ -730,6 +747,119 @@ class MainFrame extends JFrame
 			JOptionPane.showMessageDialog(null, "Ошибка зыписи штрих-кода", "Ошибка!", JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
+	}
+	
+	private double CalcSale(int aId_client){
+		double sumOfDiscount=CalcSumForSale(aId_client);
+		if (sumOfDiscount==0)
+			return 0;
+		try{
+			if (sumOfDiscount>=MIN_SUM_FOR_SALE){
+				sumOfDiscount=sumOfDiscount*DISCOUNT_FOR_SALE/100;
+				String SQL=String.format("update lines set disc=%s where rowid in (select l.rowid from lines l, document d where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s))", DISCOUNT_FOR_SALE, aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+				DataSet.UpdateQuery(SQL);
+				SQL=String.format("update document set sum = (select sum(l.kol*l.cost*(1-l.disc/100)*(1-d.disc/100)) from document d, lines l where document.id_doc = d.id_doc and l.id_doc = d.id_doc) where document.id_type_doc=2 and document.numb is null and document.id_client=%s", aId_client);
+				DataSet.UpdateQuery(SQL);
+			}
+		}catch(Exception e){
+			JOptionPane.showMessageDialog(null, "Ошибка расчета акции.\nОбатитесь к администратору.", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+			sumOfDiscount=-1;
+			e.printStackTrace();
+			try{
+				DataSet.rollback();
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+		return sumOfDiscount;
+	}
+	
+	private double CalcSumForSale(int aId_client){
+		double sumForSale=0;
+		if (!isSale()){
+			return sumForSale;
+		}
+		try{
+			String SQL=String.format("select sum(l.kol*l.cost*c.curs) from lines l, document d, curs_now c  where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s) and c.id_val=d.id_val", aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			if (rs.next())
+				sumForSale=rs.getDouble(1);
+		}catch(Exception e){
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Ошибка в модуле:CalcSumForSale", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+		}
+		return sumForSale;
+	}
+	
+	public Double CalcSumForSale(String aName_client){
+		double sumForSale=0;
+		if (!isSale()){
+			return null;
+		}
+		try{
+			String SQL=String.format("select sum(l.kol*l.cost*c.curs) from lines l, document d, curs_now c  where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s) and c.id_val=d.id_val", getId_clientByName(aName_client),IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			if (rs.next())
+				sumForSale=rs.getDouble(1);
+		}catch(Exception e){
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Ошибка в модуле: CalcSumForSale", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+		}
+	
+		return sumForSale;
+	}
+	
+	private String IntArrayToCommaString(int[] array){
+		String resultString="";
+		for (int element:GROUP_FOR_SALE){
+			resultString=resultString+", "+element;
+		}
+		if (resultString.length()>0)
+			resultString=resultString.substring(2);
+		return resultString; 
+
+	}
+	
+	private int getId_clientByName(String aNameClient){
+		int id_client=-1;
+		try{
+			String SQL=String.format("select id_client from client where name='%s'", aNameClient);
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			if (rs.next())
+				id_client=rs.getInt(1);
+		}catch(Exception e){
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Ошибка в модуле: getId_clientByName", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+		}
+		return id_client;
+	}
+	
+	public Vector<String> ChooseNameForSale(String commaName, String skladName){
+		Vector<String> nameForSale=new Vector<String>(0); 
+		try{
+			String SQL=String.format("Select id_skl from sklad where name='%s'", skladName);
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			int id_skl=0;
+			if (rs.next())
+				id_skl=rs.getInt(1);
+			if (id_skl!=SKLAD_FOR_SALE)
+				return nameForSale;
+			SQL=String.format("select trim(t2.name) from (select distinct k.id_group, t1.name from (select id_tovar, name from tovar where name in (%s)) t1, kart k where k.id_tovar=t1.id_tovar and k.id_skl=%s) t2," +
+					" (select t.root,t.id_group from groupid g1,(select distinct CONNECT_BY_ROOT id_group root, id_group from groupid g connect by prior g.id_group= g.parent_group ) t " +
+					"where t.root= g1.id_group and g1.parent_group is null) r where r.id_group=t2.id_group and r.root in (%s)", commaName, SKLAD_FOR_SALE, IntArrayToCommaString(GROUP_FOR_SALE));
+			rs=DataSet.QueryExec(SQL, false);
+			while (rs.next()){
+				nameForSale.add(rs.getString(1));
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Ошибка в модуле: ChooseNameForSale", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+		}
+		return nameForSale;
+	}
+	
+	public Boolean isSale(){
+		return ((new GregorianCalendar()).after(STARTDATE) && (new GregorianCalendar()).before(ENDDATE)) && SALE; 
 	}
 }
 
