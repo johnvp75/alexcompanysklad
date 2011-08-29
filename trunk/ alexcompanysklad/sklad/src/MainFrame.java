@@ -30,9 +30,11 @@ class MainFrame extends JFrame
 {
 	private static final boolean SALE=true;
 	private static final GregorianCalendar STARTDATE=new GregorianCalendar(2011,7,25,0,0);
-	private static final GregorianCalendar ENDDATE=new GregorianCalendar(2011,8,15,23,59);
-	private static final double MIN_SUM_FOR_SALE=500.00;
-	private static final int DISCOUNT_FOR_SALE=5;
+	private static final GregorianCalendar ENDDATE=new GregorianCalendar(2011,8,20,23,59);
+	private static final double MIN_SUM_FOR_SALE_1=300.00;
+	private static final int DISCOUNT_FOR_SALE_1=5;
+	private static final double MIN_SUM_FOR_SALE_2=1000.00;
+	private static final int DISCOUNT_FOR_SALE_2=7;
 	private static final int GROUP_FOR_SALE[]={120000,130000,80000,480000,540000};
 	private static final int SKLAD_FOR_SALE=4;
 
@@ -753,10 +755,15 @@ class MainFrame extends JFrame
 		double sumOfDiscount=CalcSumForSale(aId_client);
 		if (sumOfDiscount==0)
 			return 0;
+		int discount=0;
+		if (sumOfDiscount>=MIN_SUM_FOR_SALE_1 && sumOfDiscount<MIN_SUM_FOR_SALE_2)
+			discount=DISCOUNT_FOR_SALE_1;
+		if (sumOfDiscount>=MIN_SUM_FOR_SALE_2)
+			discount=DISCOUNT_FOR_SALE_2;
 		try{
-			if (sumOfDiscount>=MIN_SUM_FOR_SALE){
-				sumOfDiscount=sumOfDiscount*DISCOUNT_FOR_SALE/100;
-				String SQL=String.format("update lines set disc=%s where rowid in (select l.rowid from lines l, document d where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s))", DISCOUNT_FOR_SALE, aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+			if (sumOfDiscount>=MIN_SUM_FOR_SALE_1){
+				sumOfDiscount=sumOfDiscount*discount/100;
+				String SQL=String.format("update lines set disc=%s where rowid in (select l.rowid from lines l, document d where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s))", discount, aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
 				DataSet.UpdateQuery(SQL);
 				SQL=String.format("update document set sum = (select sum(l.kol*l.cost*(1-l.disc/100)*(1-d.disc/100)) from document d, lines l where document.id_doc = d.id_doc and l.id_doc = d.id_doc) where document.id_type_doc=2 and document.numb is null and document.id_client=%s", aId_client);
 				DataSet.UpdateQuery(SQL);
@@ -858,7 +865,7 @@ class MainFrame extends JFrame
 		return nameForSale;
 	}
 	
-	public Boolean isSale(){
+	public static Boolean isSale(){
 		return ((new GregorianCalendar()).after(STARTDATE) && (new GregorianCalendar()).before(ENDDATE)) && SALE; 
 	}
 }
