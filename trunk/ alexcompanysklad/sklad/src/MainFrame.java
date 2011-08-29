@@ -753,7 +753,7 @@ class MainFrame extends JFrame
 	
 	private double CalcSale(int aId_client){
 		double sumOfDiscount=CalcSumForSale(aId_client);
-		if (sumOfDiscount==0)
+		if (sumOfDiscount<MIN_SUM_FOR_SALE_1)
 			return 0;
 		int discount=0;
 		if (sumOfDiscount>=MIN_SUM_FOR_SALE_1 && sumOfDiscount<MIN_SUM_FOR_SALE_2)
