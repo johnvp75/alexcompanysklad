@@ -76,7 +76,7 @@ class NewSaleFrame extends MyPanel
 		itogowo = new JLabel("Итого (не учитывая скидку): 0,00");
 		itogoallLabel= new JLabel("Итого по всем накладным: 0,00");
 		sumForSale=new JButton("Сумма по акции");
-		sumForSale.setVisible(parent.isSale());
+		sumForSale.setVisible(MainFrame.isSale());
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
@@ -218,7 +218,8 @@ class NewSaleFrame extends MyPanel
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, String.format("Сумма по акции: %s", parent.CalcSumForSale((String)clientCombo.getSelectedItem())+getSumForSaleInCurrentDoc()), "Акция!", JOptionPane.INFORMATION_MESSAGE);
+				NumberFormat formatter = new DecimalFormat ("0.00") ;
+				JOptionPane.showMessageDialog(null, String.format("Сумма по акции: %s", formatter.format(parent.CalcSumForSale((String)clientCombo.getSelectedItem())+getSumForSaleInCurrentDoc())), "Акция!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		model.addTableModelListener(modlis);
@@ -316,10 +317,6 @@ class NewSaleFrame extends MyPanel
 				}				
 			}
 		});
-		
-//		SelectionListener listener = new SelectionListener(naklTable);
-//	    naklTable.getSelectionModel().addListSelectionListener(listener);
-//	    naklTable.getColumnModel().getSelectionModel().addListSelectionListener(listener);
 //Добавляем элементы на форму
 		add(saveButton);
 		add(cancelButton);
@@ -468,9 +465,6 @@ class NewSaleFrame extends MyPanel
 		}
 			}
 		Checking=false;
-//		ComboBoxEditor edit=clientCombo.getEditor();
-//		edit.selectAll();
-//		clientCombo.getEditor().selectAll();
 		ResultSet rs;
 		try {
 			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",false );
@@ -484,11 +478,7 @@ class NewSaleFrame extends MyPanel
 
 		model.setClient((String)clientCombo.getSelectedItem());
 		itogo.setText("Итого (учитывая скидку): "+model.summ());
-		if (!parent.isSale()){
-			sumForSale.setVisible(false);
-		}else{
-			sumForSale.setVisible(true);
-		}
+		sumForSale.setVisible(MainFrame.isSale() && !okrCombo.isVisible());
 		double curs=1;
 		try{
 			rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
