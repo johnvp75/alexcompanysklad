@@ -278,6 +278,7 @@ class MainFrame extends JFrame
 			double sum=0;
 			int id=0;
 			boolean isOpt=true;
+			double amountOfDiscount=0;
 			
 			try{
 				try{
@@ -292,15 +293,20 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
-				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
-				rs.next();
-				sum=rs.getDouble(1);
-				Suma=formatter.format(sum)+" грн.";
 				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
 				rs.next();
 				id_client=rs.getInt(2);
 				if (rs.getInt(1)==2)
 					isOpt=false;
+				
+				if (isOpt && SALE)
+					amountOfDiscount=CalcSale(id_client);
+				if (amountOfDiscount<0)
+					return;
+				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
+				rs.next();
+				sum=rs.getDouble(1);
+				Suma=formatter.format(sum)+" грн.";
 			}catch (Exception e) {
 				try {
 					DataSet.rollback();
@@ -311,12 +317,8 @@ class MainFrame extends JFrame
 				e.printStackTrace();
 				return;
 			}
-			double amountOfDiscount=0;
-			if (isOpt && SALE)
-				amountOfDiscount=CalcSale(id_client);
-			if (amountOfDiscount<0)
-				return;
-			Suma=formatter.format(sum-amountOfDiscount)+" грн.";
+
+			Suma=formatter.format(sum)+" грн.";
 			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" грн.";
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
@@ -753,6 +755,7 @@ class MainFrame extends JFrame
 	
 	private double CalcSale(int aId_client){
 		double sumOfDiscount=CalcSumForSale(aId_client);
+		double curs=0.00;
 		if (sumOfDiscount<MIN_SUM_FOR_SALE_1)
 			return 0;
 		int discount=0;
@@ -761,13 +764,15 @@ class MainFrame extends JFrame
 		if (sumOfDiscount>=MIN_SUM_FOR_SALE_2)
 			discount=DISCOUNT_FOR_SALE_2;
 		try{
-			if (sumOfDiscount>=MIN_SUM_FOR_SALE_1){
-				sumOfDiscount=sumOfDiscount*discount/100;
-				String SQL=String.format("update lines set disc=%s where rowid in (select l.rowid from lines l, document d where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s))", discount, aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
-				DataSet.UpdateQuery(SQL);
-				SQL=String.format("update document set sum = (select sum(l.kol*l.cost*(1-l.disc/100)*(1-d.disc/100)) from document d, lines l where document.id_doc = d.id_doc and l.id_doc = d.id_doc) where document.id_type_doc=2 and document.numb is null and document.id_client=%s", aId_client);
-				DataSet.UpdateQuery(SQL);
-			}
+			sumOfDiscount=sumOfDiscount*discount/100;
+			String SQL=String.format("update lines set disc=%s where rowid in (select l.rowid from lines l, document d where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s))", discount, aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+			DataSet.UpdateQuery(SQL);
+			SQL=String.format("update document set sum = (select sum(l.kol*l.cost*(1-l.disc/100)*(1-d.disc/100)) from document d, lines l where document.id_doc = d.id_doc and l.id_doc = d.id_doc) where document.id_type_doc=2 and document.numb is null and document.id_client=%s", aId_client);
+			DataSet.UpdateQuery(SQL);
+			SQL="Select curs from curs_now where id_val=22";
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			rs.next();
+			curs=rs.getDouble(1);
 		}catch(Exception e){
 			JOptionPane.showMessageDialog(null, "Ошибка расчета акции.\nОбатитесь к администратору.", "Ошибка!", JOptionPane.ERROR_MESSAGE);
 			sumOfDiscount=-1;
@@ -778,7 +783,7 @@ class MainFrame extends JFrame
 				ex.printStackTrace();
 			}
 		}
-		return sumOfDiscount;
+		return sumOfDiscount*curs;
 	}
 	
 	private double CalcSumForSale(int aId_client){
@@ -787,7 +792,7 @@ class MainFrame extends JFrame
 			return sumForSale;
 		}
 		try{
-			String SQL=String.format("select sum(l.kol*l.cost*c.curs) from lines l, document d, curs_now c  where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s) and c.id_val=d.id_val", aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+			String SQL=String.format("select sum(l.kol*l.cost) from lines l, document d, curs_now c  where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s) and c.id_val=d.id_val", aId_client,IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
 			ResultSet rs=DataSet.QueryExec(SQL, false);
 			if (rs.next())
 				sumForSale=rs.getDouble(1);
@@ -804,7 +809,7 @@ class MainFrame extends JFrame
 			return null;
 		}
 		try{
-			String SQL=String.format("select sum(l.kol*l.cost*c.curs) from lines l, document d, curs_now c  where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s) and c.id_val=d.id_val", getId_clientByName(aName_client),IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
+			String SQL=String.format("select sum(l.kol*l.cost) from lines l, document d  where l.id_doc = d.id_doc and d.id_type_doc=2 and d.numb is null and d.id_client=%s and l.disc=0 and substr(d.note,1,1)!='&' and l.id_tovar in (select distinct id_tovar FROM kart WHERE id_group in (select id_group FROM groupid start with parent_group in (%s) CONNECT BY prior id_group=parent_group) and id_skl=%s)", getId_clientByName(aName_client),IntArrayToCommaString(GROUP_FOR_SALE),SKLAD_FOR_SALE);
 			ResultSet rs=DataSet.QueryExec(SQL, false);
 			if (rs.next())
 				sumForSale=rs.getDouble(1);
