@@ -75,7 +75,7 @@ class ManagerChooser extends JPanel
 		String SQL="select decode(to_char(sysdate, 'DD.MM.YYYY'),to_char(day,'DD.MM.YYYY'),1,0),complete,trim(text) from manager where name='"+(String)username.getSelectedItem()+"' and password='"+(new String(password.getPassword()))+"'";
 		
 		try {
-			ResultSet rs = DataSet.QueryExec(SQL,true);
+			ResultSet rs = DataSet.QueryExec(SQL,false);
 			
 			if (rs.next()){
 				
@@ -116,7 +116,7 @@ class ManagerChooser extends JPanel
 		
 		username.removeAllItems();
 		try {
-			ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%"+rul+"%' order by manager.name",true);
+			ResultSet rs = DataSet.QueryExec("select rtrim(manager.name) from manager inner join rules on manager.id_rules=rules.id_rules where rules.id_doc like '%"+rul+"%' order by manager.name",false);
 			rs.next();
 			while (!rs.isAfterLast()){
 				username.addItem(rs.getString("rtrim(manager.name)"));

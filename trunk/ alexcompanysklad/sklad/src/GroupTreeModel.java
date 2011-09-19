@@ -29,7 +29,7 @@ class GroupTreeModel implements TreeModel{
 		}
 		
 		try{
-			ResultSet rs=DataSet.QueryExec(SQL,true);
+			ResultSet rs=DataSet.QueryExec(SQL,false);
 			for(int i=0;i<=index;i++)
 				rs.next();
 //			rs.absolute(index+1);
@@ -48,7 +48,7 @@ class GroupTreeModel implements TreeModel{
 		}
 		
 		try{
-			ResultSet rs=DataSet.QueryExec(SQL,true);
+			ResultSet rs=DataSet.QueryExec(SQL,false);
 			if (!(rs==null)){ 
 				rs.next();
 				count=rs.getInt(1);
@@ -70,7 +70,7 @@ class GroupTreeModel implements TreeModel{
 		}
 		
 		try{
-			ResultSet rs=DataSet.QueryExec(SQL,true);
+			ResultSet rs=DataSet.QueryExec(SQL,false);
 			int i=-1;
 			while (rs.next()){
 				i++;
