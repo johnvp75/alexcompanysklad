@@ -640,11 +640,14 @@ class MainFrame extends JFrame
 				}
 				NumberFormat formatter = new DecimalFormat ( "0.00" );
 				Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
-				rs=DataSet.QueryExec(String.format("select id_doc from document where numb=%s and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", numb), false);
+				rs=DataSet.QueryExec(String.format("select id_doc,id_skl from document where numb=%s and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", numb), false);
 				rs.next();
 				int id=rs.getInt(1);
+				int skl=rs.getInt(2);
 				GenerateBarCodeForMissing(id);
-				rs=DataSet.QueryExec(String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code where for_shops=1 group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol", id), false);
+				String SQL=String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code where for_shops=1 group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol order by %s", id,
+						skl!=8?"trim(t.name)":"substr(upper(trim(t.name)),instr(trim(t.name),' ')+1),to_number(substr(upper(trim(t.name)),1,instr(trim(t.name),' ')-1),'999999999.99')");
+				rs=DataSet.QueryExec(SQL, false);
 				for (int i=0; i<OutData.size();i++)
 					OutData.get(i).clear();
 				OutData.clear();
