@@ -279,7 +279,8 @@ class MainFrame extends JFrame
 			int id=0;
 			boolean isOpt=true;
 			double amountOfDiscount=0;
-			
+			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
+				return;
 			try{
 				try{
 					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+clientName+"')" +
@@ -414,7 +415,7 @@ class MainFrame extends JFrame
 
 						}
 					OutputOO.Insert(1, 9, OutData);
-					OutputOO.print(2);
+					OutputOO.print(isOpt?2:3);
 					OutputOO.CloseDoc();
 					
 					rs=DataSet.QueryExec(SQL, false);
@@ -529,7 +530,7 @@ class MainFrame extends JFrame
 						}
 					OutputOO.Insert(1, 9, OutData);
 					if (!view){
-						OutputOO.print(2);
+						OutputOO.print(1);
 						OutputOO.CloseDoc();
 					}
 					

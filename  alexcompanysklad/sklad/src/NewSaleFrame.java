@@ -52,11 +52,14 @@ class NewSaleFrame extends MyPanel
 	private JPopupMenu popup;
 	private int p;
 	private double itogoall=0.0;
+	private double koefForPrice=1;
 	private JTextField noteText;
 	private ActionListener clientlistener;
 	private ActionListener skladlistener;
 	private boolean Checking=false;
 	private Double sumForSaleInOtherDoc=0.0;
+	private JCheckBox isKoefForPrice;
+	private JTextField fieldForInputKoefForPrice;
 	
 	private int id_doc;
 	private JButton infoButton;
@@ -84,17 +87,17 @@ class NewSaleFrame extends MyPanel
 		okrCombo.addItem("До 0,1");
 		okrCombo.addItem("До 1");
 		infoButton = new JButton("Информация");
-		editableCheck = new JCheckBox("Редактировать в ячейке");
+		editableCheck = new JCheckBox("Редактировать в ячейке",false);
 		skladCombo = new JComboBoxFire();
 		clientCombo = new AutoComplete();
 		clientCombo.setEditable(true);
 		priceCombo=new JComboBox();
-//		model = new naklTableModel((String)clientCombo.getSelectedItem(),(String)skladCombo.getSelectedItem(),disc,true);
+		isKoefForPrice= new JCheckBox("Процент",false);
+		fieldForInputKoefForPrice=new JTextField("0");
+		fieldForInputKoefForPrice.setVisible(false);
 		model = new naklTableModel("","",0,true);
 		
 		naklTable=new MyTable(model);
-//		Font font = new Font("Times New Roman",Font.PLAIN,16);
-//		naklTable.setFont(font);
 		naklTable.setAutoCreateColumnsFromModel(false);
 		naklTable.getColumnModel().getColumn(0).setMaxWidth(30);
 		naklTable.getColumnModel().getColumn(1).setMaxWidth(455);
@@ -119,16 +122,16 @@ class NewSaleFrame extends MyPanel
 		barcodeButton.setBounds(285, 495, 150, 22);
 		listButton.setBounds(455, 495, 163, 22);
 		printButton.setBounds(638, 495, 104, 22);
-		skladLabel.setBounds(10, 28, 58, 22);
-		skladCombo.setBounds(79, 28, 207, 22);
-		clientLabel.setBounds(10, 58, 61, 22);
-		clientCombo.setBounds(79, 58, 207, 22);
-		infoButton.setBounds(296, 58, 104, 22);
+		skladLabel.setBounds(10, 1, 58, 22);
+		skladCombo.setBounds(79, 1, 207, 22);
+		clientLabel.setBounds(10, 28, 61, 22);
+		clientCombo.setBounds(79, 28, 207, 22);
+		infoButton.setBounds(296, 28, 104, 22);
 		ScrollTable.setBounds(6, 89, 769, 335);
 		priceLabel.setBounds(407, 1, 86, 22);
-		priceCombo.setBounds(505, 1, 207, 22);
+		priceCombo.setBounds(505, 1, 170, 22);
 		okrLabel.setBounds(407, 28, 86, 22);
-		okrCombo.setBounds(505, 28, 207, 22);	
+		okrCombo.setBounds(505, 28, 170, 22);	
 		editableCheck.setBounds(555, 58, 207, 22);
 		itogo.setBounds(220, 425, 200, 22);
 		itogowo.setBounds(10, 425, 210, 22);
@@ -136,6 +139,8 @@ class NewSaleFrame extends MyPanel
 		sumForSale.setBounds(650, 425, 120, 22);
 		noteLabel.setBounds(10, 450, 90, 22);
 		noteText.setBounds(100, 450, 670, 22);
+		isKoefForPrice.setBounds(690, 1, 70, 22);
+		fieldForInputKoefForPrice.setBounds(690, 28, 70, 22);
 		
 //Задаем слушателей
 		clientlistener=new ClientChoose();
@@ -152,10 +157,55 @@ class NewSaleFrame extends MyPanel
 				model.setEditable(((JCheckBox)(event.getSource())).isSelected());
 			}
 		});
+		isKoefForPrice.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				fieldForInputKoefForPrice.setText("0");
+				setKoefForPrice(0);
+				fieldForInputKoefForPrice.setVisible(((JCheckBox)(e.getSource())).isSelected());
+				
+			}
+		});
+		fieldForInputKoefForPrice.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					setKoefForPrice(new Integer(((JTextField)(e.getSource())).getText()));
+				}catch(Exception exc){
+					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Необходимо вводить целое число!");
+					((JTextField)(e.getSource())).setText("0");
+					setKoefForPrice(0);
+				}
+				
+				
+			}
+		});
+		fieldForInputKoefForPrice.addFocusListener(new FocusListener() {
+			
+			@Override
+			public void focusLost(FocusEvent e) {
+				try {
+					setKoefForPrice(new Integer(((JTextField)(e.getSource())).getText()));
+				}catch(Exception exc){
+					exc.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Необходимо вводить целое число!");
+					((JTextField)(e.getSource())).setText("0");
+					setKoefForPrice(0);
+				}
+			}
+			
+			@Override
+			public void focusGained(FocusEvent e) {
+				((JTextField)(e.getSource())).selectAll();
+				
+			}
+		});
 		pressF1 press=new pressF1();
 		addKeyListener(press);
 		skladCombo.addKeyListener(press);
-//		clientCombo.
 		clientCombo.getEditor().getEditorComponent().addKeyListener(press);
 		editableCheck.addKeyListener(press);
 		cancelButton.addKeyListener(press);
@@ -168,6 +218,8 @@ class NewSaleFrame extends MyPanel
 		priceCombo.addKeyListener(press);
 		naklTable.addKeyListener(press);
 		noteText.addKeyListener(press);
+		isKoefForPrice.addKeyListener(press);
+		fieldForInputKoefForPrice.addKeyListener(press);
 		clientCombo.getEditor().getEditorComponent().addFocusListener(new FocusAdapter(){
 		    public void focusGained(FocusEvent event){
 		        clientCombo.getEditor().selectAll();
@@ -340,6 +392,8 @@ class NewSaleFrame extends MyPanel
 		add(noteLabel);
 		add(noteText);
 		add(itogoallLabel);
+		add(isKoefForPrice);
+		add(fieldForInputKoefForPrice);
 		
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
@@ -549,6 +603,7 @@ class NewSaleFrame extends MyPanel
 		 int isakcia=0;
 		 int inBox=1;
 		 ResultSet rs;
+		 String SQL;
 		 try{
 			 rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'",false);
 			 rs.next();
@@ -576,7 +631,9 @@ class NewSaleFrame extends MyPanel
 		 if (res==-1){
 			 
 			 try{
-				 rs=DataSet.QueryExec("select cost,akciya,isakcia from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')",false);
+				 SQL=String.format("select cost*%s,akciya,isakcia from price where id_tovar=(select id_tovar from tovar where name='%s') and id_skl=(select id_skl from SKLAD where name='%s') and id_price=(select id_price from type_price where name='%s')",getKoefForPrice(), aValue,(String)skladCombo.getSelectedItem(),(String)priceCombo.getSelectedItem());
+				 rs=DataSet.QueryExec(SQL, false);
+//				 rs=DataSet.QueryExec("select cost,akciya,isakcia from price where id_tovar=(select id_tovar from tovar where name='"+aValue+"') and id_skl=(select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') and id_price=(select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"')",false);
 				 rs.next();
 				 Box=rs.getFloat(1);
 				 akcia=rs.getInt(2);
@@ -998,6 +1055,12 @@ class NewSaleFrame extends MyPanel
 			sumInDocument=sumInDocument+model.getSumByName(listOfName.get(i));
 		}
 		return sumInDocument;
+	}
+	private double getKoefForPrice() {
+		return koefForPrice;
+	}
+	private void setKoefForPrice(double koefForPrice) {
+		this.koefForPrice = 1+koefForPrice/100;
 	}
 
 }
