@@ -281,6 +281,10 @@ class MainFrame extends JFrame
 			double amountOfDiscount=0;
 			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
 				return;
+			PrintProcess question=new PrintProcess();
+			if (question.ShowDialog(clientName)==PrintProcess.CancelPrint){
+				return;
+			}
 			try{
 				try{
 					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+clientName+"')" +
