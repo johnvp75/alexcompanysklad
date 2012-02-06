@@ -282,7 +282,7 @@ class MainFrame extends JFrame
 			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
 				return;
 			PrintProcess question=new PrintProcess();
-			if (question.ShowDialog(clientName)==PrintProcess.CancelPrint){
+			if (question.ShowDialog(clientName)==PrintProcess.CANCEL_PRINT){
 				return;
 			}
 			try{
@@ -328,8 +328,8 @@ class MainFrame extends JFrame
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
 			try {
-				rs=DataSet.QueryExec("select max(numb) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
-				if (!rs.next()){
+				rs=DataSet.QueryExec("select nvl(max(numb),-1) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
+				if ((!rs.next()) || (rs.getInt(1)==-1) ){
 					DataSet.UpdateQuery1("drop sequence numb_real");
 					DataSet.UpdateQuery1("CREATE SEQUENCE   numb_real  MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE NOORDER");
 					DataSet.commit1();
@@ -343,11 +343,10 @@ class MainFrame extends JFrame
 					int skl=rs.getInt(2);
 					boolean last=!rs.next();
 					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
-//					DataSet.UpdateQuery("update document set numb=-1, day=sysdate where id_doc="+id);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else{
-						String SQLr="select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999.99')");
+						String SQLr=skl==2?PrintGlassForShop(id):"select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999.99')");
 						rs=DataSet.QueryExec(SQLr, false);
 					}
 					for (int i=0; i<OutData.size();i++)
@@ -439,6 +438,23 @@ class MainFrame extends JFrame
 		}
 		this.repaint();
 	}
+	
+	private String PrintGlassForShop(int id) throws Exception{
+		String LocateSQL=String.format("select cost from lines where not (cost in (select price from glassforshop)) and id_doc=%s", id);
+		ResultSet rs=DataSet.QueryExec(LocateSQL, false);
+		try{
+			while (rs.next()){
+				LocateSQL=String.format("Insert into glassforshop (name,barcode,price) values ('%s','%s',%s)",rs.getInt(1)+" Очки с/з",BarCode.GenerateBarCode(60000),rs.getString(1) );
+				DataSet.UpdateQuery1(LocateSQL);
+			}
+			DataSet.commit1();
+		}catch(Exception e){
+			DataSet.rollback1();
+			JOptionPane.showMessageDialog(null, "Ошибка записи новыш штрих кодов");
+		}
+		return String.format("select trim(gfs.name), sum(l.kol),l.cost,sum(l.kol)*l.cost from glassforshop gfs,lines l where gfs.price=l.cost and id_doc=%s group by l.cost,trim(gfs.name), trim(gfs.barcode) order by l.cost", id);
+	}
+	
 	public void printold(int numb, boolean view){
 //		Vector<String> data =new Vector<String>(0);
 		NumberFormat formatter = new DecimalFormat ( "0.00" );
@@ -466,8 +482,10 @@ class MainFrame extends JFrame
 					int skl=rs.getInt(2);
 					if (isOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
-					else
-						rs=DataSet.QueryExec("select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')"), false);
+					else{
+						String SQL=skl==2?PrintGlassForShop(id):"select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')");
+						rs=DataSet.QueryExec(SQL, false);
+					}
 					for (int i=0; i<OutData.size();i++)
 						OutData.get(i).clear();
 					OutData.clear();
@@ -650,7 +668,9 @@ class MainFrame extends JFrame
 				int id=rs.getInt(1);
 				int skl=rs.getInt(2);
 				GenerateBarCodeForMissing(id);
-				String SQL=String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code where for_shops=1 group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol order by %s", id,
+				String SQL=skl==2
+						?String.format("select trim(gfs.barcode), trim(gfs.name), sum(l.kol),l.cost from glassforshop gfs,lines l where gfs.price=l.cost and id_doc=%s group by l.cost,trim(gfs.name), trim(gfs.barcode) order by l.cost", id)
+						:String.format("select b.bar_code, trim(t.name), sum(l.kol*t.kol), l.cost/t.kol from lines l, tovar t, (select max(trim(bar_code)) as bar_code, id_tovar, id_skl from bar_code where for_shops=1 group by id_tovar, id_skl) b, document d where t.id_tovar = l.id_tovar and b.id_tovar=l.id_tovar and l.id_doc = d.id_doc and d.id_skl=b.id_skl and d.id_doc=%s group by b.bar_code, trim(t.name), l.cost/t.kol order by %s", id,
 						skl!=8?"trim(t.name)":"substr(upper(trim(t.name)),instr(trim(t.name),' ')+1),to_number(substr(upper(trim(t.name)),1,instr(trim(t.name),' ')-1),'999999999.99')");
 				rs=DataSet.QueryExec(SQL, false);
 				for (int i=0; i<OutData.size();i++)

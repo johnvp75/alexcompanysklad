@@ -241,12 +241,15 @@ class NewSaleFrame extends MyPanel
 				}catch(Exception e){
 					e.printStackTrace();
 				}
+				
 				model.removeAll();
 //				setVisible(false);
 				parent.showFrame("noVisible");
 //				ChooserStreamIn.close();
 				parent.closeSaleFrame();
-
+				isKoefForPrice.setSelected(false);
+				fieldForInputKoefForPrice.setText("0");
+				setKoefForPrice(0);
 			}
 		});
 		listButton.addActionListener(new ActionListener(){
@@ -285,6 +288,9 @@ class NewSaleFrame extends MyPanel
 //					setVisible(false);
 					parent.showFrame("noVisible");
 					parent.closeSaleFrame();
+					isKoefForPrice.setSelected(false);
+					fieldForInputKoefForPrice.setText("0");
+					setKoefForPrice(0);
 					parent.print();
 				}
 			}
