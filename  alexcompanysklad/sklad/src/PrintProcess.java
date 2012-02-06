@@ -1,4 +1,5 @@
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ContainerEvent;
@@ -17,8 +18,8 @@ import javax.swing.Timer;
 
 public class PrintProcess extends JDialog {
 
-	public static boolean Printing=true;
-	public static boolean CancelPrint=false;
+	public static boolean PRINTING=true;
+	public static boolean CANCEL_PRINT=false;
 	
 	private JLabel print;
 	private JLabel clientName;
@@ -28,7 +29,7 @@ public class PrintProcess extends JDialog {
 	private int time=10;
 	
 	public PrintProcess(){
-		setStatus(Printing);
+		setStatus(PRINTING);
 		Font fontPlain=new Font("Times New Roman", Font.PLAIN,14);
 		Font fontBold=new Font("Times New Roman", Font.BOLD,12);
 		print=new JLabel ("Печатается:");
@@ -46,14 +47,14 @@ public class PrintProcess extends JDialog {
 		cancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				setStatus(CancelPrint);
+				setStatus(CANCEL_PRINT);
 				hideDialog();
 			}
 		});
 		this.addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent event){
 				if (time>0) {
-					setStatus(CancelPrint);
+					setStatus(CANCEL_PRINT);
 					
 				}
 			}
@@ -79,6 +80,9 @@ public class PrintProcess extends JDialog {
 		    public void actionPerformed(ActionEvent evt) {
 		    	if (time==0){
 		    		hideDialog();
+		    	}
+		    	if (time>8){
+		    		Toolkit.getDefaultToolkit().beep();
 		    	}
 		    	cancel.setText("Отменить (" + time + ")");
 		    	time--;

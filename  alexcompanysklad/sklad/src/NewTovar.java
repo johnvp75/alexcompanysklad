@@ -259,23 +259,9 @@ public class NewTovar extends JPanel {
 
 							if (Price.trim().equals("Розница Бижутерия")){
 // Штрих-код
-					            int group=1310000;
-								SQL=String.format("select max(substr(bar_code,%s,5)) from bar_code where bar_code like '%s%s'", (new Integer(group)).toString().length()+1,group,"%");
-					            rs=DataSet.QueryExec(SQL, false);
-					            int num=1;
-					            if (rs.next())
-					                num=rs.getInt(1);
-					            String code=String.format("%s%05d", group,num+1);
-					            String code_sum=String.format("%07d%05d", group,num+1);
-					            Integer sum=new Integer(0);
-					            for (int i=2;i<13;i=i+2)
-					                sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
-					            sum=sum*3;
-					            for (int i=1;i<12;i=i+2)
-					                sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
-					            sum=10-((Double)((((sum.doubleValue()/10)-sum/10)*10)+0.1)).intValue();
-					            code=code+sum.toString().substring(sum.toString().length()-1);
-					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar, code);
+//					            int group=1310000;
+//					            String code 
+					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar, BarCode.GenerateBarCode(1310000));
 					            DataSet.UpdateQuery(SQL);
 					            Double cost=((new Double(CostTextField.getText())*10));
 					            String grname="%"+TovarNameTextField.getText().trim().substring(TovarNameTextField.getText().trim().indexOf(" ")+1).toUpperCase()+"%";

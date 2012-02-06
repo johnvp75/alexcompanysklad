@@ -1,3 +1,5 @@
+import java.sql.ResultSet;
+
 
 public class BarCode {
 	protected String code;
@@ -46,6 +48,24 @@ public class BarCode {
 	public void setBarcodeForShops(Boolean barcodeForShops) {
 		this.barcodeForShops = barcodeForShops;
 	}
-	
+	public static String GenerateBarCode(int group) throws Exception{
+		int num=1;
+		String SQL=String.format("select max(substr(bar_code,%s,5)) from bar_code where bar_code like '%s%s'", (new Integer(group)).toString().length()+1,group,"%");
+		ResultSet rs=DataSet.QueryExec(SQL, false);
+		if (rs.next())
+			num=rs.getInt(1);
+        String code=String.format("%s%05d", group,num+1);
+        String code_sum=String.format("%07d%05d", group,num+1);
+        Integer sum=new Integer(0);
+        for (int i=2;i<13;i=i+2)
+            sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
+        sum=sum*3;
+        for (int i=1;i<12;i=i+2)
+            sum=sum+(Integer.valueOf(code_sum.substring(i-1, i)));
+        sum=10-((Double)((((sum.doubleValue()/10)-sum/10)*10)+0.1)).intValue();
+        code=code+sum.toString().substring(sum.toString().length()-1);
+        return code;
+
+	}
 	
 }
