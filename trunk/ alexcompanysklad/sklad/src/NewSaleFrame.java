@@ -599,12 +599,28 @@ class NewSaleFrame extends MyPanel
 		return true;
 	}
 	
-	
+	private boolean IsBan(String nameOfItem){
+		try{
+			String SQL=String.format("select max(nvl(g.ban,0)) from groupid g, kart k, tovar t where t.name= '%s' and k.id_tovar = t.id_tovar and k.id_group = g.id_group", nameOfItem);
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			if (rs.next()) {
+				return rs.getInt(1)==1;
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Ошибка проверки запрета продаж. \nОбратитесь к администратору.", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+		}
+		return false;
+	}
 	public void Input(String aValue, int aCount){
 		 if (aValue==null)
 			return;
 		 if (formInput==null)
 			 formInput = new InputCountTovar();
+		 if (IsBan(aValue)){
+			 JOptionPane.showMessageDialog(null, String.format("Продажа этого товара запрешена \n %s",aValue), "Операция запрещена", JOptionPane.ERROR_MESSAGE);
+			 return;
+		 }
 		 int akcia=0;
 		 int isakcia=0;
 		 int inBox=1;

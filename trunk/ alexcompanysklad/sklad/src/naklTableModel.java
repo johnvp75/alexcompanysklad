@@ -244,7 +244,7 @@ class dataCont{
 	public int add(String aName, int aCount, double aCost, int aDiscount, boolean aAkcia, boolean aReal){
 		int pr;
 		if (aReal)
-			pr=present(aName);
+			pr=present(aName,aCost);
 		else
 			pr=-1;
 		if (pr==-1){
@@ -313,6 +313,13 @@ class dataCont{
 			setDiscount(aValue,row);
 			break;
 		}
+	}
+	public int present(String aName,double cost){
+		int ret=-1;
+		for (int i=0;i<=getSize()-1;i++)
+			if ((getName(i)).equals(aName) && ((Double)getCost(i)).doubleValue()==cost )
+				ret=i;
+		return ret;	
 	}
 	public int present(String aName){
 		int ret=-1;
