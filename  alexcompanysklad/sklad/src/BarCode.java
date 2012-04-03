@@ -51,7 +51,7 @@ public class BarCode {
 	public static String GenerateBarCode(int group) throws Exception{
 		int num=1;
 		String SQL=String.format("select max(substr(bar_code,%s,5)) from bar_code where bar_code like '%s%s'", (new Integer(group)).toString().length()+1,group,"%");
-		ResultSet rs=DataSet.QueryExec(SQL, false);
+		ResultSet rs=DataSet.QueryExec1(SQL, false);
 		if (rs.next())
 			num=rs.getInt(1);
         String code=String.format("%s%05d", group,num+1);

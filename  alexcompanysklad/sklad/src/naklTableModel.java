@@ -317,7 +317,7 @@ class dataCont{
 	public int present(String aName,double cost){
 		int ret=-1;
 		for (int i=0;i<=getSize()-1;i++)
-			if ((getName(i)).equals(aName) && ((Double)getCost(i)).doubleValue()==cost )
+			if ((getName(i)).equals(aName) && Math.abs(((Double)getCost(i)).doubleValue()-cost)<0.001)
 				ret=i;
 		return ret;	
 	}
