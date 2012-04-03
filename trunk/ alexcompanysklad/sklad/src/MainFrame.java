@@ -441,16 +441,17 @@ class MainFrame extends JFrame
 	
 	private String PrintGlassForShop(int id) throws Exception{
 		String LocateSQL=String.format("select cost from lines where not (cost in (select price from glassforshop)) and id_doc=%s", id);
-		ResultSet rs=DataSet.QueryExec(LocateSQL, false);
+		ResultSet rs1=DataSet.QueryExec(LocateSQL, false);
 		try{
-			while (rs.next()){
-				LocateSQL=String.format("Insert into glassforshop (name,barcode,price) values ('%s','%s',%s)",rs.getInt(1)+" Очки с/з",BarCode.GenerateBarCode(60000),rs.getString(1) );
+			while (rs1.next()){
+				LocateSQL=String.format("Insert into glassforshop (name,barcode,price) values ('%s','%s',%s)",rs1.getInt(1)+" Очки с/з",BarCode.GenerateBarCode(60000),rs1.getString(1) );
 				DataSet.UpdateQuery1(LocateSQL);
 			}
 			DataSet.commit1();
 		}catch(Exception e){
+			e.printStackTrace();
 			DataSet.rollback1();
-			JOptionPane.showMessageDialog(null, "Ошибка записи новыш штрих кодов");
+			JOptionPane.showMessageDialog(null, "Ошибка записи новых штрих кодов");
 		}
 		return String.format("select trim(gfs.name), sum(l.kol),l.cost,sum(l.kol)*l.cost from glassforshop gfs,lines l where gfs.price=l.cost and id_doc=%s group by l.cost,trim(gfs.name), trim(gfs.barcode) order by l.cost", id);
 	}
