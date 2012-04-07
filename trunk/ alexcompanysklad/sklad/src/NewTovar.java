@@ -261,7 +261,7 @@ public class NewTovar extends JPanel {
 // Штрих-код
 //					            int group=1310000;
 //					            String code 
-					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar, BarCode.GenerateBarCode(1310000));
+					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar, BarCode.GenerateBarCode(1310000,false));
 					            DataSet.UpdateQuery(SQL);
 					            Double cost=((new Double(CostTextField.getText())*10));
 					            String grname="%"+TovarNameTextField.getText().trim().substring(TovarNameTextField.getText().trim().indexOf(" ")+1).toUpperCase()+"%";

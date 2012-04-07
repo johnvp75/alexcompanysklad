@@ -851,7 +851,7 @@ class NewSaleFrame extends MyPanel
 			if (rs1.getInt(1)==2){
 				roz=1;
 			}
-			rs1=DataSet.QueryExec("select select max(id_doc) from document", false);
+			rs1=DataSet.QueryExec("select max(id_doc) from document", false);
 			if (rs1.next())
 				id=rs1.getInt(1)+1;
 			
