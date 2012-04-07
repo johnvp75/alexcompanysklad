@@ -48,9 +48,12 @@ public class BarCode {
 	public void setBarcodeForShops(Boolean barcodeForShops) {
 		this.barcodeForShops = barcodeForShops;
 	}
-	public static String GenerateBarCode(int group) throws Exception{
+	public static String GenerateBarCode(int group, boolean special) throws Exception{
 		int num=1;
 		String SQL=String.format("select max(substr(bar_code,%s,5)) from bar_code where bar_code like '%s%s'", (new Integer(group)).toString().length()+1,group,"%");
+		if (special){
+			SQL=String.format("select max(substr(barcode,%s,5)) from glassforshop where barcode like '%s%s'", (new Integer(group)).toString().length()+1,group,"%");
+		}	
 		ResultSet rs=DataSet.QueryExec1(SQL, false);
 		if (rs.next())
 			num=rs.getInt(1);
