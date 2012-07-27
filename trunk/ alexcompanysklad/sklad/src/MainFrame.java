@@ -44,6 +44,7 @@ class MainFrame extends JFrame
 	private JMenu doceditMenu;
 	private JMenu printMenu;
 	private JMenu exportMenu;
+	private JMenu priceMenu;
 	private NewSaleFrame newFrame;
 	private SelectDoc selectFrame;
 	private ManagerChooser dialog=null;
@@ -103,6 +104,10 @@ class MainFrame extends JFrame
 		menuBar.add(exportMenu);
 		JMenuItem rozexport=new JMenuItem("Экспорт розничной накладной");
 		exportMenu.add(rozexport);
+		priceMenu=new JMenu("Цены");
+		menuBar.add(priceMenu);
+		JMenuItem updateRozPrice=new JMenuItem("Обновить розничные цены");
+		priceMenu.add(updateRozPrice);
 		JMenu windowMenu = new JMenu("Окно");
 		menuBar.add(windowMenu);
 		JMenuItem windowcloseItem = new JMenuItem("Закрыть текущее окно");
@@ -125,6 +130,28 @@ class MainFrame extends JFrame
 //		saleMenu.addMenuListener(new NewSaleAction());
 		newSaleItem.addActionListener(new NewSaleAction());
 		nonregdocItem.addActionListener(new editNonRegAction());
+		updateRozPrice.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try{
+					DataSet.UpdateQuery("delete from price where id_price=8");
+					DataSet.UpdateQuery("insert into price (id_price,id_tovar,id_skl,cost,akciya,isakcia) select 8,id_tovar,id_skl,max(cost),0,0 from price where id_price=41 group by id_tovar,id_skl");
+					DataSet.commit();
+					JOptionPane.showMessageDialog(null, "Цены обновлены!", "Успех.", JOptionPane.INFORMATION_MESSAGE);
+				}catch(Exception ex){
+					try{
+						DataSet.rollback();
+					}catch(Exception ex1){
+						ex1.printStackTrace();
+						JOptionPane.showMessageDialog(null, "Крах системы!", "Критическая ошибка!", JOptionPane.ERROR_MESSAGE);
+					}
+					JOptionPane.showMessageDialog(null, "Ошибка обновления!\n Попробуйте позже.", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+					ex.printStackTrace();
+				}
+				
+			}
+		});
 		rozexport.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				int numb=new Integer(JOptionPane.showInputDialog("Введите номер"));
@@ -688,13 +715,17 @@ class MainFrame extends JFrame
 				for (int i=0; i<OutData.size();i++)
 					OutData.get(i).clear();
 				OutData.clear();
-				while (rs.next()){
-					Vector<String> Row=new Vector<String>(0);
-					Row.add(rs.getString(1));
-					Row.add(rs.getString(2));
-					Row.add(rs.getString(3));
-					Row.add((formatter.format(rs.getDouble(4))).replace('.', ','));
-					OutData.add(Row);
+				if (skl!=8){
+					while (rs.next()){
+						Vector<String> Row=new Vector<String>(0);
+						Row.add(rs.getString(1));
+						Row.add(rs.getString(2));
+						Row.add(rs.getString(3));
+						Row.add((formatter.format(rs.getDouble(4))).replace('.', ','));
+						OutData.add(Row);
+					}
+				}else{
+					OutData=exportForJuv(rs);
 				}
 				OutputOO.OpenDoc("export_roz.ots",false);
 				OutputOO.Insert(1, 2, OutData);
@@ -704,6 +735,66 @@ class MainFrame extends JFrame
 			}
 		}
 		this.repaint();
+	}
+	private Vector<Vector<String>> exportForJuv(ResultSet rs1) throws SQLException{
+		Vector<Vector<String>> ret=new Vector<Vector<String>>(0);
+		NumberFormat formatter = new DecimalFormat ( "0.00" );
+		if (rs1.next()){
+			int firstBlank=rs1.getString(2).indexOf(" ");
+			int endBlank=rs1.getString(2).indexOf(" ", firstBlank+1);
+			String groupName=rs1.getString(2).substring(firstBlank+1, endBlank>0?endBlank:rs1.getString(2).length());
+			Vector<String> Row=new Vector<String>(0);
+			Row.add(" ");
+			Row.add(" ");
+			Row.add("1");
+			Row.add(" ");
+			Row.add(" ");
+			Row.add(groupName);
+			ret.add(Row);
+			String newGroupName=groupName;
+			String oldGroupName="";
+			do{
+				oldGroupName=newGroupName;
+				firstBlank=rs1.getString(2).indexOf(" ");
+				endBlank=rs1.getString(2).indexOf(" ", firstBlank+1);
+				newGroupName=rs1.getString(2).substring(firstBlank+1, endBlank>0?endBlank:rs1.getString(2).length());
+				if (!newGroupName.equals(oldGroupName)){
+					Row=new Vector<String>(0);
+					Row.add(" ");
+					Row.add(" ");
+					Row.add("1");
+					Row.add(" ");
+					Row.add(" ");
+					Row.add(oldGroupName);
+					ret.add(Row);
+					Row=new Vector<String>(0);
+					Row.add(" ");
+					Row.add(" ");
+					Row.add("1");
+					Row.add(" ");
+					Row.add(" ");
+					Row.add(newGroupName);
+					ret.add(Row);
+				}
+				Row=new Vector<String>(0);
+				Row.add(rs1.getString(1));
+				Row.add(rs1.getString(2));
+				Row.add(rs1.getString(3));
+				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ','));
+				Row.add(" ");
+				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ',')+" грн.");
+				ret.add(Row);
+			}while (rs1.next());
+			Row=new Vector<String>(0);
+			Row.add(" ");
+			Row.add(" ");
+			Row.add("1");
+			Row.add(" ");
+			Row.add(" ");
+			Row.add(newGroupName);
+			ret.add(Row);
+		}
+		return ret;
 	}
 	public void setBackgroundImage(Image backgroundImage) {
 		this.backgroundImage = backgroundImage;
