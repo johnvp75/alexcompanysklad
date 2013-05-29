@@ -100,10 +100,12 @@ class MainFrame extends JFrame
 		printMenu.add(printWorkDoc);
 		printMenu.add(printOldDoc);
 		printMenu.add(viewOldDoc);
-		exportMenu = new JMenu ("Экспорт");
+		exportMenu = new JMenu ("Экспорт/Импорт");
 		menuBar.add(exportMenu);
 		JMenuItem rozexport=new JMenuItem("Экспорт розничной накладной");
 		exportMenu.add(rozexport);
+		JMenuItem impRemoteScanDoc = new JMenuItem("Импорт данных с автономного сканера");
+		exportMenu.add(impRemoteScanDoc);
 		priceMenu=new JMenu("Цены");
 		menuBar.add(priceMenu);
 		JMenuItem updateRozPrice=new JMenuItem("Обновить розничные цены");
@@ -130,6 +132,16 @@ class MainFrame extends JFrame
 //		saleMenu.addMenuListener(new NewSaleAction());
 		newSaleItem.addActionListener(new NewSaleAction());
 		nonregdocItem.addActionListener(new editNonRegAction());
+		impRemoteScanDoc.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (anyVisible()){
+					
+				}
+				
+			}
+		});
 		updateRozPrice.addActionListener(new ActionListener() {
 			
 			@Override
@@ -364,6 +376,8 @@ class MainFrame extends JFrame
 				String SQL="Select id_doc, id_skl from document where (numb is NULL) and (id_client=(select id_client from client where name='"+clientName+"'))";
 				rs=DataSet.QueryExec(SQL, false);
 				int Doc_count=0;
+				boolean first=true;
+				int startRow=0;
 				while (rs.next()){
 					Doc_count++;
 					id=rs.getInt(1);
@@ -410,45 +424,67 @@ class MainFrame extends JFrame
 					int size=OutData.size();
 					if (isOpt) 
 						{
-						OutputOO.OpenDoc("nakl_opt.ots",true);
-						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1);
-						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4);
-						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
-						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7);
-						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7);
-						OutputOO.InsertOne("ИТОГО:",10,false,5,9+size);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)/(1-rs.getDouble(3)/100)),10,false,7,9+size);
-						OutputOO.InsertOne("Скидка",10,false,2,9+size+1);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(3))+"%",10,false,5,9+size+1);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)*(1/(1-rs.getDouble(3)/100)-1)),10,false,7,9+size+1);
-						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2);
-						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4);
-						if (last) {
-							OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma+" (курс USD="+curs_USD+")",10,true,2,9+size+6);
-							if (SALE && amountOfDiscount>0)
-								OutputOO.InsertOne(messageDiscount,10,true,2,9+size+8);
+						OutputOO.OpenDoc("nakl_opt.ots",true,false);
+						if (first){
+							OutputOO.OpenDoc("nakl_sum.ots",true,true);
+							OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1,true);
+							OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,true);
+
 						}
+						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1,false);
+						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,false);
+						boolean repeat=false;
+						do{
+							OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, repeat?11:16, true, repeat?2:1, (repeat?startRow:0)+2,repeat);
+							OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,(repeat?startRow+3+(first?3:0):6),repeat);
+							OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,repeat?6:7,(repeat?startRow+4+(first?3:0):7),repeat);
+							OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,(repeat?startRow+4+(first?3:0):7),repeat);
+							OutputOO.InsertOne("ИТОГО:",10,false,5,(repeat?startRow+6+(first?3:0):9)+size,repeat);
+							OutputOO.InsertOne(formatter.format(rs.getDouble(1)/(1-rs.getDouble(3)/100)),10,false,7,(repeat?startRow+6+(first?3:0):9)+size,repeat);
+							OutputOO.InsertOne("Скидка",10,false,2,(repeat?startRow+6+(first?3:0):9)+size+1,repeat);
+							OutputOO.InsertOne(formatter.format(rs.getDouble(3))+"%",10,false,5,(repeat?startRow+6+(first?3:0):9)+size+1,repeat);
+							OutputOO.InsertOne(formatter.format(rs.getDouble(1)*(1/(1-rs.getDouble(3)/100)-1)),10,false,7,(repeat?startRow+6+(first?3:0):9)+size+1,repeat);
+							OutputOO.InsertOne("Итого со скидкой",10,false,2,(repeat?startRow+6+(first?3:0):9)+size+2,repeat);
+							OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,(repeat?startRow+6+(first?3:0):9)+size+2,repeat);
+							OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,(repeat?startRow+6+(first?3:0):9)+size+4,repeat);
+							if (last) {
+								OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma+" (курс USD="+curs_USD+")",10,true,2,(repeat?startRow+6+(first?3:0):9)+size+6,repeat);
+								if (SALE && amountOfDiscount>0)
+									OutputOO.InsertOne(messageDiscount,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+8,repeat);
+							}
+							repeat=!repeat;
+						}while(repeat);
 						}
 					else
 						{
-						OutputOO.OpenDoc("nakl_roz.ots",true);
-						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1);
-						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4);
-						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
-						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7);
-						OutputOO.InsertOne("Итого:",10,false,2,9+size);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size);
-						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2);
+						OutputOO.OpenDoc("nakl_roz.ots",true,false);
+						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1,false);
+						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2,false);
+						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,false);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6,false);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7,false);
+						OutputOO.InsertOne("Итого:",10,false,2,9+size,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size,false);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2,false);
 
 						}
-					OutputOO.Insert(1, 9, OutData);
-					OutputOO.print(isOpt?2:3);
-					OutputOO.CloseDoc();
+					OutputOO.Insert(1, 9, OutData,false);
+					OutputOO.Insert(1, startRow+6+(first?3:0), OutData,true);
+					startRow=startRow+size+(first?14:11);					
+					if (isOpt){
+						OutputOO.print(1,false);
+						if (last){
+							OutputOO.print(1,true);
+							OutputOO.CloseDoc(true);
+						}
+					}
+					else{
+						OutputOO.print(3,false);
+					}
+					OutputOO.CloseDoc(false);
 					
 					rs=DataSet.QueryExec(SQL, false);
+					first=false;
 				}
 				DataSet.commit();
 				
@@ -466,20 +502,24 @@ class MainFrame extends JFrame
 		this.repaint();
 	}
 	
+	private void insertHead(int startRow,boolean summary){
+		
+	}
+	
 	private String specialPrintForShop(int id, int skl) throws Exception{
-		String LocateSQL=String.format("select distinct cost from lines where not (cost in (select price from glassforshop where id_skl=%s)) and id_doc=%s",skl, id);
-		ResultSet rs1=DataSet.QueryExec(LocateSQL, false);
 		String name="";
 		int prefixBarCode=0;
 		if (skl==2){
 			name=" Очки с/з";
 			prefixBarCode=60000;
 		}
+		
 		if (skl==3){
-			name=" Головные уборы";
+			name=" Шляпа";
 			prefixBarCode=1392306;
 		}
-
+		String LocateSQL=String.format("select distinct cost from lines where not (cost in (select price from glassforshop where id_skl=%s)) and id_doc=%s",skl, id);
+		ResultSet rs1=DataSet.QueryExec(LocateSQL, false);
 		try{
 			while (rs1.next()){
 				LocateSQL=String.format("Insert into glassforshop (name,barcode,price,id_skl) values ('%s','%s',%s,%s)",rs1.getInt(1)+name,BarCode.GenerateBarCode(prefixBarCode,true),rs1.getString(1),skl );
@@ -560,39 +600,39 @@ class MainFrame extends JFrame
 					int size=OutData.size();
 					if (isOpt) 
 						{
-						OutputOO.OpenDoc("nakl_opt.ots",!view);
-						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 5,1);
-						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
-						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
-						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7);
-						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7);
-						OutputOO.InsertOne("ИТОГО:",10,false,5,9+size);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)/(1-rs.getDouble(3)/100)),10,false,7,9+size);
-						OutputOO.InsertOne("Скидка",10,false,2,9+size+1);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(3))+"%",10,false,5,9+size+1);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)*(1/(1-rs.getDouble(3)/100)-1)),10,false,7,9+size+1);
-						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2);
-						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4);
+						OutputOO.OpenDoc("nakl_opt.ots",!view,false);
+						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 5,1,false);
+						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2,false);
+						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4,false);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6,false);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7,false);
+						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7,false);
+						OutputOO.InsertOne("ИТОГО:",10,false,5,9+size,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)/(1-rs.getDouble(3)/100)),10,false,7,9+size,false);
+						OutputOO.InsertOne("Скидка",10,false,2,9+size+1,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(3))+"%",10,false,5,9+size+1,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)*(1/(1-rs.getDouble(3)/100)-1)),10,false,7,9+size+1,false);
+						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2,false);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4,false);
 						}
 					else
 						{
-						OutputOO.OpenDoc("nakl_roz.ots",!view);
-						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 3,1);
-						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2);
-						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4);
-						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6);
-						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7);
-						OutputOO.InsertOne("Итого:",10,false,2,9+size);
-						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size);
-						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2);
+						OutputOO.OpenDoc("nakl_roz.ots",!view,false);
+						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 3,1,false);
+						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2,false);
+						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4,false);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6,false);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7,false);
+						OutputOO.InsertOne("Итого:",10,false,2,9+size,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size,false);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2,false);
 
 						}
-					OutputOO.Insert(1, 9, OutData);
+					OutputOO.Insert(1, 9, OutData,false);
 					if (!view){
-						OutputOO.print(1);
-						OutputOO.CloseDoc();
+						OutputOO.print(1,false);
+						OutputOO.CloseDoc(false);
 					}
 					
 				}
@@ -715,7 +755,7 @@ class MainFrame extends JFrame
 				for (int i=0; i<OutData.size();i++)
 					OutData.get(i).clear();
 				OutData.clear();
-				if (skl!=8){
+				if (skl!=8 && skl!=3){
 					while (rs.next()){
 						Vector<String> Row=new Vector<String>(0);
 						Row.add(rs.getString(1));
@@ -727,8 +767,8 @@ class MainFrame extends JFrame
 				}else{
 					OutData=exportForJuv(rs);
 				}
-				OutputOO.OpenDoc("export_roz.ots",false);
-				OutputOO.Insert(1, 2, OutData);
+				OutputOO.OpenDoc("export_roz.ots",false,false);
+				OutputOO.Insert(1, 2, OutData,false);
 			
 			}catch(Exception e){
 				e.printStackTrace();
