@@ -24,6 +24,7 @@ public class OutputOO {
 	private static XComponentContext xRemouteContext = null;
 	private static XMultiComponentFactory xRemouteServiceManager = null;
 	private static XSpreadsheetDocument xSpreadsheetDocument;
+	private static XSpreadsheetDocument summarySpreadsheetDocument;
 //	private static final String oooExeFolder="C:\\JavaProjects\\OpenOffice.org 3\\program"; //house
 	private static final String oooExeFolder="C:\\Program Files\\OpenOffice.org 3\\program"; //server
 	public OutputOO() {
@@ -40,7 +41,7 @@ public class OutputOO {
 			e.printStackTrace();
 			}
 	}
-	public static void OpenDoc(String DocPath, boolean hidden) {
+	public static void OpenDoc(String DocPath, boolean hidden, boolean summary) {
 		try{
 			connect();
 			Object desktop=xRemouteServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", xRemouteContext);
@@ -50,13 +51,16 @@ public class OutputOO {
             loadProps[0].Name = "Hidden";
             loadProps[0].Value = new Boolean(hidden);
 			XComponent xSpreadsheetComponent=xComponentLoader.loadComponentFromURL("file://localhost/C:/sklad/Forms/"+DocPath, "_blank", 0, loadProps);
-			xSpreadsheetDocument=(XSpreadsheetDocument)UnoRuntime.queryInterface(XSpreadsheetDocument.class, xSpreadsheetComponent);
+			if (summary)
+				summarySpreadsheetDocument=(XSpreadsheetDocument)UnoRuntime.queryInterface(XSpreadsheetDocument.class, xSpreadsheetComponent);
+			else
+				xSpreadsheetDocument=(XSpreadsheetDocument)UnoRuntime.queryInterface(XSpreadsheetDocument.class, xSpreadsheetComponent);
 		}
 		catch(Exception e){
 			e.printStackTrace();
 			}
 	}
-	public static void OpenDoc(String DocPath, boolean hidden, boolean full) {
+/*	public static void OpenDoc(String DocPath, boolean hidden, boolean full) {
 		try{
 			connect();
 			Object desktop=xRemouteServiceManager.createInstanceWithContext("com.sun.star.frame.Desktop", xRemouteContext);
@@ -72,9 +76,13 @@ public class OutputOO {
 			e.printStackTrace();
 			}
 	}
-
-	public static void CloseDoc () {
-		XCloseable xCloseable =(XCloseable)UnoRuntime.queryInterface(XCloseable.class, xSpreadsheetDocument);
+*/
+	public static void CloseDoc (boolean summary) {
+		XCloseable xCloseable;
+		if (summary)
+			xCloseable =(XCloseable)UnoRuntime.queryInterface(XCloseable.class, summarySpreadsheetDocument);
+		else
+			xCloseable =(XCloseable)UnoRuntime.queryInterface(XCloseable.class, xSpreadsheetDocument);
 		try{
 			xCloseable.close(false);
 		}
@@ -82,9 +90,14 @@ public class OutputOO {
 			e.printStackTrace();
 			}
 	}
-	public static void Insert(int X, int Y, Vector<Vector<String>> aValue){
+	public static void Insert(int X, int Y, Vector<Vector<String>> aValue,boolean summary){
 		try{
-			XSpreadsheets xSpreadsheets=xSpreadsheetDocument.getSheets();
+			XSpreadsheets xSpreadsheets;
+			if (summary)
+				xSpreadsheets=summarySpreadsheetDocument.getSheets();
+			else
+				xSpreadsheets=xSpreadsheetDocument.getSheets();
+
 			Object sheet=xSpreadsheets.getByName("Лист1");
 			XSpreadsheet xSpreadsheet=(XSpreadsheet)UnoRuntime.queryInterface(XSpreadsheet.class, sheet);
 			int width=aValue.get(0).size();
@@ -102,9 +115,13 @@ public class OutputOO {
 			e.printStackTrace();
 		}
 	}
-	public static void InsertOne(String aValue, int aSize, boolean aBold, int X, int Y){
+	public static void InsertOne(String aValue, int aSize, boolean aBold, int X, int Y,boolean summary){
 		try{
-			XSpreadsheets xSpreadsheets=xSpreadsheetDocument.getSheets();
+			XSpreadsheets xSpreadsheets;
+			if (summary)
+				xSpreadsheets=summarySpreadsheetDocument.getSheets();
+			else
+				xSpreadsheets=xSpreadsheetDocument.getSheets();
 			Object sheet=xSpreadsheets.getByName("Лист1");
 			XSpreadsheet xSpreadsheet=(XSpreadsheet)UnoRuntime.queryInterface(XSpreadsheet.class, sheet);
 			XCell xCell;
@@ -122,10 +139,10 @@ public class OutputOO {
 		}
 		
 	}
-	public static void print(int copies){
+	public static void print(int copies, boolean summary){
 		
 		try{
-			XPrintable xPrintable=(XPrintable)UnoRuntime.queryInterface(XPrintable.class, xSpreadsheetDocument);
+			XPrintable xPrintable=(XPrintable)UnoRuntime.queryInterface(XPrintable.class, summary?summarySpreadsheetDocument:xSpreadsheetDocument);
 			PropertyValue[] loadProps=new PropertyValue[1];
 			loadProps[0] = new PropertyValue();
             loadProps[0].Name = "Wait";
