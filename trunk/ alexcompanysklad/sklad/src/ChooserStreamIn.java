@@ -118,7 +118,7 @@ public class ChooserStreamIn implements Runnable{
 				try {
 					if (!(((NewSaleFrame)ChooserStreamIn.getParent()).formInput==null) && ((NewSaleFrame)ChooserStreamIn.getParent()).formInput.isVisible())
 						((NewSaleFrame)ChooserStreamIn.getParent()).formInput.closeDialog();
-					RetBarCode codd=inputBarcode.newcod(cod, ChooserStreamIn.getSklad(), ChooserStreamIn.getPrice());
+					RetBarCode codd=InputBarcode.newcod(cod, ChooserStreamIn.getSklad(), ChooserStreamIn.getPrice());
 					((NewSaleFrame)ChooserStreamIn.getParent()).Input(codd.Name,codd.Count);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
