@@ -712,7 +712,7 @@ class NewSaleFrame extends MyPanel
 	}
 	private void BarCodeFire(){
 		try{
-			RetBarCode cod=inputBarcode.newcod(JOptionPane.showInputDialog("¬ведите штрих-код"),(String)skladCombo.getSelectedItem(),(String)priceCombo.getSelectedItem());
+			RetBarCode cod=InputBarcode.newcod(JOptionPane.showInputDialog("¬ведите штрих-код"),(String)skladCombo.getSelectedItem(),(String)priceCombo.getSelectedItem());
 			Input(cod.Name,cod.Count);
 			
 		}
