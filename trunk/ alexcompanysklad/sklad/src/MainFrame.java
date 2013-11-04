@@ -94,10 +94,12 @@ class MainFrame extends JFrame
 		menuBar.add(doceditMenu);
 		printMenu = new JMenu("Печать");
 		JMenuItem printWorkDoc = new JMenuItem("Документы в обработке");
+		JMenuItem printWorkDocOne = new JMenuItem("Документы в обработке выборочно");
 		JMenuItem printOldDoc = new JMenuItem("Проведенные документы");
 		JMenuItem viewOldDoc = new JMenuItem("Просмотр проведенных документов");
 		menuBar.add(printMenu);
 		printMenu.add(printWorkDoc);
+		printMenu.add(printWorkDocOne);
 		printMenu.add(printOldDoc);
 		printMenu.add(viewOldDoc);
 		exportMenu = new JMenu ("Экспорт/Импорт");
@@ -783,12 +785,14 @@ class MainFrame extends JFrame
 			int firstBlank=rs1.getString(2).indexOf(" ");
 			int endBlank=rs1.getString(2).indexOf(" ", firstBlank+1);
 			String groupName=rs1.getString(2).substring(firstBlank+1, endBlank>0?endBlank:rs1.getString(2).length());
+			
 			Vector<String> Row=new Vector<String>(0);
 			Row.add(" ");
 			Row.add(" ");
 			Row.add("1");
 			Row.add(" ");
 			Row.add(" ");
+			Row.add(" ");//номер группы
 			Row.add(groupName);
 			ret.add(Row);
 			String newGroupName=groupName;
@@ -805,6 +809,7 @@ class MainFrame extends JFrame
 					Row.add("1");
 					Row.add(" ");
 					Row.add(" ");
+					Row.add(" ");//номер группы
 					Row.add(oldGroupName);
 					ret.add(Row);
 					Row=new Vector<String>(0);
@@ -813,6 +818,7 @@ class MainFrame extends JFrame
 					Row.add("1");
 					Row.add(" ");
 					Row.add(" ");
+					Row.add(" ");//номер группы
 					Row.add(newGroupName);
 					ret.add(Row);
 				}
@@ -822,6 +828,7 @@ class MainFrame extends JFrame
 				Row.add(rs1.getString(3));
 				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ','));
 				Row.add(" ");
+				Row.add(numbOfGroupFromName(newGroupName));//номер группы
 				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ',')+" грн.");
 				ret.add(Row);
 			}while (rs1.next());
@@ -831,8 +838,22 @@ class MainFrame extends JFrame
 			Row.add("1");
 			Row.add(" ");
 			Row.add(" ");
+			Row.add(" ");//номер группы
 			Row.add(newGroupName);
 			ret.add(Row);
+		}
+		return ret;
+	}
+	
+	private String numbOfGroupFromName(String groupName) {
+		String SQL=String.format("Select substr(name,0,2) from groupid where parent_group=1310000 and name like '%s'", '%'+groupName+'%');
+		String ret=null;
+		try{
+		ResultSet rs=DataSet.QueryExec1(SQL, false);
+		if (rs.next())
+			ret=rs.getString(1);
+		}catch(Exception e){
+			e.printStackTrace();
 		}
 		return ret;
 	}
