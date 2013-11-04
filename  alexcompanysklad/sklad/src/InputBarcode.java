@@ -40,10 +40,18 @@ public class InputBarcode {
 			else
 				throw new IOException();
 		}
+		String SQL;
 		try {
 			if (cod.charAt(0)=='*')
+			{
 				//rs=DataSet.QueryExec("select count(*) from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"')",true);
-				rs=DataSet.QueryExec(String.format("select count(*) from (select distinct id_tovar from kart where id_tovar in (select id_tovar from tovar where lower(name) like '%%s%') and id_skl=(select id_skl from SKLAD where name='%s')) t;",cod.substring(1).toLowerCase(),sklad ), false);
+				SQL=String.format("select count(*) from (select distinct id_tovar from kart where id_tovar in (select id_tovar from tovar where lower(name) like '%s%s%s') and id_skl=(select id_skl from SKLAD where name='%s')) t","%",cod.substring(1).toLowerCase(),"%",sklad);
+				rs=DataSet.QueryExec(SQL, false);
+			}
+			if (cod.charAt(0)=='-'){
+				SQL=String.format("Select count(*) from (select distinct id_tovar from bar_code where lower(trim(bar_code)) like '%s%s' and id_skl=(select id_skl from SKLAD where name='%s'))", "%",cod.substring(1).toLowerCase(),sklad);
+				rs=DataSet.QueryExec(SQL, false);
+			}
 			else
 				rs=DataSet.QueryExec("select count(*) from BAR_CODE where BAR_CODE='"+cod+"' and id_skl = (select id_skl from SKLAD where name='"+sklad+"')",false);
  
@@ -57,7 +65,11 @@ public class InputBarcode {
 			if (cod.charAt(0)=='*')
 				rs=DataSet.QueryExec("select trim(name), 1 as count from (select distinct tovar.name from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",false);
 			else
-				rs=DataSet.QueryExec("select trim(name), nvl(count,1) from (select distinct tovar.name,bar_code.count from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",false);
+				if (cod.charAt(0)=='-'){
+					SQL=String.format("select trim(name), 1 as count from tovar where id_tovar in (select distinct id_tovar from bar_code where lower(trim(bar_code)) like '%s%s' and id_skl=(select id_skl from SKLAD where name='%s'))","%",cod.substring(1).toLowerCase(),sklad);
+					rs=DataSet.QueryExec(SQL, false);
+				}else
+					rs=DataSet.QueryExec("select trim(name), nvl(count,1) from (select distinct tovar.name,bar_code.count from tovar inner join BAR_CODE on tovar.id_tovar=bar_code.id_tovar where bar_code.BAR_CODE='"+cod+"' and bar_code.id_skl = (select id_skl from SKLAD where name='"+sklad+"') order by tovar.name)",false);
 			rs.next();
 			if (count==1)
 				return new RetBarCode(rs.getString(1),rs.getInt(2));
@@ -73,7 +85,7 @@ public class InputBarcode {
 				}
 				tovchoose.addTovar(data);
 				if (tovchoose.showDialog(null, "Выбор товара")){
-					String SQL="select nvl(b.count,1) from bar_code b,tovar t where t.name='"+tovchoose.getTovar().trim()+"'and t.id_tovar=b.id_tovar and b.bar_code='"+cod+"' and b.id_skl = (select id_skl from SKLAD where name='"+sklad+"')";
+					SQL="select nvl(b.count,1) from bar_code b,tovar t where t.name='"+tovchoose.getTovar().trim()+"'and t.id_tovar=b.id_tovar and b.bar_code='"+cod+"' and b.id_skl = (select id_skl from SKLAD where name='"+sklad+"')";
 					rs=DataSet.QueryExec(SQL, false);
 					int in =1;
 					if (rs.next())
