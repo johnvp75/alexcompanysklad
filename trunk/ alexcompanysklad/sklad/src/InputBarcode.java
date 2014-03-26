@@ -47,13 +47,13 @@ public class InputBarcode {
 				//rs=DataSet.QueryExec("select count(*) from tovar inner join kart on tovar.id_tovar=kart.id_tovar where lower(tovar.name) like '%"+cod.substring(1).toLowerCase()+"%' and kart.id_skl=(select id_skl from SKLAD where name='"+sklad+"')",true);
 				SQL=String.format("select count(*) from (select distinct id_tovar from kart where id_tovar in (select id_tovar from tovar where lower(name) like '%s%s%s') and id_skl=(select id_skl from SKLAD where name='%s')) t","%",cod.substring(1).toLowerCase(),"%",sklad);
 				rs=DataSet.QueryExec(SQL, false);
-			}
-			if (cod.charAt(0)=='-'){
-				SQL=String.format("Select count(*) from (select distinct id_tovar from bar_code where lower(trim(bar_code)) like '%s%s' and id_skl=(select id_skl from SKLAD where name='%s'))", "%",cod.substring(1).toLowerCase(),sklad);
-				rs=DataSet.QueryExec(SQL, false);
-			}
-			else
-				rs=DataSet.QueryExec("select count(*) from BAR_CODE where BAR_CODE='"+cod+"' and id_skl = (select id_skl from SKLAD where name='"+sklad+"')",false);
+			}else 
+				if (cod.charAt(0)=='-'){
+					SQL=String.format("Select count(*) from (select distinct id_tovar from bar_code where lower(trim(bar_code)) like '%s%s' and id_skl=(select id_skl from SKLAD where name='%s'))", "%",cod.substring(1).toLowerCase(),sklad);
+					rs=DataSet.QueryExec(SQL, false);
+				}
+				else
+					rs=DataSet.QueryExec("select count(*) from BAR_CODE where BAR_CODE='"+cod+"' and id_skl = (select id_skl from SKLAD where name='"+sklad+"')",false);
  
 			rs.next();
 			count=rs.getInt(1);
