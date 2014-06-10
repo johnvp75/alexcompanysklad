@@ -2,6 +2,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Vector;
 
+import javax.swing.JOptionPane;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 
@@ -11,6 +12,7 @@ class naklTableModel extends AbstractTableModel{
 	private boolean Editable = false;
 	private boolean isReal;
 	private boolean changed=false;
+	private boolean changeNakl=false;
 	public naklTableModel(String aClient, String aSklad, int aDiscount, boolean aIsReal){
 		nakl = new dataCont(aClient,aSklad,aDiscount);
 		isReal=aIsReal;
@@ -165,6 +167,26 @@ class naklTableModel extends AbstractTableModel{
 	}
 	public Double getSumByName(String name){
 		return nakl.getSumByName(name);
+	}
+	public void setStateNakl(){
+		if (getRowCount()>0 && !changeNakl){
+			changeNakl=true;
+			setStateInTable(true);
+		}
+		if (getRowCount()==0 && changeNakl){
+			changeNakl=false;
+			setStateInTable(false);
+		}
+	}
+	public void setStateInTable(boolean increase){
+		try{
+			String sql=String.format("update client set editing=nvl(editing,0)%s where name='%s'",increase?"+1":"-1", nakl.getNameClient());
+			DataSet.QueryExec1(sql, true);
+		}catch(Exception ex){
+			JOptionPane.showMessageDialog(null, "Ошибка записи изменения статуса.", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+			ex.printStackTrace();
+		}
+		
 	}
 }
 class dataCont{
