@@ -60,6 +60,7 @@ class NewSaleFrame extends MyPanel
 	private Double sumForSaleInOtherDoc=0.0;
 	private JCheckBox isKoefForPrice;
 	private JTextField fieldForInputKoefForPrice;
+	private String oldClientName="";
 	
 	private int id_doc;
 	private JButton infoButton;
@@ -535,7 +536,7 @@ class NewSaleFrame extends MyPanel
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
 		model.setClient((String)clientCombo.getSelectedItem());
 		itogo.setText("Итого (учитывая скидку): "+model.summ());
 		sumForSale.setVisible(MainFrame.isSale() && !okrCombo.isVisible());

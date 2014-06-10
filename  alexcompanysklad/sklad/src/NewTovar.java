@@ -257,7 +257,7 @@ public class NewTovar extends JPanel {
 							SQL="insert into price (id_tovar, cost, akciya, isakcia, id_skl, id_price) select "+id_tovar+" , "+CostTextField.getText()+", "+DiscTextField.getText()+", "+isakcia+", (select id_skl from sklad where name='"+Sklad+"'), id_price from type_price where name='"+Price+"'";
 							DataSet.UpdateQuery(SQL);
 
-							if (Price.trim().equals("Розница Бижутерия")){
+							if (Price.trim().equals("Розница Бижутерия")||Price.trim().equals("Розница Бижутерия (руб)")){
 // Штрих-код
 //					            int group=1310000;
 //					            String code 

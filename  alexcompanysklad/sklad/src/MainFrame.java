@@ -150,7 +150,7 @@ class MainFrame extends JFrame
 			public void actionPerformed(ActionEvent e) {
 				try{
 					DataSet.UpdateQuery("delete from price where id_price=8");
-					DataSet.UpdateQuery("insert into price (id_price,id_tovar,id_skl,cost,akciya,isakcia) select 8,id_tovar,id_skl,max(cost),0,0 from price where id_price=41 group by id_tovar,id_skl");
+					DataSet.UpdateQuery("insert into price (id_price,id_tovar,id_skl,cost,akciya,isakcia) select 8,id_tovar,id_skl,max(cost),0,0 from price where id_price=3 group by id_tovar,id_skl");
 					DataSet.commit();
 					JOptionPane.showMessageDialog(null, "Цены обновлены!", "Успех.", JOptionPane.INFORMATION_MESSAGE);
 				}catch(Exception ex){
@@ -304,7 +304,7 @@ class MainFrame extends JFrame
 			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 group by trim(name),document.id_client",true );
 			rs.next();
 			while (!rs.isAfterLast()){
-			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" грн.";
+			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" руб.";
 			data.addElement(item);
 			rs.next();
 		}
@@ -352,7 +352,7 @@ class MainFrame extends JFrame
 				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
 				rs.next();
 				sum=rs.getDouble(1);
-				Suma=formatter.format(sum)+" грн.";
+				Suma=formatter.format(sum)+" руб.";
 			}catch (Exception e) {
 				try {
 					DataSet.rollback();
@@ -364,8 +364,8 @@ class MainFrame extends JFrame
 				return;
 			}
 
-			Suma=formatter.format(sum)+" грн.";
-			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" грн.";
+			Suma=formatter.format(sum)+" руб.";
+			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" руб.";
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
 			try {
@@ -829,7 +829,7 @@ class MainFrame extends JFrame
 				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ','));
 				Row.add(" ");
 				Row.add(numbOfGroupFromName(newGroupName));//номер группы
-				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ',')+" грн.");
+				Row.add((formatter.format(rs1.getDouble(4))).replace('.', ',')+" руб.");
 				ret.add(Row);
 			}while (rs1.next());
 			Row=new Vector<String>(0);
