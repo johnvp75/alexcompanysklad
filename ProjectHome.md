@@ -1,0 +1,1 @@
+Automatization work of sklad
