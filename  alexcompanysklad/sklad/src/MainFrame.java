@@ -177,21 +177,21 @@ class MainFrame extends JFrame
 		printOldDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				int numb=new Integer(JOptionPane.showInputDialog("Введите номер"));
-				printold(numb,false);
+				newPrintold(numb,false);
 				
 			}
 		});
 		viewOldDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				int numb=new Integer(JOptionPane.showInputDialog("Введите номер"));
-				printold(numb,true);
+				newPrintold(numb,true);
 				
 			}
 		});
 
 		printWorkDoc.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-				print();
+				newPrint();
 			}
 		});
 		barcodeItem.addActionListener(new EditBarCode());
@@ -288,7 +288,7 @@ class MainFrame extends JFrame
 		SetUserName("");
 		
 	}
-	public void print(){
+	public void print_old(){
 		if (Printdialog==null)
 			Printdialog=new TovarChooser();
 
@@ -546,6 +546,7 @@ class MainFrame extends JFrame
 			
 			try{
 				rs=DataSet.QueryExec("select type,trim(name) from client where id_client=(select id_client from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY'))", false);
+				//rs=DataSet.QueryExec("select type,trim(name) from client where id_client=(select id_client from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')='2014')", false);
 				rs.next();
 				tovar=rs.getString(2);
 				if (rs.getInt(1)==2)
@@ -558,6 +559,7 @@ class MainFrame extends JFrame
 			try {
 				{
 					rs=DataSet.QueryExec("select id_doc, id_skl from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", false);
+					//rs=DataSet.QueryExec("select id_doc, id_skl from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')='2014'", false);
 					rs.next();
 					id=rs.getInt(1);
 					int skl=rs.getInt(2);
@@ -1065,5 +1067,349 @@ class MainFrame extends JFrame
 	public static Boolean isSale(){
 		return ((new GregorianCalendar()).after(STARTDATE) && (new GregorianCalendar()).before(ENDDATE)) && SALE; 
 	}
+	
+	public void newPrint(){
+		if (Printdialog==null)
+			Printdialog=new TovarChooser();
+
+		Vector<String> data =new Vector<String>(0);
+		NumberFormat formatter = new DecimalFormat ( "0.00" );
+		ResultSet rs=null;
+		String curs_USD="";
+		try{
+			rs=DataSet.QueryExec("Select curs from curs_now where id_val=22", false);
+			
+			if (rs.next())
+				curs_USD= formatter.format(rs.getDouble(1));
+			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 group by trim(name),document.id_client",true );
+			rs.next();
+			while (!rs.isAfterLast()){
+			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" руб.";
+			data.addElement(item);
+			rs.next();
+		}
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		Printdialog.addTovar(data);
+		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
+			String clientName=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
+			int id_client;
+			String Suma="";
+			double sum=0;
+			int id=0;
+			boolean isOpt=true;
+			double amountOfDiscount=0;
+			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
+				return;
+			PrintProcess question=new PrintProcess();
+			if (question.ShowDialog(clientName)==PrintProcess.CANCEL_PRINT){
+				return;
+			}
+			try{
+				try{
+					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+clientName+"')" +
+						" and numb is null for update nowait", false);
+				}catch(Exception e){
+					JOptionPane.showMessageDialog(this, "Одна из накладных редактируеться, печать не возможна! \n Попробуйте позже!", "Ошибка блокировки!", JOptionPane.INFORMATION_MESSAGE);
+					return;
+				}
+				if (!rs.next()){
+					JOptionPane.showMessageDialog(this, "Накладные уже напечатаны другим пользователем!", "Ошибка блокировки!", JOptionPane.INFORMATION_MESSAGE);
+					DataSet.rollback();
+					return;
+				}
+				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
+				rs.next();
+				id_client=rs.getInt(2);
+				if (rs.getInt(1)==2)
+					isOpt=false;
+				
+				if (isOpt && SALE)
+					amountOfDiscount=CalcSale(id_client);
+				if (amountOfDiscount<0)
+					return;
+				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
+				rs.next();
+				sum=rs.getDouble(1);
+				Suma=formatter.format(sum)+" руб.";
+			}catch (Exception e) {
+				try {
+					DataSet.rollback();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+				return;
+			}
+
+			Suma=formatter.format(sum)+" руб.";
+			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" руб.";
+			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
+			
+			try {
+				rs=DataSet.QueryExec("select nvl(max(numb),-1) from document where (to_number(to_char(day, 'YYYY'))=to_number(to_char(sysdate, 'YYYY'))) and (id_type_doc=2)", false) ;
+				if ((!rs.next()) || (rs.getInt(1)==-1) ){
+					DataSet.UpdateQuery1("drop sequence numb_real");
+					DataSet.UpdateQuery1("CREATE SEQUENCE   numb_real  MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE NOORDER");
+					DataSet.commit1();
+				}
+				String SQL="Select id_doc, id_skl from document where (numb is NULL) and (id_client=(select id_client from client where name='"+clientName+"'))";
+				rs=DataSet.QueryExec(SQL, false);
+				int Doc_count=0;
+				boolean first=true;
+				int startRow=0;
+				while (rs.next()){
+					Doc_count++;
+					id=rs.getInt(1);
+					int skl=rs.getInt(2);
+					boolean last=!rs.next();
+					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
+					if (isOpt)
+						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
+					else{
+						String SQLr=(skl==2 | skl==3)?specialPrintForShop(id,skl):"select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999.99')");
+						rs=DataSet.QueryExec(SQLr, false);
+					}
+					for (int i=0; i<OutData.size();i++)
+						OutData.get(i).clear();
+					OutData.clear();
+					int j=0;
+					double SumWithoutDiscount=0.00;
+					while (rs.next()){
+						Vector<String> Row=new Vector<String>(0);
+						j++;
+						Row.add(j+"");
+						if (isOpt){
+							SumWithoutDiscount=SumWithoutDiscount+rs.getDouble(3)*rs.getDouble(4);
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(3));
+							Row.add(formatter.format(rs.getDouble(4)));
+							Row.add(rs.getString(5));
+							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
+							Row.add(formatter.format(rs.getDouble(6)));
+						}else{
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(2));
+							Row.add(formatter.format(rs.getDouble(3)));
+							Row.add(formatter.format(rs.getDouble(4)));
+						}
+						OutData.add(Row);
+					}
+					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name),numb from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
+							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
+					String pref="";
+					rs.next();
+					if (rs.getString(2).charAt(0)=='&')
+						pref=" (АКЦИЯ)";
+					GregorianCalendar now=new GregorianCalendar();
+
+					int size=OutData.size();
+					if (isOpt) 
+						{
+						OutputOO.OpenDoc("nakl_opt_new.ots",true,false);
+						if (first){
+							OutputOO.OpenDoc("nakl_sum_new.ots",true,true);
+							OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1,true);
+							OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,true);
+
+						}
+						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1,false);
+						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,false);
+						boolean repeat=false;
+						do{
+							OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, repeat?11:16, true, repeat?2:1, (repeat?startRow:0)+2,repeat);
+							OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,(repeat?startRow+3+(first?3:0):6),repeat);
+							OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,repeat?6:7,(repeat?startRow+4+(first?3:0):7),repeat);
+							OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,(repeat?startRow+4+(first?3:0):7),repeat);
+							OutputOO.InsertOne("ИТОГО:",10,false,2,(repeat?startRow+6+(first?3:0):9)+size,repeat);
+							OutputOO.InsertOne(formatter.format(SumWithoutDiscount),10,false,7,(repeat?startRow+6+(first?3:0):9)+size,repeat);
+							OutputOO.InsertOne("Скидка",10,false,2,(repeat?startRow+6+(first?3:0):9)+size+1,repeat);
+//							OutputOO.InsertOne(formatter.format(),10,false,5,(repeat?startRow+6+(first?3:0):9)+size+1,repeat);
+							OutputOO.InsertOne(formatter.format(SumWithoutDiscount-rs.getDouble(1)),10,false,7,(repeat?startRow+6+(first?3:0):9)+size+1,repeat);
+							OutputOO.InsertOne("Итого со скидкой",10,false,2,(repeat?startRow+6+(first?3:0):9)+size+2,repeat);
+							OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,(repeat?startRow+6+(first?3:0):9)+size+2,repeat);
+							OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,(repeat?startRow+6+(first?3:0):9)+size+4,repeat);
+							if (last) {
+								OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+6,repeat);
+								if (SALE && amountOfDiscount>0)
+									OutputOO.InsertOne(messageDiscount,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+8,repeat);
+							}
+							repeat=!repeat;
+						}while(repeat);
+						}
+					else
+						{
+						OutputOO.OpenDoc("nakl_roz.ots",true,false);
+						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 3,1,false);
+						OutputOO.InsertOne("Накладная №"+rs.getString(7)+pref, 16, true, 1, 2,false);
+						OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,false);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6,false);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7,false);
+						OutputOO.InsertOne("Итого:",10,false,2,9+size,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size,false);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2,false);
+
+						}
+					OutputOO.Insert(1, 9, OutData,false);
+					OutputOO.Insert(1, startRow+6+(first?3:0), OutData,true);
+					startRow=startRow+size+(first?14:11);					
+					if (isOpt){
+						OutputOO.print(1,false);
+						if (last){
+							OutputOO.print(1,true);
+							OutputOO.CloseDoc(true);
+						}
+					}
+					else{
+						OutputOO.print(3,false);
+					}
+					OutputOO.CloseDoc(false);
+					
+					rs=DataSet.QueryExec(SQL, false);
+					first=false;
+				}
+				DataSet.commit();
+				
+			} catch (Exception e) {
+				try {
+					DataSet.rollback();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+			
+		}
+		this.repaint();
+	}
+	
+	public void newPrintold(int numb, boolean view){
+//		Vector<String> data =new Vector<String>(0);
+		NumberFormat formatter = new DecimalFormat ( "0.00" );
+		ResultSet rs=null;
+			int id=0;
+			boolean isOpt=true;
+			String tovar="";
+			
+			try{
+				rs=DataSet.QueryExec("select type,trim(name) from client where id_client=(select id_client from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY'))", false);
+				//rs=DataSet.QueryExec("select type,trim(name) from client where id_client=(select id_client from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')='2014')", false);
+				rs.next();
+				tovar=rs.getString(2);
+				if (rs.getInt(1)==2)
+					isOpt=false;
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
+			
+			try {
+				{
+					rs=DataSet.QueryExec("select id_doc, id_skl, disc from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')=to_char(sysdate,'YYYY')", false);
+					//rs=DataSet.QueryExec("select id_doc, id_skl from document where numb="+numb+" and id_type_doc=2 and to_char(day,'YYYY')='2014'", false);
+					rs.next();
+					if (rs.getInt(3)>0) {
+						printold(numb, view);
+						return;
+					}
+					id=rs.getInt(1);
+					int skl=rs.getInt(2);
+					if (isOpt)
+						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
+					else{
+						String SQL=(skl==2|skl==3)?specialPrintForShop(id,skl):"select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')");
+						rs=DataSet.QueryExec(SQL, false);
+					}
+					for (int i=0; i<OutData.size();i++)
+						OutData.get(i).clear();
+					OutData.clear();
+					int j=0;
+					double SumWithoutDiscount=0.00;
+					while (rs.next()){
+						Vector<String> Row=new Vector<String>(0);
+						j++;
+						Row.add(j+"");
+						if (isOpt){
+							SumWithoutDiscount=SumWithoutDiscount+rs.getDouble(3)*rs.getDouble(4);
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(3));
+							Row.add(formatter.format(rs.getDouble(4)));
+							Row.add(rs.getString(5));
+							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
+							Row.add(formatter.format(rs.getDouble(6)));
+						}else{
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(2));
+							Row.add(formatter.format(rs.getDouble(3)));
+							Row.add(formatter.format(rs.getDouble(4)));
+						}
+						OutData.add(Row);
+					}
+//					String SQL1=;
+					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name), to_char(document.day,'DD.MM.YYYY') from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
+							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
+					String pref="";
+					rs.next();
+					if (rs.getString(2).charAt(0)=='&')
+						pref=" (АКЦИЯ)";
+					GregorianCalendar now=new GregorianCalendar();
+					
+					
+					
+					int size=OutData.size();
+					if (isOpt) 
+						{
+						OutputOO.OpenDoc("nakl_opt_new.ots",!view,false);
+						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 5,1,false);
+						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2,false);
+						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4,false);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6,false);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,7,7,false);
+						OutputOO.InsertOne("Валюта: "+rs.getString(4),7,false,1,7,false);
+						OutputOO.InsertOne("ИТОГО:",10,false,2,9+size,false);
+						OutputOO.InsertOne(formatter.format(SumWithoutDiscount),10,false,7,9+size,false);
+						OutputOO.InsertOne("Скидка",10,false,2,9+size+1,false);
+						OutputOO.InsertOne(formatter.format(SumWithoutDiscount-rs.getDouble(1)),10,false,7,9+size+1,false);
+						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2,false);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4,false);
+						}
+					else
+						{
+						OutputOO.OpenDoc("nakl_roz.ots",!view,false);
+						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 3,1,false);
+						OutputOO.InsertOne("Накладная №"+numb+pref, 16, true, 1, 2,false);
+						OutputOO.InsertOne("Получатель: "+tovar,11, true, 1,4,false);
+						OutputOO.InsertOne(rs.getString(2).substring(1),8,false,1,6,false);
+						OutputOO.InsertOne("Склад: "+rs.getString(6),7,false,5,7,false);
+						OutputOO.InsertOne("Итого:",10,false,2,9+size,false);
+						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,5,9+size,false);
+						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+2,false);
+
+						}
+					OutputOO.Insert(1, 9, OutData,false);
+					if (!view){
+						OutputOO.print(1,false);
+						OutputOO.CloseDoc(false);
+					}
+					
+				}
+				DataSet.commit();
+				
+			} catch (Exception e) {
+				try {
+					DataSet.rollback();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				e.printStackTrace();
+			}
+			this.repaint();
+		}
+
 }
 

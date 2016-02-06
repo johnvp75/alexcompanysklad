@@ -7,12 +7,14 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 {
 	private String searchFor, previos;
 	private long lap;
+	private boolean selected=false;
 	public class CBDocument extends PlainDocument
 	{
 		public void insertString(int offset, String str, AttributeSet a) throws BadLocationException
 		{
 			if (str==null) return;
 			super.insertString(offset, str, a);
+//			System.out.println(str);
 			if(!isPopupVisible() && str.length() != 0) fireActionEvent();
 		}
 	}
@@ -51,22 +53,29 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 */
 						ComboBoxModel aModel = getModel();
 						String current;
+						boolean found=false;
 						for(int i = 0; i < aModel.getSize(); i++)
 						{
+							
 							current = aModel.getElementAt(i).toString();
 							if(current.toLowerCase().startsWith(text.toLowerCase()))
 							{
 								((JComboBox)evt.getSource()).setSelectedItem(current);
-								fireActionEvent();
+								
 								tf.setText(current);
 								tf.setSelectionStart(text.length());
 								tf.setSelectionEnd(current.length());
-								
-								
+								selected=tf.getSelectionStart()>=tf.getSelectionEnd();
+								found=true;
+								fireActionEvent();
 								break;
+							}else{
+								found=false;
 							}
 						}
+						if (!found) selected=true;
 					}
+					
 				});
 			}
 		}
@@ -80,7 +89,7 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 		}
 		else
 		{
-			//	System.out.println(lap);
+			//System.out.println(lap);
 			// Kam nie hier vorbei.
 			if(lap + 1000 < now)
 				searchFor = "" + aKey;
@@ -92,10 +101,19 @@ public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionMan
 		for(int i = 0; i < aModel.getSize(); i++)
 		{
 			current = aModel.getElementAt(i).toString().toLowerCase();
-			if (current.toLowerCase().startsWith(searchFor.toLowerCase())) return i;
+			if (current.toLowerCase().startsWith(searchFor.toLowerCase())) {
+				selected=current.toLowerCase().equals(aModel.getElementAt(i).toString().toLowerCase());
+				return i;
+			}
 		}
+		selected=true;
 		return -1;
 	}
+	
+	public boolean isSelected(){
+		return selected;
+	}
+	
 	public void fireActionEvent()
 	{
 		super.fireActionEvent();

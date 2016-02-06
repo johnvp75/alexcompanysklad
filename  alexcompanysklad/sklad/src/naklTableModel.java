@@ -13,7 +13,7 @@ class naklTableModel extends AbstractTableModel{
 	private boolean isReal;
 	private boolean changed=false;
 	private boolean changeNakl=false;
-	public naklTableModel(String aClient, String aSklad, int aDiscount, boolean aIsReal){
+	public naklTableModel(String aClient, String aSklad, IndividualDiscount aDiscount, boolean aIsReal ){
 		nakl = new dataCont(aClient,aSklad,aDiscount);
 		isReal=aIsReal;
 	}
@@ -27,7 +27,7 @@ class naklTableModel extends AbstractTableModel{
 		setChanged(true);
 		fireTableStructureChanged();
 	}
-	public void setIndDiscount(int aValue){
+	public void setIndDiscount(IndividualDiscount aValue){
 		nakl.setIndDiscount(aValue);
 		setChanged(true);
 		fireTableChanged(new TableModelEvent(this));
@@ -99,15 +99,15 @@ class naklTableModel extends AbstractTableModel{
 	public int present(String aName){
 		return nakl.present(aName);	
 	}
-	public int getIndDiscount(){
-		return nakl.getIndDiscount();
+	public int getIndDiscount(int id_group){
+		return nakl.getIndDiscount(id_group);
 	}
-	public int add(String aName, int aCount, double aCost, int aDiscount, int aAkcia){
+	public int add(String aName, int aCount, double aCost, int aDiscount, int aAkcia, int aGroup){
 		boolean b=false;
 		if (aAkcia>0)
 			b=true;
 		setChanged(true);
-		int ret=nakl.add(aName, aCount, aCost, aDiscount, b, isReal);
+		int ret=nakl.add(aName, aCount, aCost, aDiscount, b, isReal, aGroup);
 		fireTableStructureChanged();
 		return ret;
 		
@@ -130,7 +130,7 @@ class naklTableModel extends AbstractTableModel{
 			int j=1;
 			if (nakl.getAkcia(i))
 				j=0;
-			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-((new Integer(nakl.getIndDiscount())).doubleValue()/100)*j)*(1-((Integer)nakl.getValueAt(i, 5)).doubleValue()/100);
+			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-((new Integer(nakl.getIndDiscount((Integer)nakl.getValueAt(i, 6)))).doubleValue()/100)*j)*(1-((Integer)nakl.getValueAt(i, 5)).doubleValue()/100);
 		}
 		String s = formatter.format(ret);
 		return (new Double(s));
@@ -188,12 +188,15 @@ class naklTableModel extends AbstractTableModel{
 		}
 		
 	}
+	public int getRowDiscount(int row){
+		return nakl.getRowDiscount(row);
+	}
 }
 class dataCont{
-	private Vector name, count,cost,discount,akcia;
+	private Vector name, count,cost,discount,akcia,group;
 	private String nameClient, nameSklad;
-	private int inddiscount;
-	public dataCont (String anameClient,String anameSklad, int ainddiscount){
+	private IndividualDiscount inddiscount;
+	public dataCont (String anameClient,String anameSklad, IndividualDiscount ainddiscount){
 		name=new Vector<String>(0);
 		count=new Vector<Integer>(0);
 		cost=new Vector<Double>(0);
@@ -202,6 +205,7 @@ class dataCont{
 		nameClient=anameClient;
 		nameSklad=anameSklad;
 		inddiscount=ainddiscount;
+		group=new Vector<Integer>(0);
 	}
 	public void setNameClient(String aValue){
 		nameClient=aValue;
@@ -209,15 +213,28 @@ class dataCont{
 	public void setNameSklad(String aValue){
 		nameSklad=aValue;
 	}
-	public void setIndDiscount(int aValue){
+	public void setIndDiscount(IndividualDiscount aValue){
 		inddiscount=aValue;
 	}
+
 	public String getNameClient(){
 		return nameClient;
 	}
-	public int getIndDiscount(){
-		return inddiscount;
+	
+	public int getIndDiscount(int id_group){
+		return inddiscount.getDiscount(id_group);
 	}
+	
+	public int getRowDiscount(int row){
+		int ret=0;
+		if (!getAkcia(row)){
+			ret=100-((100-(Integer)getDiscount(row))*(100-getIndDiscount((Integer)getGroup(row)))/100);
+		}else{
+			ret=(Integer)getDiscount(row);
+		}
+		return ret;
+	}
+	
 	public String getNameSklad(){
 		return nameSklad;
 	}
@@ -263,7 +280,16 @@ class dataCont{
 	public boolean getAkcia(int pos){
 		return ((Boolean)akcia.elementAt(pos)).booleanValue();
 	}
-	public int add(String aName, int aCount, double aCost, int aDiscount, boolean aAkcia, boolean aReal){
+	private void newGroup(int aGroup){
+		group.add(new Integer(aGroup));
+	}
+	private void setGroup(Object aGroup, int pos){
+		group.setElementAt(new Integer((String)aGroup), pos);
+	}
+	private Object getGroup(int pos){
+		return group.elementAt(pos);
+	}
+	public int add(String aName, int aCount, double aCost, int aDiscount, boolean aAkcia, boolean aReal, int aGroup){
 		int pr;
 		if (aReal)
 			pr=present(aName,aCost);
@@ -275,6 +301,7 @@ class dataCont{
 			newCost(aCost);
 			newDiscount(aDiscount);
 			newAkcia(aAkcia);
+			newGroup(aGroup);
 			return getSize()-1;
 		}else{
 			setCount((new Integer((Integer)getCount(pr) +aCount)).toString(), pr);
@@ -290,6 +317,7 @@ class dataCont{
 			cost.removeElementAt(pos);
 			discount.removeElementAt(pos);
 			akcia.removeElementAt(pos);
+			group.removeElementAt(pos);
 			return true;
 		}
 	}
@@ -316,6 +344,8 @@ class dataCont{
 			return new Double(s);
 		case 5:
 			return getDiscount(row);
+		case 6:
+			return getGroup(row);
 		default:
 			return null;
 		}

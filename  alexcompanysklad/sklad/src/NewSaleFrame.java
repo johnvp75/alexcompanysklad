@@ -96,7 +96,7 @@ class NewSaleFrame extends MyPanel
 		isKoefForPrice= new JCheckBox("Процент",false);
 		fieldForInputKoefForPrice=new JTextField("0");
 		fieldForInputKoefForPrice.setVisible(false);
-		model = new naklTableModel("","",0,true);
+		model = new naklTableModel("","",new IndividualDiscount(0),true);
 		
 		naklTable=new MyTable(model);
 		naklTable.setAutoCreateColumnsFromModel(false);
@@ -145,7 +145,16 @@ class NewSaleFrame extends MyPanel
 		
 //Задаем слушателей
 		clientlistener=new ClientChoose();
+		
+		
+		ActionListener[] listeners=clientCombo.getActionListeners();
+		for (ActionListener element:listeners){
+			clientCombo.removeActionListener(element);
+		}
 		clientCombo.addActionListener(clientlistener);
+		for (ActionListener element:listeners){
+			clientCombo.addActionListener(element);
+		}
 		barcodeButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				BarCodeFire();
@@ -226,7 +235,8 @@ class NewSaleFrame extends MyPanel
 		        clientCombo.getEditor().selectAll();
 		    }
 		    public void focusLost(FocusEvent event){
-		    	clientChooseMet();
+		    	
+		    	clientChooseMet(true);
 		    	
 		    }
 		});
@@ -292,7 +302,7 @@ class NewSaleFrame extends MyPanel
 					isKoefForPrice.setSelected(false);
 					fieldForInputKoefForPrice.setText("0");
 					setKoefForPrice(0);
-					parent.print();
+					parent.newPrint();
 				}
 			}
 		});
@@ -412,7 +422,7 @@ class NewSaleFrame extends MyPanel
 		public void actionPerformed(ActionEvent event){
 			if (((JComboBox)event.getSource()).getModel().getSize()==0)
 				return;
-			clientChooseMet();
+			clientChooseMet(false);
 		}
 	}
 	private class SkladChoose implements ActionListener{
@@ -431,14 +441,15 @@ class NewSaleFrame extends MyPanel
 			clientCombo.fireActionEvent();
 		}
 	}
-	public void clientChooseMet(){
-		if (Checking)
+	public void clientChooseMet(boolean focusLost){
+		if (Checking||(!clientCombo.isSelected()&&!focusLost))
 			return;
-		model.setIndDiscount(0);
+		IndividualDiscount indDisc=new IndividualDiscount(0);
+		model.setIndDiscount(indDisc);
 		
 		if (checkClient()){
 		try {
-			ResultSet rs=DataSet.QueryExec("Select type, trunc(months_between(sysdate, day)) from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+			ResultSet rs=DataSet.QueryExec("Select type, trunc(months_between(sysdate, day)),id_client from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 			rs.next();
 //			GregorianCalendar lastEdit = new GregorianCalendar();
 //			lastEdit.setTime(rs.getDate(2));
@@ -450,21 +461,38 @@ class NewSaleFrame extends MyPanel
 				{infoButton.setBackground(barcodeButton.getBackground());
 				infoButton.setForeground(barcodeButton.getForeground());
 				}
-			
+			int id_client=rs.getInt(3);
 			if (rs.getInt(1)==1){
 				okrLabel.setVisible(false);
 				okrCombo.setVisible(false);
 				rs.close();
-				rs=DataSet.QueryExec("select count(*) from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+				String SQL;
+				SQL=String.format("Select id_skl from sklad where name='%s'", (String)skladCombo.getSelectedItem());
+				rs=DataSet.QueryExec(SQL, false);
+				rs.next();
+				int id_skl=rs.getInt(1);
+				rs.close();		
+				SQL=String.format("select count(*) from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
+				rs=DataSet.QueryExec(SQL,true);
 				rs.next();
 				if (rs.getInt(1)>0){
 					rs.close();
-					rs=DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+					SQL=String.format("select disc from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
+					rs=DataSet.QueryExec(SQL,true);
 					rs.next();
-					model.setIndDiscount(rs.getInt(1));}
-				else{
-					model.setIndDiscount(0);
+					indDisc.setGeneralDiscount(rs.getInt(1));
+					}
+				else
+				{
+					indDisc.setGeneralDiscount(0);
 				}
+				SQL=String.format("select CONNECT_BY_ROOT disc root, id_group from (select distinct g.id_group,g.PARENT_GROUP,d.disc from GROUPID g left join (select id_group,disc from discount where ID_CLIENT=%1$s and ID_SKL=%2$s) d on d.ID_GROUP=g.ID_GROUP start with g.ID_GROUP in (select id_group from discount where ID_CLIENT=%1$s and ID_SKL=%2$s and ID_GROUP is not null) CONNECT by g.PARENT_GROUP=prior g.ID_GROUP) start with not (disc is null) connect by parent_group= prior id_group and disc is null", id_client,id_skl);
+				rs.close();
+				rs=DataSet.QueryExec(SQL, false);
+				while (rs.next()){
+					indDisc.addDiscount(rs.getInt(2), rs.getInt(1));
+				}
+				model.setIndDiscount(indDisc);
 			}else{
 				okrLabel.setVisible(true);
 				okrCombo.setVisible(true);
@@ -625,12 +653,20 @@ class NewSaleFrame extends MyPanel
 		 int akcia=0;
 		 int isakcia=0;
 		 int inBox=1;
+		 int id_group=0;
+		 int id_tovar;
 		 ResultSet rs;
 		 String SQL;
 		 try{
-			 rs=DataSet.QueryExec("Select kol from tovar where name='"+aValue+"'",false);
+			 rs=DataSet.QueryExec("Select kol,id_tovar from tovar where name='"+aValue+"'",false);
 			 rs.next();
 			 inBox=rs.getInt(1);
+			 id_tovar=rs.getInt(2);
+			 rs.close();
+			 SQL=String.format("Select distinct id_group from kart where id_tovar=%s", id_tovar);
+			 rs=DataSet.QueryExec(SQL, false);
+			 rs.next();
+			 id_group=rs.getInt(1);
 			 rs.close();
 		 }
 		 catch (Exception e){
@@ -671,9 +707,9 @@ class NewSaleFrame extends MyPanel
 		 }
 		boolean roz=false;
 		One=Box;
+		double aCost=Box;
 		
-		
-		Box=Box*(1-model.getIndDiscount()/100);
+		Box=Box*(1-new Double(model.getIndDiscount(id_group))/100);
 		if (res==-1){
 			One=One/inBox;
 			One=(int)(One*Math.pow(10, 2-okrCombo.getSelectedIndex())+0.5)/Math.pow(10, 2-okrCombo.getSelectedIndex());
@@ -685,7 +721,7 @@ class NewSaleFrame extends MyPanel
 				roz=true;
 		}
 		catch (Exception e) { e.printStackTrace();}
-		double aCost=Box;
+		
 		if (roz){
 			aCost=One;
 		}
@@ -694,7 +730,7 @@ class NewSaleFrame extends MyPanel
 			naklTable.requestFocus();
 			if (!(((JTextField)naklTable.getEditorComponent())==null))
 				((JTextField)naklTable.getEditorComponent()).postActionEvent();
-			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
+			int row=model.add(aValue, kolTov, aCost, akcia, isakcia, id_group);
 			naklTable.setRowSelectionInterval(row, row);
 			naklTable.setColumnSelectionInterval(2, 2);
 			naklTable.editCellAt(row, 2);
@@ -702,7 +738,7 @@ class NewSaleFrame extends MyPanel
 			naklTable.scrollRectToVisible(naklTable.getCellRect(row, 2, false));
 		}else
 			{
-			int row=model.add(aValue, kolTov, aCost, akcia, isakcia);
+			int row=model.add(aValue, kolTov, aCost, akcia, isakcia, id_group);
 			naklTable.setRowSelectionInterval(row, row);
 			naklTable.setColumnSelectionInterval(2, 2);
 			naklTable.scrollRectToVisible(naklTable.getCellRect(row, 2, false));
@@ -763,17 +799,22 @@ class NewSaleFrame extends MyPanel
 				skladCombo.setSelectedItem(rs.getString(2));
 				clientCombo.setSelectedItem(rs.getString(1));
 				priceCombo.setSelectedItem(rs.getString(3));
-				model.setIndDiscount(rs.getInt(5));
+				model.setIndDiscount(new IndividualDiscount(rs.getInt(5)));
 				setNote(rs.getString(4).substring(1));
 				noteText.setText(getNote());
 				int isakciya=(rs.getString(4).charAt(0)=='&'?1:0);
-				if (rs.getInt(6)==2)
+/*				if (rs.getInt(6)==2)
 					SQL=String.format("Select trim(t.name), l.kol*t.kol, l.cost/t.kol, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
 				else
 					SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
+*/
+				if (rs.getInt(6)==2)
+					SQL=String.format("Select trim(t.name), l.kol*t.kol, l.cost/t.kol, l.disc, k.ID_GROUP from lines l, tovar t, (select distinct id_tovar, id_group from kart) k where l.id_doc=%s and l.id_tovar=t.id_tovar and l.ID_TOVAR=k.ID_TOVAR", id_doc);
+				else
+					SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc, k.ID_GROUP from lines l, tovar t, (select distinct id_tovar, id_group from kart) k where l.id_doc=%s and l.id_tovar=t.id_tovar and l.ID_TOVAR=k.ID_TOVAR", id_doc);
 				rs=DataSet.QueryExec1(SQL, false);
 				while (rs.next()){
-					model.add(rs.getString(1), rs.getInt(2), rs.getDouble(3), rs.getInt(4), isakciya);
+					model.add(rs.getString(1), rs.getInt(2), rs.getDouble(3), rs.getInt(4), isakciya, rs.getInt(5));
 				}
 //				parent.showFrame("noVisible");
 				parent.showFrame("SaleFrame");
@@ -809,6 +850,20 @@ class NewSaleFrame extends MyPanel
 				return false;
 			}
 		}
+		//Создаем модель для строк с отдельными скидками
+/*		naklTableModel LinesWithPersonDiscount;
+		LinesWithPersonDiscount= new naklTableModel((String)clientCombo.getSelectedItem(), (String)skladCombo.getSelectedItem(), 0, true);
+		int ii=0;
+		//for (int i=0;i<model.getRowCount(); i++){
+		while (ii<model.getRowCount()){	
+			if (!model.getAkcia(ii) && isPersonalDiscount((String)clientCombo.getSelectedItem(), (String)skladCombo.getSelectedItem(), (String)model.getValueAt(ii, 1))){
+				LinesWithPersonDiscount.add((String)model.getValueAt(ii, 1), (Integer)model.getValueAt(ii, 2), (Double)model.getValueAt(ii, 3), personalDiscount((String)clientCombo.getSelectedItem(), (String)skladCombo.getSelectedItem(), (String)model.getValueAt(ii, 1)), 0);
+				model.removeRow(ii);
+			}else{
+				ii++;
+			};
+		}
+*/		
 		// Записываем шапку
 		String SQL;
 		ResultSet rs1;
@@ -857,6 +912,9 @@ class NewSaleFrame extends MyPanel
 				id=rs1.getInt(1)+1;
 			
 //			if (model.summ()>model.summAkcia()){
+
+//Запись шапки старая			
+/* 			
 			if (model.getRowCount()-presentAkcia()>0){
 				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
 					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
@@ -875,11 +933,36 @@ class NewSaleFrame extends MyPanel
 						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price, " +
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}
+*/				
+
+//Запись шапки новая
+			
+			if (model.getRowCount()-presentAkcia()>0){
+				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
+					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
+					"(disc=0) and not(substr(note,1,1)='&') and id_manager=(select id_manager from manager where name='"+parent.GetUserName()+"')" +
+							" and note='-"+getNote()+"' and id_price=(select id_price from type_price where name ='"+(String)priceCombo.getSelectedItem()+"')" ;
+				rs1=DataSet.QueryExec(SQL, false);
+				if (rs1.next()){
+					id=rs1.getInt(1);
+					SQL="update document set sum="+(rs1.getDouble(2)+model.summ()-model.summAkcia())+" where id_doc="+id;
+				}else{
+					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_price, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
+						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
+						", (select distinct id_val from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_val" +
+						", "+(model.summ()-model.summAkcia())+" as sum ,'-"+getNote()+"' as note, 0 as disc" +
+						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price, " +
+						" id_manager from manager where name='"+parent.GetUserName()+"'";
+				}
+			
+			
+			
 				DataSet.UpdateQuery(SQL);
 				for (int i=0;i<model.getRowCount();i++){
 					if (!(model.getAkcia(i))){
 						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
-							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
+							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getRowDiscount(i)+" as disc, id_tovar from tovar where name='"+
 							model.getValueAt(i, 1)+"'";
 						DataSet.UpdateQuery(SQL);
 					}
@@ -907,6 +990,8 @@ class NewSaleFrame extends MyPanel
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}
 				DataSet.UpdateQuery(SQL);
+//Старая запись строк
+/*				
 				for (int i=0;i<model.getRowCount();i++){
 					if (model.getAkcia(i)){
 						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
@@ -915,6 +1000,19 @@ class NewSaleFrame extends MyPanel
 						DataSet.UpdateQuery(SQL);
 					}
 			}
+*/
+
+//Новая запись строк
+								
+				for (int i=0;i<model.getRowCount();i++){
+					if (model.getAkcia(i)){
+						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
+							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getRowDiscount(i)+" as disc, id_tovar from tovar where name='"+
+							model.getValueAt(i, 1)+"'";
+						DataSet.UpdateQuery(SQL);
+					}
+				}
+				
 
 			}
 			DataSet.commit();
@@ -941,6 +1039,38 @@ class NewSaleFrame extends MyPanel
 		}
 		return ret;
 	}
+	
+	private boolean isPersonalDiscount(String aName,String aSklad,String aTovar){
+		String SQL;
+		SQL=String.format("select count(*) from DISCOUNT where ID_CLIENT=(select id_client from client where name='%s') and id_skl=(select ID_SKL from sklad where name='%s') and ID_GROUP in (SELECT id_group from GROUPID start with ID_GROUP=(select distinct id_group from kart where id_tovar=(select id_tovar from tovar where name='%s')) connect by prior GROUPID.PARENT_GROUP=GROUPID.ID_GROUP)", aName,aSklad,aTovar);
+		boolean ret=false;
+		try{
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			ret=rs.getInt(1)!=0;
+		}
+		catch (Exception Ex){
+			Ex.printStackTrace();
+		}
+		return ret;
+		
+	}
+	
+	private int personalDiscount(String aName,String aSklad,String aTovar){
+		String SQL;
+		SQL=String.format("select disc from DISCOUNT where ID_CLIENT=(select id_client from client where name='%s') and id_skl=(select ID_SKL from sklad where name='%s') and ID_GROUP in (SELECT id_group from GROUPID start with ID_GROUP=(select distinct id_group from kart where id_tovar=(select id_tovar from tovar where name='%s')) connect by prior GROUPID.PARENT_GROUP=GROUPID.ID_GROUP)", aName,aSklad,aTovar);
+		int ret=0;
+		try{
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			ret=rs.getInt(1);
+		}
+		catch (Exception Ex){
+			Ex.printStackTrace();
+		}
+		return ret;
+		
+	}
+	
+	
 	private int presentAkcia(){
 		int ret=0;
 		for (int i=0;i<model.getRowCount();i++)
@@ -1001,7 +1131,14 @@ class NewSaleFrame extends MyPanel
 		}
 		catch (Exception e) { e.printStackTrace();}
 		clientCombo.setSelectedIndex(0);
+		ActionListener[] listeners=clientCombo.getActionListeners();
+		for (ActionListener element:listeners){
+			clientCombo.removeActionListener(element);
+		}
 		clientCombo.addActionListener(clientlistener);
+		for (ActionListener element:listeners){
+			clientCombo.addActionListener(element);
+		}
 		try {
 			rs = DataSet.QueryExec("select trim(name) from type_price order by name",true);
 			rs.next();
@@ -1014,7 +1151,7 @@ class NewSaleFrame extends MyPanel
 		catch (Exception e) { e.printStackTrace();}
 		int disc=0;
 		try{
-			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"')",true);
+			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"') and id_group is null",true);
 			if (rs.next()){
 				disc=rs.getInt(1);
 			}
