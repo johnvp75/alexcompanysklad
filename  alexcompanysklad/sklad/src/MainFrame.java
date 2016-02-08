@@ -1107,8 +1107,13 @@ class MainFrame extends JFrame
 				return;
 			}
 			try{
+				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
+				rs.next();
+				id_client=rs.getInt(2);
+				if (rs.getInt(1)==2)
+					isOpt=false;				
 				try{
-					rs=DataSet.QueryExec("Select * from document where id_client in (select id_client from client where name='"+clientName+"')" +
+					rs=DataSet.QueryExec("Select * from document where id_client = "+id_client+
 						" and numb is null for update nowait", false);
 				}catch(Exception e){
 					JOptionPane.showMessageDialog(this, "Одна из накладных редактируеться, печать не возможна! \n Попробуйте позже!", "Ошибка блокировки!", JOptionPane.INFORMATION_MESSAGE);
@@ -1119,11 +1124,7 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
-				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
-				rs.next();
-				id_client=rs.getInt(2);
-				if (rs.getInt(1)==2)
-					isOpt=false;
+
 				
 				if (isOpt && SALE)
 					amountOfDiscount=CalcSale(id_client);
@@ -1155,7 +1156,9 @@ class MainFrame extends JFrame
 					DataSet.UpdateQuery1("CREATE SEQUENCE   numb_real  MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE NOORDER");
 					DataSet.commit1();
 				}
-				String SQL="Select id_doc, id_skl from document where (numb is NULL) and (id_client=(select id_client from client where name='"+clientName+"'))";
+				convertCurrencyForUSD(id_client); //метод превода долларовых накладных
+				
+				String SQL=String.format("Select id_doc, id_skl from document where (numb is NULL) and (id_client=%s)", id_client);
 				rs=DataSet.QueryExec(SQL, false);
 				int Doc_count=0;
 				boolean first=true;
@@ -1410,6 +1413,16 @@ class MainFrame extends JFrame
 			}
 			this.repaint();
 		}
+	private void convertCurrencyForUSD(int client) throws Exception{
+		String SQL=String.format("update lines set COST=cost*(select curs from CURS_NOW where ID_VAL=22) where id_doc in (select id_doc from DOCUMENT where ID_CLIENT=%s and numb is null and ID_TYPE_DOC=2 and ID_VAL=22)", client);
+		if (DataSet.UpdateQuery(SQL)>0) {
+			SQL=String.format("update DOCUMENT set sum=sum*(select curs from CURS_NOW where ID_VAL=22),ID_VAL=4,note=trim(note)||(select curs from CURS_NOW where ID_VAL=22) where ID_CLIENT=%s and numb is null and ID_TYPE_DOC=2 and ID_VAL=22", client);
+			DataSet.UpdateQuery(SQL);
+		}
+			
+		}
+	
+
 
 }
 
