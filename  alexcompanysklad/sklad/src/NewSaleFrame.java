@@ -472,27 +472,7 @@ class NewSaleFrame extends MyPanel
 				rs.next();
 				int id_skl=rs.getInt(1);
 				rs.close();		
-				SQL=String.format("select count(*) from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
-				rs=DataSet.QueryExec(SQL,true);
-				rs.next();
-				if (rs.getInt(1)>0){
-					rs.close();
-					SQL=String.format("select disc from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
-					rs=DataSet.QueryExec(SQL,true);
-					rs.next();
-					indDisc.setGeneralDiscount(rs.getInt(1));
-					}
-				else
-				{
-					indDisc.setGeneralDiscount(0);
-				}
-				SQL=String.format("select CONNECT_BY_ROOT disc root, id_group from (select distinct g.id_group,g.PARENT_GROUP,d.disc from GROUPID g left join (select id_group,disc from discount where ID_CLIENT=%1$s and ID_SKL=%2$s) d on d.ID_GROUP=g.ID_GROUP start with g.ID_GROUP in (select id_group from discount where ID_CLIENT=%1$s and ID_SKL=%2$s and ID_GROUP is not null) CONNECT by g.PARENT_GROUP=prior g.ID_GROUP) start with not (disc is null) connect by parent_group= prior id_group and disc is null", id_client,id_skl);
-				rs.close();
-				rs=DataSet.QueryExec(SQL, false);
-				while (rs.next()){
-					indDisc.addDiscount(rs.getInt(2), rs.getInt(1));
-				}
-				model.setIndDiscount(indDisc);
+				model.setIndDiscount(getDiscForClient(id_client, id_skl));
 			}else{
 				okrLabel.setVisible(true);
 				okrCombo.setVisible(true);
@@ -792,26 +772,22 @@ class NewSaleFrame extends MyPanel
 				JOptionPane.showMessageDialog(null, "Документ заблокирован другим пользователем! Попробуйте позже.", "Ошибка блокировки", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			SQL=String.format("Select trim(c.name), trim(s.name),trim(p.name), trim(d.note), d.disc, c.type from document d, sklad s, client c, type_price p where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl and p.id_price=d.id_price", id_doc);
+			SQL=String.format("Select trim(c.name), trim(s.name),trim(p.name), trim(d.note), d.disc, c.type, p.id_price, s.id_skl, c.id_client from document d, sklad s, client c, type_price p where d.id_doc=%s and d.id_client=c.id_client and d.id_skl=s.id_skl and p.id_price=d.id_price", id_doc);
 			rs=DataSet.QueryExec1(SQL, false);
 			if (rs.next()){
 				setId_doc(id_doc);
 				skladCombo.setSelectedItem(rs.getString(2));
 				clientCombo.setSelectedItem(rs.getString(1));
 				priceCombo.setSelectedItem(rs.getString(3));
-				model.setIndDiscount(new IndividualDiscount(rs.getInt(5)));
+				model.setIndDiscount(getDiscForClient(rs.getInt(9), rs.getInt(8)));
+//				model.setIndDiscount(new IndividualDiscount(rs.getInt(5)));
 				setNote(rs.getString(4).substring(1));
 				noteText.setText(getNote());
 				int isakciya=(rs.getString(4).charAt(0)=='&'?1:0);
-/*				if (rs.getInt(6)==2)
-					SQL=String.format("Select trim(t.name), l.kol*t.kol, l.cost/t.kol, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
-				else
-					SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc from lines l, tovar t where l.id_doc=%s and l.id_tovar=t.id_tovar", id_doc);
-*/
 				if (rs.getInt(6)==2)
 					SQL=String.format("Select trim(t.name), l.kol*t.kol, l.cost/t.kol, l.disc, k.ID_GROUP from lines l, tovar t, (select distinct id_tovar, id_group from kart) k where l.id_doc=%s and l.id_tovar=t.id_tovar and l.ID_TOVAR=k.ID_TOVAR", id_doc);
 				else
-					SQL=String.format("Select trim(t.name), l.kol, l.cost, l.disc, k.ID_GROUP from lines l, tovar t, (select distinct id_tovar, id_group from kart) k where l.id_doc=%s and l.id_tovar=t.id_tovar and l.ID_TOVAR=k.ID_TOVAR", id_doc);
+					SQL=String.format("Select trim(t.name), l.kol, l.cost, p.AKCIYA, k.ID_GROUP from lines l, tovar t, price p, (select distinct id_tovar, id_group from kart) k where l.id_doc=%s and l.id_tovar=t.id_tovar and l.ID_TOVAR=k.ID_TOVAR and p.ID_PRICE=%s and p.ID_TOVAR=l.ID_TOVAR", id_doc,rs.getInt(7));
 				rs=DataSet.QueryExec1(SQL, false);
 				while (rs.next()){
 					model.add(rs.getString(1), rs.getInt(2), rs.getDouble(3), rs.getInt(4), isakciya, rs.getInt(5));
@@ -911,29 +887,7 @@ class NewSaleFrame extends MyPanel
 			if (rs1.next())
 				id=rs1.getInt(1)+1;
 			
-//			if (model.summ()>model.summAkcia()){
-
-//Запись шапки старая			
-/* 			
-			if (model.getRowCount()-presentAkcia()>0){
-				SQL="select id_doc,sum from document where (numb is NULL) and (id_type_doc=2) and (id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"')) " +
-					"and (id_skl = (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"')) and " +
-					"(disc="+model.getIndDiscount()+") and not(substr(note,1,1)='&') and id_manager=(select id_manager from manager where name='"+parent.GetUserName()+"')" +
-							" and note='-"+getNote()+"' and id_price=(select id_price from type_price where name ='"+(String)priceCombo.getSelectedItem()+"')" ;
-				rs1=DataSet.QueryExec(SQL, false);
-				if (rs1.next()){
-					id=rs1.getInt(1);
-					SQL="update document set sum="+(rs1.getDouble(2)+model.summ()-model.summAkcia())+" where id_doc="+id;
-				}else{
-					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_price, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
-						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
-						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
-						", (select distinct id_val from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_val" +
-						", "+(model.summ()-model.summAkcia())+" as sum ,'-"+getNote()+"' as note, "+model.getIndDiscount()+" as disc" +
-						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price, " +
-						" id_manager from manager where name='"+parent.GetUserName()+"'";
-				}
-*/				
+				
 
 //Запись шапки новая
 			
@@ -990,17 +944,7 @@ class NewSaleFrame extends MyPanel
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}
 				DataSet.UpdateQuery(SQL);
-//Старая запись строк
-/*				
-				for (int i=0;i<model.getRowCount();i++){
-					if (model.getAkcia(i)){
-						SQL="insert into lines (id_doc,kol,cost,disc,id_tovar) select "+id+" as id_doc, (select "+model.getValueAt(i,2)+"/(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+
-							" as kol, (select "+model.getValueAt(i,3)+"*(tovar.kol*"+roz+"+"+(1-roz)+") from tovar where name='"+model.getValueAt(i, 1)+"')"+" as cost, "+model.getValueAt(i, 5)+" as disc, id_tovar from tovar where name='"+
-							model.getValueAt(i, 1)+"'";
-						DataSet.UpdateQuery(SQL);
-					}
-			}
-*/
+
 
 //Новая запись строк
 								
@@ -1221,6 +1165,31 @@ class NewSaleFrame extends MyPanel
 	}
 	private void setKoefForPrice(double koefForPrice) {
 		this.koefForPrice = 1+koefForPrice/100;
+	}
+	private IndividualDiscount getDiscForClient(int id_client, int id_skl) throws Exception{
+		IndividualDiscount indDisc=new IndividualDiscount(0);
+		String SQL=String.format("select count(*) from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
+		ResultSet rs=DataSet.QueryExec(SQL,true);
+		rs.next();
+		if (rs.getInt(1)>0){
+			rs.close();
+			SQL=String.format("select disc from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
+			rs=DataSet.QueryExec(SQL,true);
+			rs.next();
+			indDisc.setGeneralDiscount(rs.getInt(1));
+			}
+		else
+		{
+			indDisc.setGeneralDiscount(0);
+		}
+		SQL=String.format("select CONNECT_BY_ROOT disc root, id_group from (select distinct g.id_group,g.PARENT_GROUP,d.disc from GROUPID g left join (select id_group,disc from discount where ID_CLIENT=%1$s and ID_SKL=%2$s) d on d.ID_GROUP=g.ID_GROUP start with g.ID_GROUP in (select id_group from discount where ID_CLIENT=%1$s and ID_SKL=%2$s and ID_GROUP is not null) CONNECT by g.PARENT_GROUP=prior g.ID_GROUP) start with not (disc is null) connect by parent_group= prior id_group and disc is null", id_client,id_skl);
+		rs.close();
+		rs=DataSet.QueryExec(SQL, false);
+		while (rs.next()){
+			indDisc.addDiscount(rs.getInt(2), rs.getInt(1));
+		}
+		rs.close();
+		return indDisc;
 	}
 
 }
