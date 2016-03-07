@@ -260,21 +260,27 @@ public class NewTovar extends JPanel {
 							if (Price.trim().equals("Розница Бижутерия")||Price.trim().equals("Розница Бижутерия (руб)")){
 // Штрих-код
 //					            int group=1310000;
-//					            String code 
-					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar, BarCode.GenerateBarCode(1310000,false));
+					            String code= BarCode.GenerateBarCode(1310000,false);
+					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count, for_shops) values (%s, 8, '%s', 1, 1)", id_tovar,code );
+					            DataSet.UpdateQuery(SQL);
+					            SQL=String.format("insert into glassforshop select '%s' as name,'%s' as barcode,%s as price, id_skl from sklad where name='%s'", TovarNameTextField.getText().trim(),code,new Double(CostTextField.getText()),Sklad);
 					            DataSet.UpdateQuery(SQL);
 					            Double cost=((new Double(CostTextField.getText())*10));
 					            String grname="%"+TovarNameTextField.getText().trim().substring(TovarNameTextField.getText().trim().indexOf(" ")+1).toUpperCase()+"%";
-					            SQL=String.format("select name from groupid where upper(name) like '%s' and parent_group=1310000", grname);
+					            SQL=String.format("select name,id_group from groupid where upper(name) like '%s' and parent_group=1310000", grname);
 					            rs=DataSet.QueryExec(SQL, false);
 					            if (!rs.next()){
 					            	JOptionPane.showInternalMessageDialog(null, "Неправильное имя", "Ошибка!", JOptionPane.ERROR_MESSAGE);
 					            	DataSet.rollback();
 					            	return;
 					            }
+					            int id_group=rs.getInt(2);
 					            String prefix="0"+rs.getString(1).substring(0, rs.getString(1).indexOf(" ")).trim();
 					            SQL=String.format("insert into bar_code (id_tovar, id_skl, bar_code, count) values (%s, 8, '%s%s', 1)", id_tovar, prefix, cost.intValue());
 					            DataSet.UpdateQuery(SQL);
+					            SQL=String.format("Update kart set id_group=%s where id_group=-1 and id_tovar=%s", id_group,id_tovar);
+					            DataSet.UpdateQuery(SQL);
+					            
 					            
 //Конец штрих-кода
 //insert into bar_code (id_tovar, id_skl, bar_code, count) select id_tovar, 8, '2000000002804', 1 from tovar where NAME='17 Бигуди';

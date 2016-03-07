@@ -1075,12 +1075,13 @@ class MainFrame extends JFrame
 		Vector<String> data =new Vector<String>(0);
 		NumberFormat formatter = new DecimalFormat ( "0.00" );
 		ResultSet rs=null;
-		String curs_USD="";
+//		String curs_USD="";
 		try{
-			rs=DataSet.QueryExec("Select curs from curs_now where id_val=22", false);
+/*			rs=DataSet.QueryExec("Select curs from curs_now where id_val=22", false);
 			
 			if (rs.next())
 				curs_USD= formatter.format(rs.getDouble(1));
+*/
 			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 group by trim(name),document.id_client",true );
 			rs.next();
 			while (!rs.isAfterLast()){
