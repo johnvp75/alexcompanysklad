@@ -1082,7 +1082,7 @@ class MainFrame extends JFrame
 			if (rs.next())
 				curs_USD= formatter.format(rs.getDouble(1));
 */
-			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 group by trim(name),document.id_client",true );
+			rs=DataSet.QueryExec("Select trim(client.name), sum(document.sum*curs_now.curs) from (document inner join client on client.id_client=document.id_client) inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2  group by trim(name),document.id_client order by trim(name)",true );
 			rs.next();
 			while (!rs.isAfterLast()){
 			String item=rs.getString(1)+" на сумму: "+formatter.format(rs.getDouble(2))+" руб.";
