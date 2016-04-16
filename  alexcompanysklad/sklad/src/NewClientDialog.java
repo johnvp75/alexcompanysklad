@@ -20,6 +20,7 @@ class NewClientDialog extends JPanel {
 	private String old;
 	private JButton editButton;
 	private JRadioButton roz;
+	private JRadioButton smallOpt;
 	public NewClientDialog(){
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
@@ -28,14 +29,18 @@ class NewClientDialog extends JPanel {
 		JLabel addressLabel = new JLabel("Адрес:");
 		JLabel phoneLabel=new JLabel("Телефон:");
 		JLabel typeLabel=new JLabel("Тип клиента:");
+		
 		clientname=new JTextField("");
 		address=new JTextField("");
 		phone = new JTextArea("");
 		phone.setFont(new Font(Font.SERIF,Font.PLAIN,12));
 		ButtonGroup type = new ButtonGroup();
-		opt=new JRadioButton("Оптовый",true);
-		roz=new JRadioButton("Розничный",false);
+		opt=new JRadioButton("Оптовый",false);
+		smallOpt=new JRadioButton("Розничный",true);
+		roz=new JRadioButton("Магазины",false);
+		
 		type.add(opt);
+		type.add(smallOpt);
 		type.add(roz);
 		
 		clientLabel.setBounds(15, 18, 122, 22);
@@ -45,8 +50,9 @@ class NewClientDialog extends JPanel {
 		phoneLabel.setBounds(15, 103, 122, 22);
 		phone.setBounds(137, 80, 396, 51);
 		typeLabel.setBounds(165, 172, 80, 22);
-		opt.setBounds(283, 157, 93, 22);
+		opt.setBounds(283, 149, 93, 22);
 		roz.setBounds(283, 185, 93, 22);
+		smallOpt.setBounds(283, 167, 93, 22);
 		
 		clientname.addActionListener(new nextFocus());
 		address.addActionListener(new nextFocus());
@@ -61,6 +67,7 @@ class NewClientDialog extends JPanel {
 		panel.add(typeLabel);
 		panel.add(opt);
 		panel.add(roz);
+		panel.add(smallOpt);
 		
 		panel.setBounds(0, 0, 557, 211);
 		add(panel,BorderLayout.CENTER);
@@ -90,6 +97,7 @@ class NewClientDialog extends JPanel {
 				phone.setEditable(true);
 				roz.setEnabled(true);
 				opt.setEnabled(true);
+				smallOpt.setEnabled(true);
 			}
 		});
 		JButton cancelButton = new JButton("Отмена");
@@ -130,6 +138,9 @@ class NewClientDialog extends JPanel {
 		int typeChoose=2;
 		if (opt.isSelected()){
 			typeChoose=1;
+		}
+		if (smallOpt.isSelected()){
+			typeChoose=3;
 		}
 		String query;
 		if (info)
@@ -175,10 +186,15 @@ class NewClientDialog extends JPanel {
 				if (rs.next()){
 					address.setText(rs.getString(1).trim());
 					phone.setText(rs.getString(2).trim());
-					if (rs.getInt(3)==2)
+					if (rs.getInt(3)==2){
 						roz.setSelected(true);
-					else
-						opt.setSelected(true);
+					}
+					else{ 
+						if (rs.getInt(3)==3)
+							smallOpt.setSelected(true);
+						else
+							opt.setSelected(true);
+					}
 				}
 				editButton.setEnabled(true);
 				address.setEditable(false);
@@ -186,6 +202,7 @@ class NewClientDialog extends JPanel {
 				phone.setEditable(false);
 				roz.setEnabled(false);
 				opt.setEnabled(false);
+				smallOpt.setEnabled(false);
 				okButton.setText("Принять");
 			}catch(Exception e){
 				e.printStackTrace();
@@ -199,6 +216,7 @@ class NewClientDialog extends JPanel {
 				phone.setEditable(true);
 				roz.setEnabled(true);
 				opt.setEnabled(true);
+				smallOpt.setEnabled(true);
 				okButton.setText("Добавить");
 			}
 		dialog.setLocationRelativeTo(parent);
