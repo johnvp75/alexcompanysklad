@@ -1100,6 +1100,7 @@ class MainFrame extends JFrame
 			double sum=0;
 			int id=0;
 			boolean isOpt=true;
+			boolean isSmallOpt=false;
 			double amountOfDiscount=0;
 			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
 				return;
@@ -1112,7 +1113,11 @@ class MainFrame extends JFrame
 				rs.next();
 				id_client=rs.getInt(2);
 				if (rs.getInt(1)==2)
-					isOpt=false;				
+					isOpt=false;
+				if (rs.getInt(1)==3){
+					isOpt=false;
+					isSmallOpt=true;
+				}
 				try{
 					rs=DataSet.QueryExec("Select * from document where id_client = "+id_client+
 						" and numb is null for update nowait", false);

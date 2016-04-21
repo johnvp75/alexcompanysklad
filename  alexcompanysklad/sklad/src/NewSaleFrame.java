@@ -1065,7 +1065,7 @@ class NewSaleFrame extends MyPanel
 		skladCombo.addActionListener(skladlistener);
 		clientCombo.removeActionListener(clientlistener);
 		try {
-			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2) order by upper(name)",true);
+			rs = DataSet.QueryExec("select trim(name) from client where type in (1,2,3) order by upper(name)",true);
 			rs.next();
 			clientCombo.removeAllItems();
 			while (!rs.isAfterLast()){

@@ -218,6 +218,9 @@ class NewClientDialog extends JPanel {
 				opt.setEnabled(true);
 				smallOpt.setEnabled(true);
 				okButton.setText("Добавить");
+				roz.setSelected(false);
+				opt.setSelected(false);
+				smallOpt.setSelected(true);
 			}
 		dialog.setLocationRelativeTo(parent);
 		dialog.setVisible(true);
