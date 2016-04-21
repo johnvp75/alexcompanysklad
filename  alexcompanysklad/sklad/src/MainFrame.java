@@ -1191,7 +1191,7 @@ class MainFrame extends JFrame
 						Vector<String> Row=new Vector<String>(0);
 						j++;
 						Row.add(j+"");
-						if (isOpt){
+						if (isOpt||isSmallOpt){
 							SumWithoutDiscount=SumWithoutDiscount+rs.getDouble(3)*rs.getDouble(4);
 							Row.add(rs.getString(1));
 							Row.add(rs.getString(3));
@@ -1200,13 +1200,13 @@ class MainFrame extends JFrame
 							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
 							Row.add(formatter.format(rs.getDouble(6)));
 						}
-						if (isSmallOpt){
+/*						if (isSmallOpt){
 							Row.add(rs.getString(1));
 							Row.add(rs.getString(3));
 							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
 							Row.add(formatter.format(rs.getDouble(6)));
 						}
-
+*/
 						if (!isOpt&&!isSmallOpt){
 							Row.add(rs.getString(1));
 							Row.add(rs.getString(2));
@@ -1224,7 +1224,7 @@ class MainFrame extends JFrame
 					GregorianCalendar now=new GregorianCalendar();
 
 					int size=OutData.size();
-					if (isOpt) 
+					if (isOpt||isSmallOpt) 
 						{
 						OutputOO.OpenDoc("nakl_opt_new.ots",true,false);
 						if (first){
@@ -1273,7 +1273,7 @@ class MainFrame extends JFrame
 					OutputOO.Insert(1, 9, OutData,false);
 					OutputOO.Insert(1, startRow+6+(first?3:0), OutData,true);
 					startRow=startRow+size+(first?14:11);					
-					if (isOpt){
+					if (isOpt||isSmallOpt){
 						OutputOO.print(1,false);
 						if (last){
 							OutputOO.print(1,true);
