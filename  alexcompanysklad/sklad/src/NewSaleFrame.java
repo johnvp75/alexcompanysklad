@@ -361,7 +361,7 @@ class NewSaleFrame extends MyPanel
 					clientCombo.removeActionListener(clientlistener);
 					clientCombo.removeAllItems();
 					try {
-						rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",true);
+						rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2,3) order by name",true);
 						rs.next();
 						while (!rs.isAfterLast()){
 							clientCombo.addItem(rs.getString("rtrim(name)"));
@@ -374,7 +374,7 @@ class NewSaleFrame extends MyPanel
 					try {
 						rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 						rs.next();
-						if (rs.getInt(1)==1){
+						if (rs.getInt(1)!=2){
 							okrLabel.setVisible(false);
 							okrCombo.setVisible(false);
 							priceLabel.setVisible(false);
@@ -462,7 +462,7 @@ class NewSaleFrame extends MyPanel
 				infoButton.setForeground(barcodeButton.getForeground());
 				}
 			int id_client=rs.getInt(3);
-			if (rs.getInt(1)==1){
+			if (rs.getInt(1)!=2){
 				okrLabel.setVisible(false);
 				okrCombo.setVisible(false);
 				rs.close();
@@ -491,7 +491,7 @@ class NewSaleFrame extends MyPanel
 				clientCombo.removeAllItems();
 				
 				try {
-					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2) order by name",false);
+					rs = DataSet.QueryExec("select rtrim(name) from client where type in (1,2,3) order by name",false);
 					rs.next();
 					while (!rs.isAfterLast()){
 						clientCombo.addItem(rs.getString("rtrim(name)"));
@@ -504,7 +504,7 @@ class NewSaleFrame extends MyPanel
 				try {
 					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",false);
 					rs.next();
-					if (rs.getInt(1)==1){
+					if (rs.getInt(1)!=2){
 						okrLabel.setVisible(false);
 						okrCombo.setVisible(false);
 						priceLabel.setVisible(false);
@@ -519,7 +519,7 @@ class NewSaleFrame extends MyPanel
 				try {
 					rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",false);
 					rs.next();
-					if (rs.getInt(1)==1){
+					if (rs.getInt(1)!=2){
 						okrLabel.setVisible(false);
 						okrCombo.setVisible(false);
 						priceLabel.setVisible(false);
@@ -697,7 +697,7 @@ class NewSaleFrame extends MyPanel
 		try {
 			rs=DataSet.QueryExec("Select type from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
 			rs.next();
-			if (!(rs.getInt(1)==1))
+			if (rs.getInt(1)==2)
 				roz=true;
 		}
 		catch (Exception e) { e.printStackTrace();}

@@ -1118,6 +1118,7 @@ class MainFrame extends JFrame
 					isOpt=false;
 					isSmallOpt=true;
 				}
+				
 				try{
 					rs=DataSet.QueryExec("Select * from document where id_client = "+id_client+
 						" and numb is null for update nowait", false);
@@ -1175,7 +1176,7 @@ class MainFrame extends JFrame
 					int skl=rs.getInt(2);
 					boolean last=!rs.next();
 					DataSet.UpdateQuery("update document set numb=numb_real.nextval, day=sysdate where id_doc="+id);
-					if (isOpt)
+					if (isOpt||isSmallOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else{
 						String SQLr=(skl==2 | skl==3)?specialPrintForShop(id,skl):"select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999.99')");
@@ -1198,7 +1199,15 @@ class MainFrame extends JFrame
 							Row.add(rs.getString(5));
 							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
 							Row.add(formatter.format(rs.getDouble(6)));
-						}else{
+						}
+						if (isSmallOpt){
+							Row.add(rs.getString(1));
+							Row.add(rs.getString(3));
+							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
+							Row.add(formatter.format(rs.getDouble(6)));
+						}
+
+						if (!isOpt&&!isSmallOpt){
 							Row.add(rs.getString(1));
 							Row.add(rs.getString(2));
 							Row.add(formatter.format(rs.getDouble(3)));
@@ -1248,7 +1257,7 @@ class MainFrame extends JFrame
 							repeat=!repeat;
 						}while(repeat);
 						}
-					else
+					if (!isOpt&&!isSmallOpt)
 						{
 						OutputOO.OpenDoc("nakl_roz.ots",true,false);
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"ã.", 10, true, 3,1,false);
