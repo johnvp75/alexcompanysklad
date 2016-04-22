@@ -1170,6 +1170,8 @@ class MainFrame extends JFrame
 				int Doc_count=0;
 				boolean first=true;
 				int startRow=0;
+				
+				
 				while (rs.next()){
 					Doc_count++;
 					id=rs.getInt(1);
@@ -1188,32 +1190,32 @@ class MainFrame extends JFrame
 					int j=0;
 					double SumWithoutDiscount=0.00;
 					while (rs.next()){
-						Vector<String> Row=new Vector<String>(0);
+						Vector<String> row=new Vector<String>(0);
 						j++;
-						Row.add(j+"");
-						if (isOpt||isSmallOpt){
+						row.add(j+"");
+						if (isOpt){
 							SumWithoutDiscount=SumWithoutDiscount+rs.getDouble(3)*rs.getDouble(4);
-							Row.add(rs.getString(1));
-							Row.add(rs.getString(3));
-							Row.add(formatter.format(rs.getDouble(4)));
-							Row.add(rs.getString(5));
-							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
-							Row.add(formatter.format(rs.getDouble(6)));
+							row.add(rs.getString(1));
+							row.add(rs.getString(3));
+							row.add(formatter.format(rs.getDouble(4)));
+							row.add(rs.getString(5));
+							row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
+							row.add(formatter.format(rs.getDouble(6)));
 						}
-/*						if (isSmallOpt){
-							Row.add(rs.getString(1));
-							Row.add(rs.getString(3));
-							Row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
-							Row.add(formatter.format(rs.getDouble(6)));
+						if (isSmallOpt){
+							row.add(rs.getString(1));
+							row.add(rs.getString(3));
+							row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
+							row.add(formatter.format(rs.getDouble(6)));
 						}
-*/
+
 						if (!isOpt&&!isSmallOpt){
-							Row.add(rs.getString(1));
-							Row.add(rs.getString(2));
-							Row.add(formatter.format(rs.getDouble(3)));
-							Row.add(formatter.format(rs.getDouble(4)));
+							row.add(rs.getString(1));
+							row.add(rs.getString(2));
+							row.add(formatter.format(rs.getDouble(3)));
+							row.add(formatter.format(rs.getDouble(4)));
 						}
-						OutData.add(Row);
+						OutData.add(row);
 					}
 					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name),numb from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
 							"sklad on document.id_skl=sklad.id_skl where id_doc="+id, false);
