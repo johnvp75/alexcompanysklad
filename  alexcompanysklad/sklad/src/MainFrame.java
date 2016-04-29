@@ -1312,6 +1312,7 @@ class MainFrame extends JFrame
 		ResultSet rs=null;
 			int id=0;
 			boolean isOpt=true;
+			boolean isSmallOpt=false;
 			String tovar="";
 			
 			try{
@@ -1321,6 +1322,10 @@ class MainFrame extends JFrame
 				tovar=rs.getString(2);
 				if (rs.getInt(1)==2)
 					isOpt=false;
+				if (rs.getInt(1)==3){
+					isOpt=false;
+					isSmallOpt=true;
+				}
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -1337,7 +1342,7 @@ class MainFrame extends JFrame
 					}
 					id=rs.getInt(1);
 					int skl=rs.getInt(2);
-					if (isOpt)
+					if (isOpt||isSmallOpt)
 						rs=DataSet.QueryExec("select trim(tovar.name), tovar.kol, sum(lines.kol), cost, disc, sum(lines.kol*cost*(1-disc/100)) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, tovar.kol, cost, disc order by tovar.name", false);
 					else{
 						String SQL=(skl==2|skl==3)?specialPrintForShop(id,skl):"select trim(tovar.name), sum(lines.kol*tovar.kol), cost/tovar.kol, sum(lines.kol*cost) from lines inner join tovar on lines.id_tovar=tovar.id_tovar where id_doc="+id+" group by tovar.name, cost/tovar.kol order by "+(skl!=8?"tovar.name":"substr(upper(trim(tovar.name)),instr(trim(tovar.name),' ')+1),to_number(substr(upper(trim(tovar.name)),1,instr(trim(tovar.name),' ')-1),'999999999')");
@@ -1352,7 +1357,7 @@ class MainFrame extends JFrame
 						Vector<String> Row=new Vector<String>(0);
 						j++;
 						Row.add(j+"");
-						if (isOpt){
+						if (isOpt||isSmallOpt){
 							SumWithoutDiscount=SumWithoutDiscount+rs.getDouble(3)*rs.getDouble(4);
 							Row.add(rs.getString(1));
 							Row.add(rs.getString(3));
@@ -1380,7 +1385,7 @@ class MainFrame extends JFrame
 					
 					
 					int size=OutData.size();
-					if (isOpt) 
+					if (isOpt||isSmallOpt) 
 						{
 						OutputOO.OpenDoc("nakl_opt_new.ots",!view,false);
 						OutputOO.InsertOne("\""+rs.getString(7).substring(0, 2)+"\" "+Month(new Integer(rs.getString(7).substring(3, 5))-1)+" "+rs.getString(7).substring(6, 10)+"г.", 10, true, 5,1,false);
@@ -1396,6 +1401,12 @@ class MainFrame extends JFrame
 						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2,false);
 						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2,false);
 						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4,false);
+						OutputOO.InsertOne("Вы можете оформить заказ товара на сайте CONTE-CRIMEA.RU",13,true,2,9+size+6,false);
+						OutputOO.cleanBorder(9+size+6, false);
+						OutputOO.cleanBorder(9+size+5, false);
+						OutputOO.cleanBorder(9+size+3, false);
+						OutputOO.cleanBorder(9+size+4, false);
+						
 						}
 					else
 						{

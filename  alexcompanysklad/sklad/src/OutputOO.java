@@ -4,15 +4,24 @@ import ooo.connector.BootstrapSocketConnector;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.beans.PropertyVetoException;
+import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.NoSuchElementException;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.lang.DisposedException;
+import com.sun.star.lang.IllegalArgumentException;
+import com.sun.star.lang.IndexOutOfBoundsException;
+import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.table.BorderLine;
+import com.sun.star.table.TableBorder;
 import com.sun.star.table.XCell;
+import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XCloseable;
@@ -59,6 +68,56 @@ public class OutputOO {
 		catch(Exception e){
 			e.printStackTrace();
 			}
+	}
+	
+	public static void cleanBorder(int row, boolean summary){
+		try {
+			XSpreadsheets xSpreadsheets;
+			XPropertySet xPropSet = null;
+			if (summary)
+				xSpreadsheets=summarySpreadsheetDocument.getSheets();
+			else
+				xSpreadsheets=xSpreadsheetDocument.getSheets();
+			Object sheet;
+			sheet = xSpreadsheets.getByName("Лист1");
+			XSpreadsheet xSpreadsheet=(XSpreadsheet)UnoRuntime.queryInterface(XSpreadsheet.class, sheet);
+			BorderLine borderLine = new BorderLine();
+			borderLine.Color=0;
+			borderLine.InnerLineWidth=0;
+			borderLine.LineDistance=0;
+			borderLine.OuterLineWidth=0;
+			TableBorder border=new TableBorder();
+			border.TopLine=border.RightLine=border.BottomLine=border.LeftLine=border.HorizontalLine=border.VerticalLine=borderLine;
+	        border.IsTopLineValid = border.IsBottomLineValid = true;
+	        border.IsLeftLineValid =border.IsRightLineValid = true;
+	        border.IsHorizontalLineValid=border.IsVerticalLineValid=true;
+			XCellRange xCellRange;
+			xCellRange=xSpreadsheet.getCellRangeByPosition(0, row-1, 6, row-1);
+			xPropSet = (com.sun.star.beans.XPropertySet)
+		            UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCellRange );
+			xPropSet.setPropertyValue( "TableBorder", border );
+		} catch (NoSuchElementException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WrappedTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IndexOutOfBoundsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnknownPropertyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (PropertyVetoException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+		
 	}
 /*	public static void OpenDoc(String DocPath, boolean hidden, boolean full) {
 		try{
