@@ -43,6 +43,8 @@ class NewSaleFrame extends MyPanel
 	private JButton sumForSale;
 	private naklTableModel model;
 	public static InputCountTovar formInput = null;
+	public static boolean isClientChoose=false;
+	public static String clientCode;
 	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
 	private MyTable naklTable;

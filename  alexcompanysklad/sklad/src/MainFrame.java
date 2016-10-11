@@ -1193,7 +1193,7 @@ class MainFrame extends JFrame
 						Vector<String> row=new Vector<String>(0);
 						j++;
 						row.add(j+"");
-						if (isOpt){
+						if (isOpt||isSmallOpt){
 							SumWithoutDiscount=SumWithoutDiscount+rs.getDouble(3)*rs.getDouble(4);
 							row.add(rs.getString(1));
 							row.add(rs.getString(3));
@@ -1202,19 +1202,20 @@ class MainFrame extends JFrame
 							row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
 							row.add(formatter.format(rs.getDouble(6)));
 						}
-						if (isSmallOpt){
+/*						if (isSmallOpt){
 							row.add(rs.getString(1));
 							row.add(rs.getString(3));
 							row.add(formatter.format(rs.getDouble(4)*(1-rs.getDouble(5)/100)));
 							row.add(formatter.format(rs.getDouble(6)));
 						}
-
+*/
 						if (!isOpt&&!isSmallOpt){
 							row.add(rs.getString(1));
 							row.add(rs.getString(2));
 							row.add(formatter.format(rs.getDouble(3)));
 							row.add(formatter.format(rs.getDouble(4)));
 						}
+						
 						OutData.add(row);
 					}
 					rs=DataSet.QueryExec("select sum, trim(note), disc, trim(val.name), trim(manager.name), trim(sklad.name),numb from ((document inner join val on document.id_val=val.id_val) inner join manager on document.id_manager=manager.id_manager) inner join " +
@@ -1251,6 +1252,18 @@ class MainFrame extends JFrame
 							OutputOO.InsertOne("Итого со скидкой",10,false,2,(repeat?startRow+6+(first?3:0):9)+size+2,repeat);
 							OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,(repeat?startRow+6+(first?3:0):9)+size+2,repeat);
 							OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,(repeat?startRow+6+(first?3:0):9)+size+4,repeat);
+							if (!repeat){
+								OutputOO.InsertOne("Вы можете оформить заказ товара на нашем сайте CONTE-CRIMEA.RU",13,true,2,9+size+6+(last?2:0),false);
+								OutputOO.InsertOne("или по телефону:+7-978-870-02-10; +7-978-870-02-09",13,true,2,9+size+7+(last?2:0),false);
+								OutputOO.cleanBorder(9+size+6, false);
+								OutputOO.cleanBorder(9+size+5, false);
+								OutputOO.cleanBorder(9+size+3, false);
+								OutputOO.cleanBorder(9+size+4, false);
+								OutputOO.cleanBorder(9+size+7, false);
+								OutputOO.cleanBorder(9+size+8, false);
+								OutputOO.cleanBorder(9+size+9, false);
+								
+							}
 							if (last) {
 								OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+6,repeat);
 								if (SALE && amountOfDiscount>0)
@@ -1401,12 +1414,13 @@ class MainFrame extends JFrame
 						OutputOO.InsertOne("Итого со скидкой",10,false,2,9+size+2,false);
 						OutputOO.InsertOne(formatter.format(rs.getDouble(1)),10,true,7,9+size+2,false);
 						OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,9+size+4,false);
-						OutputOO.InsertOne("Вы можете оформить заказ товара на сайте CONTE-CRIMEA.RU",13,true,2,9+size+6,false);
+						OutputOO.InsertOne("Вы можете оформить заказ товара на нашем сайте CONTE-CRIMEA.RU",13,true,2,9+size+6,false);
+						OutputOO.InsertOne("или по телефону:+7-978-870-02-10; +7-978-870-02-09",13,true,2,9+size+7,false);
 						OutputOO.cleanBorder(9+size+6, false);
 						OutputOO.cleanBorder(9+size+5, false);
 						OutputOO.cleanBorder(9+size+3, false);
 						OutputOO.cleanBorder(9+size+4, false);
-						
+						OutputOO.cleanBorder(9+size+7, false);
 						}
 					else
 						{

@@ -22,7 +22,8 @@ import javax.swing.SwingUtilities;
 public class InputBarcode {
 	private static TovarChooser tovchoose=null;
 	private static NewTovar newTovar;
-	public static RetBarCode newcod(String cod, String sklad, String price) throws IOException{
+	
+	public static RetBarCode newcod(String cod, String sklad, String price,Integer id_gr) throws IOException{
 		
 		int count=0;
 		if (cod==null)
@@ -106,6 +107,11 @@ public class InputBarcode {
 			catch (Exception e) {e.printStackTrace(); }
 		}
 	}
+	
+	public static RetBarCode newcod(String cod, String sklad, String price) throws IOException{
+		return newcod(cod,sklad,price,new Integer(null));
+	}
+
 }
 	class TovarChooser extends JPanel{
 		private JList nameList;
