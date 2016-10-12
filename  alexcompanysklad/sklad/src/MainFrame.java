@@ -1118,7 +1118,7 @@ class MainFrame extends JFrame
 					isOpt=false;
 					isSmallOpt=true;
 				}
-				
+				DataSet.UpdateQuery(String.format("Update client set ISCARDINPUT=0 where id_client=", id_client));
 				try{
 					rs=DataSet.QueryExec("Select * from document where id_client = "+id_client+
 						" and numb is null for update nowait", false);

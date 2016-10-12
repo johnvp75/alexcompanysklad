@@ -116,6 +116,12 @@ public class ChooserStreamIn implements Runnable{
 			switch (ChooserStreamIn.getIdStream()){
 			case 1:
 				try {
+					if (cod.startsWith("0000000")){
+						((NewSaleFrame)ChooserStreamIn.getParent()).getClientCodFromScaner(cod);
+						return;
+					}
+					
+					
 					if (!(((NewSaleFrame)ChooserStreamIn.getParent()).formInput==null) && ((NewSaleFrame)ChooserStreamIn.getParent()).formInput.isVisible())
 						((NewSaleFrame)ChooserStreamIn.getParent()).formInput.closeDialog();
 					RetBarCode codd=InputBarcode.newcod(cod, ChooserStreamIn.getSklad(), ChooserStreamIn.getPrice());

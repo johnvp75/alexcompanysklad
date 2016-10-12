@@ -30,6 +30,8 @@ import javax.swing.event.TableModelListener;
 class NewSaleFrame extends MyPanel
 {
 	
+	private final static int SUMM_FOR_CARD=20000;
+	
 	private JLabel okrLabel;
 	private JComboBox okrCombo;
 	private AutoComplete clientCombo;
@@ -43,11 +45,11 @@ class NewSaleFrame extends MyPanel
 	private JButton sumForSale;
 	private naklTableModel model;
 	public static InputCountTovar formInput = null;
-	public static boolean isClientChoose=false;
-	public static String clientCode;
+	public int clientKoeficientForDiscount=0;
 	private static ListChoose formGroup=null;
 	private JButton barcodeButton;
 	private MyTable naklTable;
+	private JLabel isInputCard = new JLabel("Карта не проведена");
 	public MainFrame parent;
 	private JCheckBox editableCheck;
 	private String note;
@@ -76,6 +78,8 @@ class NewSaleFrame extends MyPanel
 		JButton printButton = new JButton("Печать");
 		JLabel skladLabel = new JLabel("Склад:");
 		JLabel clientLabel = new JLabel("Клиент:");
+		isInputCard.setForeground(Color.RED);
+		isInputCard.setFont(new Font("Arial",Font.BOLD,12));
 		JLabel noteLabel = new JLabel("Примечание");
 		noteText = new JTextField("");
 		itogo = new JLabel("Итого (учитывая скидку): 0,00");
@@ -129,6 +133,7 @@ class NewSaleFrame extends MyPanel
 		skladCombo.setBounds(79, 1, 207, 22);
 		clientLabel.setBounds(10, 28, 61, 22);
 		clientCombo.setBounds(79, 28, 207, 22);
+		isInputCard.setBounds(10, 58, 160, 22);
 		infoButton.setBounds(296, 28, 104, 22);
 		ScrollTable.setBounds(6, 89, 769, 335);
 		priceLabel.setBounds(407, 1, 86, 22);
@@ -237,7 +242,6 @@ class NewSaleFrame extends MyPanel
 		        clientCombo.getEditor().selectAll();
 		    }
 		    public void focusLost(FocusEvent event){
-		    	
 		    	clientChooseMet(true);
 		    	
 		    }
@@ -413,7 +417,7 @@ class NewSaleFrame extends MyPanel
 		add(itogoallLabel);
 		add(isKoefForPrice);
 		add(fieldForInputKoefForPrice);
-		
+		add(isInputCard);
 		clientCombo.fireActionEvent();		
 		skladCombo.fireActionEvent();
 		setFocusable(true);
@@ -451,10 +455,28 @@ class NewSaleFrame extends MyPanel
 		
 		if (checkClient()){
 		try {
-			ResultSet rs=DataSet.QueryExec("Select type, trunc(months_between(sysdate, day)),id_client from client where name='"+(String)clientCombo.getSelectedItem()+"'",true);
+			String SQL=String.format("Select c.type, trunc(months_between(sysdate, c.day)),c.id_client,nvl(c.iscardinput,0),nvl(c.card_numb,0), nvl(t.sum,0) from client c,(select id_client, sum(sum)/12 as sum from DOCUMENT where day between SYSDATE-365 and SYSDATE group by id_client) t where name='%s' and t.ID_CLIENT (+) = c.ID_CLIENT ", clientCombo.getSelectedItem());
+			ResultSet rs=DataSet.QueryExec(SQL,false);
 			rs.next();
 //			GregorianCalendar lastEdit = new GregorianCalendar();
 //			lastEdit.setTime(rs.getDate(2));
+			clientKoeficientForDiscount=rs.getInt(4);
+			int typeClient=rs.getInt(1);
+			if (typeClient==1 && clientKoeficientForDiscount==1){
+				isInputCard.setForeground(Color.GREEN);
+				isInputCard.setText("Карта проведена");
+				}
+			else if (typeClient==1 && rs.getInt(5)!=0) {
+				isInputCard.setForeground(Color.RED);
+				isInputCard.setText("Карта не проведена");
+			} else if (typeClient==1 && rs.getInt(6)>20000) {
+				isInputCard.setForeground(Color.RED);
+				isInputCard.setText("Выдать карту (F12)");
+			}else{
+				isInputCard.setForeground(Color.GREEN);
+				isInputCard.setText("Без карты");
+			}
+			isInputCard.repaint();
 			if (rs.getInt(2)>3)
 				{infoButton.setBackground(Color.RED);
 				infoButton.setForeground(Color.RED);
@@ -464,11 +486,11 @@ class NewSaleFrame extends MyPanel
 				infoButton.setForeground(barcodeButton.getForeground());
 				}
 			int id_client=rs.getInt(3);
-			if (rs.getInt(1)!=2){
+			if (typeClient!=2){
 				okrLabel.setVisible(false);
 				okrCombo.setVisible(false);
 				rs.close();
-				String SQL;
+				
 				SQL=String.format("Select id_skl from sklad where name='%s'", (String)skladCombo.getSelectedItem());
 				rs=DataSet.QueryExec(SQL, false);
 				rs.next();
@@ -748,6 +770,40 @@ class NewSaleFrame extends MyPanel
 				naklTable.requestFocus();
 				BarCodeFire();
 			}
+			if (keyCode==KeyEvent.VK_F11){
+				event.setKeyCode(KeyEvent.VK_UNDEFINED);
+				String cod=JOptionPane.showInputDialog(null, "Введите номер карты клиента", "Ввод карты", JOptionPane.QUESTION_MESSAGE);
+				for (int i=cod.length();i<13;i++){
+					cod="0"+cod;
+				}
+				getClientCodFromScaner(cod);
+			}
+			if (keyCode==KeyEvent.VK_F12){
+				event.setKeyCode(KeyEvent.VK_UNDEFINED);
+				int icod=0;
+				String cod="";
+				do
+				{
+				cod=JOptionPane.showInputDialog(null, "Введите номер новой карты", "Выдача карты", JOptionPane.QUESTION_MESSAGE);
+				
+				try{
+					if (cod==null)
+						return;
+					icod=Integer.parseInt(cod, 10);
+					if (!(icod<10001 && icod>9))
+						throw new NumberFormatException();
+				}catch(NumberFormatException ex){
+					JOptionPane.showMessageDialog(null, "введите корректный номер от 10 до 10000", "Неверный номер", JOptionPane.ERROR_MESSAGE);
+				}
+				
+				}while(!(icod<10001 && icod>9));
+				for (int i=cod.length();i<13;i++){
+					cod="0"+cod;
+				}
+				
+//				getClientCodFromScaner(cod);
+			}
+
 		}
 	}
 	public void showform(){
@@ -1076,6 +1132,9 @@ class NewSaleFrame extends MyPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
+		isInputCard.setBackground(Color.RED);
+		isInputCard.setText("Карта не проведена");
+		clientKoeficientForDiscount=0;
 		clientCombo.setSelectedIndex(0);
 		ActionListener[] listeners=clientCombo.getActionListeners();
 		for (ActionListener element:listeners){
@@ -1170,6 +1229,8 @@ class NewSaleFrame extends MyPanel
 	}
 	private IndividualDiscount getDiscForClient(int id_client, int id_skl) throws Exception{
 		IndividualDiscount indDisc=new IndividualDiscount(0);
+		if (clientKoeficientForDiscount==0)
+			return indDisc;
 		String SQL=String.format("select count(*) from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
 		ResultSet rs=DataSet.QueryExec(SQL,true);
 		rs.next();
@@ -1194,6 +1255,52 @@ class NewSaleFrame extends MyPanel
 		return indDisc;
 	}
 
+	public void getClientCodFromScaner(String cod){
+		try{
+			String SQL;
+			int rez=0;
+			int numbClient=new Integer(cod.substring(8, 11));
+			if (numbClient>10){
+				SQL=String.format("update client set iscardinput=1 where card_numb='%s'", cod);
+			}else{
+				SQL=String.format("update client set iscardinput=1 where name='%s'", clientCombo.getSelectedItem());
+			}
+			rez=DataSet.UpdateQuery(SQL);
+			if (rez==0) {
+				JOptionPane.showMessageDialog(null, "Введенная карта не зарегистрированна в системе.", "Неизвестная карта", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			DataSet.commit();
+//			isInputCard.setBackground(Color.GREEN);
+//			isInputCard.setText("Карта проведена");
+			String name;
+			if (numbClient>10){
+				SQL=String.format("Select trim(name) from client where card_numb='%s'", cod);
+				ResultSet rs=DataSet.QueryExec(SQL, false);
+				rs.next();
+				name=rs.getString(1);
+				Checking=true;
+
+				ActionListener actions[]=clientCombo.getActionListeners();
+				for(ActionListener action:actions){
+					clientCombo.removeActionListener(action);
+				}
+				clientCombo.setSelectedItem(name);
+				for(ActionListener action:actions){
+					clientCombo.addActionListener(action);
+				}
+
+				Checking=false;
+				
+			}else{
+				name=(String)clientCombo.getSelectedItem();
+			}
+			clientCombo.fireActionEvent();
+			JOptionPane.showMessageDialog(null, String.format("Введенная карта %s",name), "Карта клиента", JOptionPane.INFORMATION_MESSAGE);
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+	}
 }
 class JComboBoxFire extends JComboBox{
 	public void fireActionEvent()

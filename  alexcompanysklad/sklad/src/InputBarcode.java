@@ -109,7 +109,7 @@ public class InputBarcode {
 	}
 	
 	public static RetBarCode newcod(String cod, String sklad, String price) throws IOException{
-		return newcod(cod,sklad,price,new Integer(null));
+		return newcod(cod,sklad,price,new Integer(0));
 	}
 
 }
