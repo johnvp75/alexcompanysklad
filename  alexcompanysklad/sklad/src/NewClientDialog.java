@@ -9,6 +9,10 @@ import javax.swing.*;
 
 
 class NewClientDialog extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JTextField clientname;
 	private JButton okButton;
 	private JTextField address;
@@ -150,7 +154,6 @@ class NewClientDialog extends JPanel {
 		try {
 			DataSet.QueryExec(query,true);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			JOptionPane.showMessageDialog(this, "Ошибка записи!");
 			e.printStackTrace();
 		}

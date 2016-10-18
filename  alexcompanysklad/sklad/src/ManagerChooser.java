@@ -8,6 +8,10 @@ import javax.swing.*;
 
 class ManagerChooser extends JPanel
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JComboBox username;
 	private JPasswordField password;
 	private JButton okButton;

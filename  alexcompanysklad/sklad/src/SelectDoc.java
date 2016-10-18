@@ -3,15 +3,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.ResultSet;
-import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.Vector;
-
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -21,6 +17,10 @@ import javax.swing.table.DefaultTableModel;
 
 
 public class SelectDoc extends MyPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int id_doc;
 	private int type_doc;
 	private GregorianCalendar startDate=new GregorianCalendar();
@@ -174,6 +174,11 @@ public class SelectDoc extends MyPanel {
 		Column.add("Валюта");
 		Column.add("Примечание");
 		docTable.setModel(new DefaultTableModel(Rows,Column){
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
 			public boolean isCellEditable(int row, int column){
 				return false;
 			}

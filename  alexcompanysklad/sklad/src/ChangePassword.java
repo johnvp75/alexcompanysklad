@@ -2,13 +2,10 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Frame;
 import java.awt.GridLayout;
-import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
-
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -18,13 +15,17 @@ import javax.swing.SwingUtilities;
 
 
 public class ChangePassword extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JPasswordField OldPassword;
 	private JPasswordField NewPassword1;
 	private JPasswordField NewPassword2;
 	private JButton okButton;
 	private String UserName;
 	private JDialog dialog;
-	private boolean ok;
+//	private boolean ok;
 	public ChangePassword() {
 		setLayout(new BorderLayout());
 		JPanel panel = new JPanel();
@@ -48,7 +49,6 @@ public class ChangePassword extends JPanel {
 								try {
 									DataSet.QueryExec("update manager set password = '"+(new String(NewPassword1.getPassword()))+"' where name='"+getUserName()+"'", true);
 								} catch (Exception e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 								dialog.setVisible(false);

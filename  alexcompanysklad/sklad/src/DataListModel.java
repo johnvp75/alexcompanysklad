@@ -11,7 +11,11 @@ import javax.swing.AbstractListModel;
  * @author Жека
  */
 public class DataListModel extends AbstractListModel{
-    private Vector<String> data;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private Vector<String> data;
     public DataListModel(){
         data = new Vector<String>(0);
     }

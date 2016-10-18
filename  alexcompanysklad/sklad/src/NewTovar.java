@@ -1,6 +1,4 @@
-import java.awt.GridLayout;
 import javax.swing.JPanel;
-import java.awt.Dimension;
 import javax.swing.JLabel;
 import java.awt.Rectangle;
 
@@ -20,7 +18,6 @@ import java.awt.Insets;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 public class NewTovar extends JPanel {
 

@@ -5,11 +5,20 @@ import javax.swing.*;
 import javax.swing.text.*;
 public class AutoComplete extends JComboBox	implements JComboBox.KeySelectionManager
 {
-	private String searchFor, previos;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String searchFor;
 	private long lap;
 	private boolean selected=false;
 	public class CBDocument extends PlainDocument
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		public void insertString(int offset, String str, AttributeSet a) throws BadLocationException
 		{
 			if (str==null) return;

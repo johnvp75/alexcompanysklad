@@ -1,3 +1,4 @@
+import java.sql.ResultSet;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Vector;
@@ -8,13 +9,18 @@ import javax.swing.table.AbstractTableModel;
 
 
 class naklTableModel extends AbstractTableModel{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private dataCont nakl;
 	private boolean Editable = false;
 	private boolean isReal;
 	private boolean changed=false;
 	private boolean changeNakl=false;
+	private int id_skl;
 	public naklTableModel(String aClient, String aSklad, IndividualDiscount aDiscount, boolean aIsReal ){
-		nakl = new dataCont(aClient,aSklad,aDiscount);
+		nakl = new dataCont(aClient,aSklad,aDiscount,0);
 		isReal=aIsReal;
 	}
 	public void setClient(String aValue){
@@ -23,7 +29,17 @@ class naklTableModel extends AbstractTableModel{
 		fireTableChanged(new TableModelEvent(this));
 	}
 	public void setSklad(String aValue){
+		try{
+			String sql=String.format("Select id_skl from sklad where name='%s'", aValue);
+			ResultSet rs=DataSet.QueryExec1(sql, false);
+			rs.next();
+			id_skl=rs.getInt(1);
+		}catch(Exception ex){
+			JOptionPane.showMessageDialog(null, "Ошибка чтения склада.", "Ошибка!", JOptionPane.ERROR_MESSAGE);
+			ex.printStackTrace();
+		}
 		nakl.setNameSklad(aValue);
+		nakl.setId_skl(id_skl);
 		setChanged(true);
 		fireTableStructureChanged();
 	}
@@ -100,7 +116,7 @@ class naklTableModel extends AbstractTableModel{
 		return nakl.present(aName);	
 	}
 	public int getIndDiscount(int id_group){
-		return nakl.getIndDiscount(id_group);
+		return nakl.getIndDiscount(id_group,id_skl);
 	}
 	public int add(String aName, int aCount, double aCost, int aDiscount, int aAkcia, int aGroup){
 		boolean b=false;
@@ -130,7 +146,7 @@ class naklTableModel extends AbstractTableModel{
 			int j=1;
 			if (nakl.getAkcia(i))
 				j=0;
-			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-((new Integer(nakl.getIndDiscount((Integer)nakl.getValueAt(i, 6)))).doubleValue()/100)*j)*(1-((Integer)nakl.getValueAt(i, 5)).doubleValue()/100);
+			ret=ret+((Double)nakl.getValueAt(i, 4))*(1-((new Integer(nakl.getIndDiscount((Integer)nakl.getValueAt(i, 6),id_skl))).doubleValue()/100)*j)*(1-((Integer)nakl.getValueAt(i, 5)).doubleValue()/100);
 		}
 		String s = formatter.format(ret);
 		return (new Double(s));
@@ -193,10 +209,15 @@ class naklTableModel extends AbstractTableModel{
 	}
 }
 class dataCont{
-	private Vector name, count,cost,discount,akcia,group;
+	private Vector<String> name;
+	private Vector<Integer> count,discount,group;
+	private Vector <Double> cost;
+	private Vector <Boolean> akcia;
 	private String nameClient, nameSklad;
 	private IndividualDiscount inddiscount;
-	public dataCont (String anameClient,String anameSklad, IndividualDiscount ainddiscount){
+	private int id_skl;
+
+	public dataCont (String anameClient,String anameSklad, IndividualDiscount ainddiscount,int id_skl){
 		name=new Vector<String>(0);
 		count=new Vector<Integer>(0);
 		cost=new Vector<Double>(0);
@@ -206,6 +227,7 @@ class dataCont{
 		nameSklad=anameSklad;
 		inddiscount=ainddiscount;
 		group=new Vector<Integer>(0);
+		this.id_skl=id_skl;
 	}
 	public void setNameClient(String aValue){
 		nameClient=aValue;
@@ -221,14 +243,14 @@ class dataCont{
 		return nameClient;
 	}
 	
-	public int getIndDiscount(int id_group){
-		return inddiscount.getDiscount(id_group);
+	public int getIndDiscount(int id_group,int id_skl){
+		return inddiscount.getDiscount(id_group,id_skl);
 	}
 	
 	public int getRowDiscount(int row){
 		int ret=0;
 		if (!getAkcia(row)){
-			ret=100-((100-(Integer)getDiscount(row))*(100-getIndDiscount((Integer)getGroup(row)))/100);
+			ret=100-((100-(Integer)getDiscount(row))*(100-getIndDiscount((Integer)getGroup(row),id_skl))/100);
 		}else{
 			ret=(Integer)getDiscount(row);
 		}
@@ -250,7 +272,7 @@ class dataCont{
 	private void newName(String aName){
 		name.add(aName);
 	}
-	private void setName(Object aName, int pos){
+	private void setName(String aName, int pos){
 		name.setElementAt(aName, pos);
 	}
 	private String getName(int pos){
@@ -283,9 +305,17 @@ class dataCont{
 	private void newGroup(int aGroup){
 		group.add(new Integer(aGroup));
 	}
+	public int getId_skl() {
+		return id_skl;
+	}
+	public void setId_skl(int id_skl) {
+		this.id_skl = id_skl;
+	}
+/*
 	private void setGroup(Object aGroup, int pos){
 		group.setElementAt(new Integer((String)aGroup), pos);
 	}
+*/
 	private Object getGroup(int pos){
 		return group.elementAt(pos);
 	}
@@ -353,7 +383,7 @@ class dataCont{
 	public void setValueAt(Object aValue, int row, int column){
 		switch (column){
 		case 1:
-			setName(aValue,row);
+			setName((String)aValue,row);
 			break;
 		case 2:
 			setCount(aValue, row);

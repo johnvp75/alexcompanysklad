@@ -1,12 +1,9 @@
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
-import java.util.Properties;
 
 
 public class DataSet {
@@ -81,7 +78,6 @@ public class DataSet {
 				st = cn.createStatement();
 			} catch (SQLException e) {
 				throw e;
-				// TODO Auto-generated catch block
 			}
 		}
 
@@ -98,7 +94,6 @@ public class DataSet {
 			try {
 				cn.commit();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				throw e;
 			}
 		}
@@ -108,7 +103,6 @@ public class DataSet {
 			try {
 				cn.rollback();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				throw e;
 			}
 		}
@@ -180,7 +174,6 @@ public class DataSet {
 				st1 = cn1.createStatement();
 			} catch (SQLException e) {
 				throw e;
-				// TODO Auto-generated catch block
 			}
 		}
 
@@ -197,7 +190,6 @@ public class DataSet {
 			try {
 				cn1.commit();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				throw e;
 			}
 		}
@@ -207,7 +199,6 @@ public class DataSet {
 			try {
 				cn1.rollback();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
 				throw e;
 			}
 		}

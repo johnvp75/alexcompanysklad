@@ -39,9 +39,11 @@ public class BarCode {
 	public int getCountTovarForOneCode() {
 		return countTovarForOneCode;
 	}
+	/*
 	public void setCountTovarForOneCode(int countTovarForOneCode) {
 		countTovarForOneCode = countTovarForOneCode;
 	}
+	*/
 	public Boolean getBarcodeForShops() {
 		return barcodeForShops;
 	}

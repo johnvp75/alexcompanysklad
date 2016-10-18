@@ -1,15 +1,7 @@
 import javax.swing.JPanel;
-import java.awt.BorderLayout;
-import java.awt.Dialog;
-import java.awt.Frame;
-import java.awt.GraphicsConfiguration;
-import java.awt.Window;
-
 import javax.swing.JDialog;
-import java.awt.Dimension;
 import javax.swing.JLabel;
 import javax.swing.WindowConstants;
-import java.awt.GridBagLayout;
 import java.awt.Rectangle;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -17,14 +9,16 @@ import java.sql.SQLException;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTextArea;
 import javax.swing.JButton;
 import javax.swing.JList;
 
 public class NewBarCode extends JDialog {
 
-	private final long serialVersionUID = 1L;
-	private JPanel jContentPane = null;  //  @jve:decl-index=0:visual-constraint="18,36"
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+//	private JPanel jContentPane = null;  //  @jve:decl-index=0:visual-constraint="18,36"
 	private JPanel jPanel = null;
 	private JLabel jLabel = null;
 	private JTextField CodeEdit = null;
@@ -43,7 +37,6 @@ public class NewBarCode extends JDialog {
 	}
 
 	public NewBarCode(String sklad, String tovar) {
-		// TODO Auto-generated constructor stub
 		setSklad(sklad);
 		setTovar(tovar);
 		initialize();
@@ -79,6 +72,7 @@ public class NewBarCode extends JDialog {
 	 * 
 	 * @return javax.swing.JPanel
 	 */
+/*
 	private JPanel getJContentPane() {
 		if (jContentPane == null) {
 			jContentPane = new JPanel();
@@ -86,7 +80,7 @@ public class NewBarCode extends JDialog {
 		}
 		return jContentPane;
 	}
-
+*/
 	/**
 	 * This method initializes jPanel	
 	 * 	

@@ -18,7 +18,11 @@ import javax.swing.table.TableModel;
 
 
 public class MyTable extends JTable {
-    private int oldRow=-1, oldCol=-1;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+//	private int oldRow=-1, oldCol=-1;
 	public MyTable(TableModel model)   
     {   
         super(model);   

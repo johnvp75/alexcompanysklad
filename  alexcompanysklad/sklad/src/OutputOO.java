@@ -9,7 +9,6 @@ import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.frame.XComponentLoader;
-import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
@@ -37,7 +36,6 @@ public class OutputOO {
 //	private static final String oooExeFolder="C:\\JavaProjects\\OpenOffice.org 3\\program"; //house
 	private static final String oooExeFolder="C:\\Program Files\\OpenOffice.org 3\\program"; //server
 	public OutputOO() {
-		// TODO Auto-generated constructor stub
 	}
 	private static void connect() {
 //		if (xRemouteContext==null)
@@ -97,22 +95,16 @@ public class OutputOO {
 		            UnoRuntime.queryInterface( com.sun.star.beans.XPropertySet.class, xCellRange );
 			xPropSet.setPropertyValue( "TableBorder", border );
 		} catch (NoSuchElementException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (WrappedTargetException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IndexOutOfBoundsException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (UnknownPropertyException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (PropertyVetoException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

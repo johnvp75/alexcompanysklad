@@ -11,7 +11,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
@@ -22,21 +21,23 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 
 
 class MainFrame extends JFrame 
 {
-	private static final boolean SALE=true;
-	private static final GregorianCalendar STARTDATE=new GregorianCalendar(2011,7,25,0,0);
-	private static final GregorianCalendar ENDDATE=new GregorianCalendar(2011,8,20,23,59);
-	private static final double MIN_SUM_FOR_SALE_1=300.00;
-	private static final int DISCOUNT_FOR_SALE_1=5;
-	private static final double MIN_SUM_FOR_SALE_2=1000.00;
-	private static final int DISCOUNT_FOR_SALE_2=7;
-	private static final int GROUP_FOR_SALE[]={120000,130000,80000,480000,540000};
-	private static final int SKLAD_FOR_SALE=4;
+/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+//	private static final boolean SALE=true;
+//	private static final GregorianCalendar STARTDATE=new GregorianCalendar(2011,7,25,0,0);
+//	private static final GregorianCalendar ENDDATE=new GregorianCalendar(2011,8,20,23,59);
+//	private static final double MIN_SUM_FOR_SALE_1=300.00;
+//	private static final int DISCOUNT_FOR_SALE_1=5;
+//	private static final double MIN_SUM_FOR_SALE_2=1000.00;
+//	private static final int DISCOUNT_FOR_SALE_2=7;
+//	private static final int GROUP_FOR_SALE[]={120000,130000,80000,480000,540000};
+//	private static final int SKLAD_FOR_SALE=4;
 
 	
 	private JMenu saleMenu;
@@ -314,12 +315,12 @@ class MainFrame extends JFrame
 		Printdialog.addTovar(data);
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			String clientName=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
-			int id_client;
+//			int id_client;
 			String Suma="";
 			double sum=0;
 			int id=0;
 			boolean isOpt=true;
-			double amountOfDiscount=0;
+//			double amountOfDiscount=0;
 			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
 				return;
 			PrintProcess question=new PrintProcess();
@@ -341,14 +342,16 @@ class MainFrame extends JFrame
 				}
 				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
 				rs.next();
-				id_client=rs.getInt(2);
+//				id_client=rs.getInt(2);
 				if (rs.getInt(1)==2)
 					isOpt=false;
 				
-				if (isOpt && SALE)
+/*
+ 				if (isOpt && SALE)
 					amountOfDiscount=CalcSale(id_client);
 				if (amountOfDiscount<0)
 					return;
+*/
 				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
 				rs.next();
 				sum=rs.getDouble(1);
@@ -357,7 +360,6 @@ class MainFrame extends JFrame
 				try {
 					DataSet.rollback();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -365,7 +367,7 @@ class MainFrame extends JFrame
 			}
 
 			Suma=formatter.format(sum)+" руб.";
-			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" руб.";
+//			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" руб.";
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
 			try {
@@ -451,8 +453,8 @@ class MainFrame extends JFrame
 							OutputOO.InsertOne("Документ оформил: "+rs.getString(5),8,false,2,(repeat?startRow+6+(first?3:0):9)+size+4,repeat);
 							if (last) {
 								OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma+" (курс USD="+curs_USD+")",10,true,2,(repeat?startRow+6+(first?3:0):9)+size+6,repeat);
-								if (SALE && amountOfDiscount>0)
-									OutputOO.InsertOne(messageDiscount,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+8,repeat);
+//								if (SALE && amountOfDiscount>0)
+//									OutputOO.InsertOne(messageDiscount,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+8,repeat);
 							}
 							repeat=!repeat;
 						}while(repeat);
@@ -494,7 +496,6 @@ class MainFrame extends JFrame
 				try {
 					DataSet.rollback();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -504,9 +505,6 @@ class MainFrame extends JFrame
 		this.repaint();
 	}
 	
-	private void insertHead(int startRow,boolean summary){
-		
-	}
 	
 	private String specialPrintForShop(int id, int skl) throws Exception{
 		String name="";
@@ -599,7 +597,7 @@ class MainFrame extends JFrame
 					rs.next();
 					if (rs.getString(2).charAt(0)=='&')
 						pref=" (АКЦИЯ)";
-					GregorianCalendar now=new GregorianCalendar();
+//					GregorianCalendar now=new GregorianCalendar();
 
 					int size=OutData.size();
 					if (isOpt) 
@@ -646,7 +644,6 @@ class MainFrame extends JFrame
 				try {
 					DataSet.rollback();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -862,9 +859,11 @@ class MainFrame extends JFrame
 	public void setBackgroundImage(Image backgroundImage) {
 		this.backgroundImage = backgroundImage;
 	}
+/*
 	private void repaintform(){
 		this.repaint();
 	}
+*/
 	private void GenerateBarCodeForMissing(int IdDocumentForWork){
 		String SQL=String.format("select id_tovar, (select max(id_skl)  from document where id_doc=%1$s) as id_skl from(select l.id_tovar,b.bar_code from lines l  left join (select id_tovar, bar_code from bar_code where for_shops=1 and id_skl=(select id_skl from document where id_doc=%1$s)) b on l.id_tovar=b.id_tovar where l.id_doc=%1$s) where bar_code is null",IdDocumentForWork);
 		try{
@@ -947,6 +946,7 @@ class MainFrame extends JFrame
 		}
 	}
 	
+/*
 	private double CalcSale(int aId_client){
 		double sumOfDiscount=CalcSumForSale(aId_client);
 		double curs=0.00;
@@ -1067,7 +1067,7 @@ class MainFrame extends JFrame
 	public static Boolean isSale(){
 		return ((new GregorianCalendar()).after(STARTDATE) && (new GregorianCalendar()).before(ENDDATE)) && SALE; 
 	}
-	
+*/	
 	public void newPrint(){
 		if (Printdialog==null)
 			Printdialog=new TovarChooser();
@@ -1096,12 +1096,15 @@ class MainFrame extends JFrame
 		if ((Printdialog.showDialog(MainFrame.this, "Выбор клиента")) && (Printdialog.getTovar()!=null)){
 			String clientName=Printdialog.getTovar().substring(0, Printdialog.getTovar().indexOf(" на сумму: "));
 			int id_client;
+			boolean isCard=false;
 			String Suma="";
 			double sum=0;
 			int id=0;
 			boolean isOpt=true;
 			boolean isSmallOpt=false;
-			double amountOfDiscount=0;
+			int isCardInput=0;
+			boolean second=false;
+//			double amountOfDiscount=0;
 			if (JOptionPane.showConfirmDialog(null, String.format("Вы уверены что хотите напечатать\nдокументы %s? ", clientName), "Вы уверенны?", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.NO_OPTION)
 				return;
 			PrintProcess question=new PrintProcess();
@@ -1109,8 +1112,10 @@ class MainFrame extends JFrame
 				return;
 			}
 			try{
-				rs=DataSet.QueryExec("select type,id_client from client where name='"+clientName+"'", false);
+				rs=DataSet.QueryExec("select type,id_client, nvl(card_numb,'0'),nvl(iscardinput,0) from client where name='"+clientName+"'", false);
 				rs.next();
+				isCard=rs.getInt(3)>0;
+				isCardInput=rs.getInt(4);
 				id_client=rs.getInt(2);
 				if (rs.getInt(1)==2)
 					isOpt=false;
@@ -1118,8 +1123,13 @@ class MainFrame extends JFrame
 					isOpt=false;
 					isSmallOpt=true;
 				}
-				DataSet.UpdateQuery(String.format("Update client set ISCARDINPUT=0 where id_client=", id_client));
 				try{
+					rs=DataSet.QueryExec(String.format("Select count(*) from document where id_client=%s and day>to_date('14.10.2016','DD.MM.YYYY') ", id_client),false);
+					rs.next();
+					second=rs.getInt(1)>0;
+					DataSet.UpdateQuery(String.format("Update document set ISCLIENTCARD=%s where id_client=%s and day is null and numb is null",isCardInput, id_client));
+					DataSet.UpdateQuery(String.format("Update client set ISCARDINPUT=0 where id_client=%s", id_client));
+
 					rs=DataSet.QueryExec("Select * from document where id_client = "+id_client+
 						" and numb is null for update nowait", false);
 				}catch(Exception e){
@@ -1133,10 +1143,11 @@ class MainFrame extends JFrame
 				}
 
 				
-				if (isOpt && SALE)
+/*				if (isOpt && SALE)
 					amountOfDiscount=CalcSale(id_client);
 				if (amountOfDiscount<0)
 					return;
+*/
 				rs=DataSet.QueryExec(String.format("Select sum(document.sum*curs_now.curs) from document, curs_now where curs_now.id_val=document.id_val and (document.numb is NULL) and document.id_type_doc=2 and document.id_client=(select id_client from client where name='%s') ",clientName),false );
 				rs.next();
 				sum=rs.getDouble(1);
@@ -1145,7 +1156,6 @@ class MainFrame extends JFrame
 				try {
 					DataSet.rollback();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -1153,7 +1163,7 @@ class MainFrame extends JFrame
 			}
 
 			Suma=formatter.format(sum)+" руб.";
-			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" руб.";
+//			String messageDiscount="Скидка по акции составила: "+formatter.format(amountOfDiscount)+" руб.";
 			Vector<Vector<String>> OutData = new Vector<Vector<String>>(0);
 			
 			try {
@@ -1234,6 +1244,8 @@ class MainFrame extends JFrame
 							OutputOO.OpenDoc("nakl_sum_new.ots",true,true);
 							OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1,true);
 							OutputOO.InsertOne("Получатель: "+clientName,11, true, 1,4,true);
+							if (!isCard)
+								OutputOO.InsertOne("Карты нет"+(second?" (повторно)":" "),12,true,6,5,true);
 
 						}
 						OutputOO.InsertOne("\""+now.get(Calendar.DAY_OF_MONTH)+"\" "+Month(now.get(Calendar.MONTH))+" "+now.get(Calendar.YEAR)+"г.", 10, true, 5,1,false);
@@ -1266,8 +1278,8 @@ class MainFrame extends JFrame
 							}
 							if (last) {
 								OutputOO.InsertOne("Итого по всем накладным ("+Doc_count+" шт.): "+Suma,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+6,repeat);
-								if (SALE && amountOfDiscount>0)
-									OutputOO.InsertOne(messageDiscount,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+8,repeat);
+//								if (SALE && amountOfDiscount>0)
+//									OutputOO.InsertOne(messageDiscount,10,true,2,(repeat?startRow+6+(first?3:0):9)+size+8,repeat);
 							}
 							repeat=!repeat;
 						}while(repeat);
@@ -1309,7 +1321,6 @@ class MainFrame extends JFrame
 				try {
 					DataSet.rollback();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -1393,7 +1404,7 @@ class MainFrame extends JFrame
 					rs.next();
 					if (rs.getString(2).charAt(0)=='&')
 						pref=" (АКЦИЯ)";
-					GregorianCalendar now=new GregorianCalendar();
+//					GregorianCalendar now=new GregorianCalendar();
 					
 					
 					
@@ -1448,7 +1459,6 @@ class MainFrame extends JFrame
 				try {
 					DataSet.rollback();
 				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				e.printStackTrace();
@@ -1463,7 +1473,9 @@ class MainFrame extends JFrame
 		}
 			
 		}
-	
+	private void testPrice(int id_client){
+		
+	}
 
 
 }

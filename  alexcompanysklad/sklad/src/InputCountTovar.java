@@ -4,12 +4,16 @@ import java.awt.Frame;
 import java.awt.event.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.io.*;
+
 
 import javax.swing.*;
 
 
 class InputCountTovar extends JPanel{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JTextField incase;
 	private JTextField count;
 	private JLabel name;
@@ -54,7 +58,6 @@ class InputCountTovar extends JPanel{
 				try {
 					DataSet.QueryExec("Update tovar set kol="+incase.getText()+" where name='"+name.getText()+"'",true);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				((JTextField)event.getSource()).transferFocus();

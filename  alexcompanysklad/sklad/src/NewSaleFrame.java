@@ -1,6 +1,5 @@
  import java.awt.Color;
 import java.awt.Font;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.*;
 import java.sql.ResultSet;
@@ -8,13 +7,8 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.GregorianCalendar;
-import java.util.Vector;
 
 import javax.swing.*;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
@@ -30,7 +24,12 @@ import javax.swing.event.TableModelListener;
 class NewSaleFrame extends MyPanel
 {
 	
-	private final static int SUMM_FOR_CARD=20000;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private final static int MIN_SUMM_FOR_CARD=20000;
 	
 	private JLabel okrLabel;
 	private JComboBox okrCombo;
@@ -42,7 +41,7 @@ class NewSaleFrame extends MyPanel
 	private JLabel itogo;
 	private JLabel itogowo;
 	private JLabel itogoallLabel;
-	private JButton sumForSale;
+//	private JButton sumForSale;
 	private naklTableModel model;
 	public static InputCountTovar formInput = null;
 	public int clientKoeficientForDiscount=0;
@@ -61,10 +60,10 @@ class NewSaleFrame extends MyPanel
 	private ActionListener clientlistener;
 	private ActionListener skladlistener;
 	private boolean Checking=false;
-	private Double sumForSaleInOtherDoc=0.0;
+//	private Double sumForSaleInOtherDoc=0.0;
 	private JCheckBox isKoefForPrice;
 	private JTextField fieldForInputKoefForPrice;
-	private String oldClientName="";
+//	private String oldClientName="";
 	
 	private int id_doc;
 	private JButton infoButton;
@@ -85,8 +84,8 @@ class NewSaleFrame extends MyPanel
 		itogo = new JLabel("Итого (учитывая скидку): 0,00");
 		itogowo = new JLabel("Итого (не учитывая скидку): 0,00");
 		itogoallLabel= new JLabel("Итого по всем накладным: 0,00");
-		sumForSale=new JButton("Сумма по акции");
-		sumForSale.setVisible(MainFrame.isSale());
+//		sumForSale=new JButton("Сумма по акции");
+//		sumForSale.setVisible(MainFrame.isSale());
 		priceLabel = new JLabel("Прайс:");
 		okrLabel = new JLabel("Округление:");
 		okrCombo = new JComboBox();
@@ -102,7 +101,7 @@ class NewSaleFrame extends MyPanel
 		isKoefForPrice= new JCheckBox("Процент",false);
 		fieldForInputKoefForPrice=new JTextField("0");
 		fieldForInputKoefForPrice.setVisible(false);
-		model = new naklTableModel("","",new IndividualDiscount(0),true);
+		model = new naklTableModel("","",new IndividualDiscount(),true);
 		
 		naklTable=new MyTable(model);
 		naklTable.setAutoCreateColumnsFromModel(false);
@@ -144,7 +143,7 @@ class NewSaleFrame extends MyPanel
 		itogo.setBounds(220, 425, 200, 22);
 		itogowo.setBounds(10, 425, 210, 22);
 		itogoallLabel.setBounds(420, 425, 200, 22);
-		sumForSale.setBounds(650, 425, 120, 22);
+//		sumForSale.setBounds(650, 425, 120, 22);
 		noteLabel.setBounds(10, 450, 90, 22);
 		noteText.setBounds(100, 450, 670, 22);
 		isKoefForPrice.setBounds(690, 1, 70, 22);
@@ -286,7 +285,7 @@ class NewSaleFrame extends MyPanel
 				save();
 			}
 		});
-		sumForSale.addActionListener(new ActionListener() {
+/*		sumForSale.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -294,6 +293,8 @@ class NewSaleFrame extends MyPanel
 				JOptionPane.showMessageDialog(null, String.format("Сумма по акции: %s", formatter.format(parent.CalcSumForSale((String)clientCombo.getSelectedItem())+getSumForSaleInCurrentDoc())), "Акция!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
+		
+*/		
 		model.addTableModelListener(modlis);
 		printButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
@@ -341,10 +342,10 @@ class NewSaleFrame extends MyPanel
 				if (!editableCheck.isSelected())
 					return;
 				
-				if (event.getKeyCode()==event.VK_ENTER){
+				if (event.getKeyCode()==KeyEvent.VK_ENTER){
 					return;
 				}
-				if ((event.getKeyCode()>=event.VK_0 && event.getKeyCode()<=event.VK_9) || (event.getKeyChar()=='.') || (event.getKeyCode()>=event.VK_NUMPAD0 && event.getKeyCode()<=event.VK_NUMPAD9)){
+				if ((event.getKeyCode()>=KeyEvent.VK_0 && event.getKeyCode()<=KeyEvent.VK_9) || (event.getKeyChar()=='.') || (event.getKeyCode()>=KeyEvent.VK_NUMPAD0 && event.getKeyCode()<=KeyEvent.VK_NUMPAD9)){
 					if (naklTable.getEditingColumn()==-1){
 						naklTable.editCellAt(naklTable.getSelectedRow(), naklTable.getSelectedColumn());
 						((JTextField)naklTable.getEditorComponent()).selectAll();
@@ -411,7 +412,7 @@ class NewSaleFrame extends MyPanel
 		add(editableCheck);
 		add(itogo);
 		add(itogowo);
-		add(sumForSale);
+//		add(sumForSale);
 		add(noteLabel);
 		add(noteText);
 		add(itogoallLabel);
@@ -444,19 +445,26 @@ class NewSaleFrame extends MyPanel
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			clientCombo.fireActionEvent();
+//			IndividualDiscount indDisc=new IndividualDiscount(0);
+//			model.setIndDiscount(indDisc);
+			
+//			clientCombo.fireActionEvent();
 		}
 	}
 	public void clientChooseMet(boolean focusLost){
+//		long timing;
 		if (Checking||(!clientCombo.isSelected()&&!focusLost))
 			return;
-		IndividualDiscount indDisc=new IndividualDiscount(0);
+		IndividualDiscount indDisc=new IndividualDiscount();
 		model.setIndDiscount(indDisc);
 		
-		if (checkClient()){
+		if (isPresentClientNameInBase()){
 		try {
 			String SQL=String.format("Select c.type, trunc(months_between(sysdate, c.day)),c.id_client,nvl(c.iscardinput,0),nvl(c.card_numb,0), nvl(t.sum,0) from client c,(select id_client, sum(sum)/12 as sum from DOCUMENT where day between SYSDATE-365 and SYSDATE group by id_client) t where name='%s' and t.ID_CLIENT (+) = c.ID_CLIENT ", clientCombo.getSelectedItem());
+// 1
+//			timing=(new GregorianCalendar()).getTimeInMillis();
 			ResultSet rs=DataSet.QueryExec(SQL,false);
+//			System.out.println("1: "+((new GregorianCalendar()).getTimeInMillis()-timing));
 			rs.next();
 //			GregorianCalendar lastEdit = new GregorianCalendar();
 //			lastEdit.setTime(rs.getDate(2));
@@ -469,7 +477,7 @@ class NewSaleFrame extends MyPanel
 			else if (typeClient==1 && rs.getInt(5)!=0) {
 				isInputCard.setForeground(Color.RED);
 				isInputCard.setText("Карта не проведена");
-			} else if (typeClient==1 && rs.getInt(6)>20000) {
+			} else if (typeClient==1 && rs.getInt(6)>MIN_SUMM_FOR_CARD) {
 				isInputCard.setForeground(Color.RED);
 				isInputCard.setText("Выдать карту (F12)");
 			}else{
@@ -492,7 +500,11 @@ class NewSaleFrame extends MyPanel
 				rs.close();
 				
 				SQL=String.format("Select id_skl from sklad where name='%s'", (String)skladCombo.getSelectedItem());
+// 2
+//				timing=(new GregorianCalendar()).getTimeInMillis();
 				rs=DataSet.QueryExec(SQL, false);
+//				System.out.println("2: "+((new GregorianCalendar()).getTimeInMillis()-timing));
+				
 				rs.next();
 				int id_skl=rs.getInt(1);
 				rs.close();		
@@ -560,21 +572,27 @@ class NewSaleFrame extends MyPanel
 		Checking=false;
 		ResultSet rs;
 		try {
+// 3
+//			timing=(new GregorianCalendar()).getTimeInMillis();
+
 			rs = DataSet.QueryExec("Select sum(document.sum*curs_now.curs) from document inner join curs_now on curs_now.id_val=document.id_val where (numb is NULL) and document.id_type_doc=2 and id_client=(Select id_client from client where name='"+clientCombo.getSelectedItem()+"')",false );
+//			System.out.println("3: "+((new GregorianCalendar()).getTimeInMillis()-timing));
 			rs.next();
-			
 			setItogoall(rs.getDouble(1));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		model.setClient((String)clientCombo.getSelectedItem());
 		itogo.setText("Итого (учитывая скидку): "+model.summ());
-		sumForSale.setVisible(MainFrame.isSale() && !okrCombo.isVisible());
+//		sumForSale.setVisible(MainFrame.isSale() && !okrCombo.isVisible());
 		double curs=1;
 		try{
+// 4
+//			timing=(new GregorianCalendar()).getTimeInMillis();
+
 			rs=DataSet.QueryExec("select curs from curs_now where id_val=(select id_val from type_price where name='"+priceCombo.getSelectedItem()+"')", false);
+//			System.out.println("4: "+((new GregorianCalendar()).getTimeInMillis()-timing));			
 			if (rs.next())
 				curs=rs.getDouble(1);
 		}catch(Exception e){
@@ -585,11 +603,20 @@ class NewSaleFrame extends MyPanel
 		if (getId_doc()!=0){
 			try{
 				String SQL=String.format("Select trim(c.name) from client c,document d where d.id_doc=%s and d.id_client=c.id_client", getId_doc());
+// 5
+//				timing=(new GregorianCalendar()).getTimeInMillis();
+				
 				rs=DataSet.QueryExec(SQL, false);
+//				System.out.println("5: "+((new GregorianCalendar()).getTimeInMillis()-timing));
 				
 				if (rs.next()&&clientCombo.getSelectedItem().equals(rs.getString(1))){
 					SQL=String.format("Select sum*(1-disc/100) from document where id_doc=%s", getId_doc());
+// 6
+//					timing=(new GregorianCalendar()).getTimeInMillis();
+
 					rs=DataSet.QueryExec(SQL, false);
+//					System.out.println("6: "+((new GregorianCalendar()).getTimeInMillis()-timing));					
+					
 					rs.next();
 					setItogoall(getItogoall()-rs.getDouble(1)*curs);
 				}
@@ -600,7 +627,7 @@ class NewSaleFrame extends MyPanel
 		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
 
 	}
-	private boolean checkClient(){
+	private boolean isPresentClientNameInBase(){
 		boolean ret=false;
 		
 		try {
@@ -773,35 +800,43 @@ class NewSaleFrame extends MyPanel
 			if (keyCode==KeyEvent.VK_F11){
 				event.setKeyCode(KeyEvent.VK_UNDEFINED);
 				String cod=JOptionPane.showInputDialog(null, "Введите номер карты клиента", "Ввод карты", JOptionPane.QUESTION_MESSAGE);
-				for (int i=cod.length();i<13;i++){
+				for (int i=cod.length();i<12;i++){
 					cod="0"+cod;
 				}
 				getClientCodFromScaner(cod);
 			}
 			if (keyCode==KeyEvent.VK_F12){
 				event.setKeyCode(KeyEvent.VK_UNDEFINED);
+				if (!isInputCard.getText().equals("Выдать карту (F12)")){
+					return;
+				}
 				int icod=0;
 				String cod="";
 				do
 				{
-				cod=JOptionPane.showInputDialog(null, "Введите номер новой карты", "Выдача карты", JOptionPane.QUESTION_MESSAGE);
+				cod=JOptionPane.showInputDialog(null, String.format("Введите номер новой карты для %s",clientCombo.getSelectedItem()), "Выдача карты", JOptionPane.QUESTION_MESSAGE);
 				
 				try{
 					if (cod==null)
 						return;
 					icod=Integer.parseInt(cod, 10);
-					if (!(icod<10001 && icod>9))
+					if (!(icod<10001 && icod>99))
 						throw new NumberFormatException();
 				}catch(NumberFormatException ex){
-					JOptionPane.showMessageDialog(null, "введите корректный номер от 10 до 10000", "Неверный номер", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Введите корректный номер от 100 до 10000", "Неверный номер", JOptionPane.ERROR_MESSAGE);
 				}
 				
-				}while(!(icod<10001 && icod>9));
-				for (int i=cod.length();i<13;i++){
+				}while(!(icod<10001 && icod>99));
+				for (int i=cod.length();i<12;i++){
 					cod="0"+cod;
 				}
-				
-//				getClientCodFromScaner(cod);
+				String SQL=String.format("Update client set card_numb='%s' where name='%s'", cod,clientCombo.getSelectedItem());
+				try{
+					DataSet.QueryExec(SQL, true);
+				}catch(Exception ex){
+					ex.printStackTrace();
+				}
+				getClientCodFromScaner(cod);
 			}
 
 		}
@@ -959,12 +994,13 @@ class NewSaleFrame extends MyPanel
 					id=rs1.getInt(1);
 					SQL="update document set sum="+(rs1.getDouble(2)+model.summ()-model.summAkcia())+" where id_doc="+id;
 				}else{
-					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_price, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc, id_price,isclientcard, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
 						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
 						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
 						", (select distinct id_val from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_val" +
 						", "+(model.summ()-model.summAkcia())+" as sum ,'-"+getNote()+"' as note, 0 as disc" +
-						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price, " +
+						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price "+ 
+						", " +clientKoeficientForDiscount+ " as isclientcard,"+
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}
 			
@@ -993,12 +1029,13 @@ class NewSaleFrame extends MyPanel
 					id=rs1.getInt(1);
 					SQL="update document set sum="+(rs1.getDouble(2)+model.summAkcia())+" where id_doc="+id;
 				}else{
-					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc,id_price , id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
+					SQL="insert into document (id_type_doc, id_doc, id_client, id_skl, id_val, sum, note, disc,id_price ,isclientcard, id_manager) select 2 as id_type_doc,"+id+" as id_doc"+
 						", (select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') as id_client" +
 						", (select id_skl from SKLAD where name='"+(String)skladCombo.getSelectedItem()+"') as id_skl"+
 						", (select distinct id_val from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_val" +
 						", "+model.summAkcia()+" as sum ,'&"+getNote()+"' as note, 0 as disc" +
-						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price, " +						
+						", (select id_price from type_price where name='"+(String)priceCombo.getSelectedItem()+"') as id_price " +
+						", " +clientKoeficientForDiscount+ " as isclientcard,"+
 						" id_manager from manager where name='"+parent.GetUserName()+"'";
 				}
 				DataSet.UpdateQuery(SQL);
@@ -1031,7 +1068,6 @@ class NewSaleFrame extends MyPanel
 			 try {
 				DataSet.rollback();
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				JOptionPane.showMessageDialog(null, "Критическая ошибка. Обратитесь к администратору!/n (ERROR-02)", "Ошибка", JOptionPane.ERROR_MESSAGE);
 				e1.printStackTrace();
 				ret=false;
@@ -1042,7 +1078,7 @@ class NewSaleFrame extends MyPanel
 		return ret;
 	}
 	
-	private boolean isPersonalDiscount(String aName,String aSklad,String aTovar){
+/*	private boolean isPersonalDiscount(String aName,String aSklad,String aTovar){
 		String SQL;
 		SQL=String.format("select count(*) from DISCOUNT where ID_CLIENT=(select id_client from client where name='%s') and id_skl=(select ID_SKL from sklad where name='%s') and ID_GROUP in (SELECT id_group from GROUPID start with ID_GROUP=(select distinct id_group from kart where id_tovar=(select id_tovar from tovar where name='%s')) connect by prior GROUPID.PARENT_GROUP=GROUPID.ID_GROUP)", aName,aSklad,aTovar);
 		boolean ret=false;
@@ -1071,7 +1107,7 @@ class NewSaleFrame extends MyPanel
 		return ret;
 		
 	}
-	
+*/	
 	
 	private int presentAkcia(){
 		int ret=0;
@@ -1154,7 +1190,7 @@ class NewSaleFrame extends MyPanel
 			}
 		}
 		catch (Exception e) { e.printStackTrace();}
-		int disc=0;
+/*		int disc=0;
 		try{
 			rs = DataSet.QueryExec("select disc from discount where id_client=(select id_client from client where name='"+(String)clientCombo.getSelectedItem()+"') and id_skl=(select id_skl from sklad where name='"+(String)skladCombo.getSelectedItem()+"') and id_group is null",true);
 			if (rs.next()){
@@ -1163,12 +1199,13 @@ class NewSaleFrame extends MyPanel
 		}catch(Exception e){
 			e.printStackTrace();
 		}
+		
+*/
 		try {
 			rs=DataSet.QueryExec("select trim(name) from type_price where id_price=(select id_price from sklad where name = '"+(String)skladCombo.getSelectedItem()+"' )", false);
 			rs.next();
 			priceCombo.setSelectedItem(rs.getString(1));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		okrCombo.setSelectedIndex(0);
@@ -1207,12 +1244,14 @@ class NewSaleFrame extends MyPanel
 			}
 		}
 	};
+/*
 	private Double getSumForSaleInOtherDoc() {
 		return sumForSaleInOtherDoc;
 	}
 	private void setSumForSaleInOtherDoc(Double sumForSaleInOtherDoc) {
 		this.sumForSaleInOtherDoc = sumForSaleInOtherDoc;
 	}
+
 	private Double getSumForSaleInCurrentDoc(){
 		Double sumInDocument=0.0;
 		Vector<String> listOfName=parent.ChooseNameForSale(model.getCommaName(), (String)skladCombo.getSelectedItem());
@@ -1221,6 +1260,8 @@ class NewSaleFrame extends MyPanel
 		}
 		return sumInDocument;
 	}
+*/	
+	
 	private double getKoefForPrice() {
 		return koefForPrice;
 	}
@@ -1228,28 +1269,20 @@ class NewSaleFrame extends MyPanel
 		this.koefForPrice = 1+koefForPrice/100;
 	}
 	private IndividualDiscount getDiscForClient(int id_client, int id_skl) throws Exception{
-		IndividualDiscount indDisc=new IndividualDiscount(0);
+//		System.out.println("Зашел");
+		IndividualDiscount indDisc=new IndividualDiscount();
 		if (clientKoeficientForDiscount==0)
 			return indDisc;
-		String SQL=String.format("select count(*) from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
+		String SQL=String.format("select disc, id_skl from discount where id_client='%s' and id_group is null", id_client);
 		ResultSet rs=DataSet.QueryExec(SQL,true);
-		rs.next();
-		if (rs.getInt(1)>0){
-			rs.close();
-			SQL=String.format("select disc from discount where id_client='%s' and id_skl='%s' and id_group is null", id_client,id_skl);
-			rs=DataSet.QueryExec(SQL,true);
-			rs.next();
-			indDisc.setGeneralDiscount(rs.getInt(1));
+		while(rs.next()){
+			indDisc.addGeneralDiscount(rs.getInt(1),rs.getInt(2));
 			}
-		else
-		{
-			indDisc.setGeneralDiscount(0);
-		}
-		SQL=String.format("select CONNECT_BY_ROOT disc root, id_group from (select distinct g.id_group,g.PARENT_GROUP,d.disc from GROUPID g left join (select id_group,disc from discount where ID_CLIENT=%1$s and ID_SKL=%2$s) d on d.ID_GROUP=g.ID_GROUP start with g.ID_GROUP in (select id_group from discount where ID_CLIENT=%1$s and ID_SKL=%2$s and ID_GROUP is not null) CONNECT by g.PARENT_GROUP=prior g.ID_GROUP) start with not (disc is null) connect by parent_group= prior id_group and disc is null", id_client,id_skl);
+		SQL=String.format("select CONNECT_BY_ROOT disc disc, id_group, CONNECT_BY_ROOT id_skl from (select distinct g.id_group,g.PARENT_GROUP,d.disc,d.id_skl from GROUPID g left join (select id_group,disc,id_skl from discount where ID_CLIENT=%1$s ) d on d.ID_GROUP=g.ID_GROUP start with g.ID_GROUP in (select id_group from discount where ID_CLIENT=%1$s and ID_GROUP is not null) CONNECT by g.PARENT_GROUP=prior g.ID_GROUP) start with not (disc is null) connect by parent_group= prior id_group and disc is null", id_client);
 		rs.close();
 		rs=DataSet.QueryExec(SQL, false);
 		while (rs.next()){
-			indDisc.addDiscount(rs.getInt(2), rs.getInt(1));
+			indDisc.addDiscount(rs.getInt(2), rs.getInt(1), rs.getInt(3));
 		}
 		rs.close();
 		return indDisc;
@@ -1257,6 +1290,7 @@ class NewSaleFrame extends MyPanel
 
 	public void getClientCodFromScaner(String cod){
 		try{
+//			System.out.println(cod);
 			String SQL;
 			int rez=0;
 			int numbClient=new Integer(cod.substring(8, 11));
@@ -1271,8 +1305,6 @@ class NewSaleFrame extends MyPanel
 				return;
 			}
 			DataSet.commit();
-//			isInputCard.setBackground(Color.GREEN);
-//			isInputCard.setText("Карта проведена");
 			String name;
 			if (numbClient>10){
 				SQL=String.format("Select trim(name) from client where card_numb='%s'", cod);
@@ -1303,6 +1335,11 @@ class NewSaleFrame extends MyPanel
 	}
 }
 class JComboBoxFire extends JComboBox{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public void fireActionEvent()
 	{
 		super.fireActionEvent();
