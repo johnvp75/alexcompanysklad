@@ -2,7 +2,7 @@ import java.util.Vector;
 
 public class IndividualDiscount {
 //	private int generalDiscount=0;
-//	private int id_client;
+	private int id_client;
 //	private int id_skl;
 	Vector<DiscountElement> discountElements;
 	Vector<GeneralDiscountElement> generalDiscount;
@@ -42,5 +42,13 @@ public class IndividualDiscount {
 
 	public void addGeneralDiscount(int generalDiscount,int id_skl) {
 		this.generalDiscount.add(new GeneralDiscountElement(generalDiscount, id_skl));
+	}
+
+	public int getId_client() {
+		return id_client;
+	}
+
+	public void setId_client(int id_client) {
+		this.id_client = id_client;
 	}	
 }

@@ -74,6 +74,7 @@ public class SelectDoc extends MyPanel {
 					try{
 						DataSet.QueryExec(SQL, false);
 					}catch(Exception e){
+						e.printStackTrace();
 						JOptionPane.showMessageDialog(null, "Документ заблокирован другим пользователем! Попробуйте позже.", "Ошибка блокировки", JOptionPane.ERROR_MESSAGE);
 						return;
 					}

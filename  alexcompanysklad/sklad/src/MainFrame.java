@@ -1141,7 +1141,8 @@ class MainFrame extends JFrame
 					DataSet.rollback();
 					return;
 				}
-
+				if (!testPrice(id_client))
+					return;
 				
 /*				if (isOpt && SALE)
 					amountOfDiscount=CalcSale(id_client);
@@ -1473,8 +1474,46 @@ class MainFrame extends JFrame
 		}
 			
 		}
-	private void testPrice(int id_client){
-		
+	private boolean testPrice(int id_client){
+		boolean ret=true;
+		try{
+			String SQL=String.format("merge into lines l using (select l.id_tovar,p.AKCIYA,d.id_doc from document d, lines l, price p where d.id_client = %s and d.day is null and d.numb is null and l.ID_DOC = d.ID_DOC and p.ID_PRICE = d.ID_PRICE and p.ID_TOVAR = l.ID_TOVAR) t1 on (l.id_doc=t1.id_doc and l.id_tovar=t1.id_tovar) when matched then update set l.DISC=t1.AKCIYA", id_client);
+			DataSet.UpdateQuery(SQL);
+			IndividualDiscount disc=new IndividualDiscount();
+			disc=NewSaleFrame.getDiscForClient(id_client, 1);
+			SQL=String.format("select distinct l.rowid, k.id_group,d.ID_SKL from kart k,DOCUMENT d,lines l where d.ID_CLIENT=%s and d.ISCLIENTCARD=1 and l.ID_DOC=d.ID_DOC and k.ID_TOVAR=l.ID_TOVAR and d.day is null and d.numb is null ", id_client);
+			ResultSet rs=DataSet.QueryExec(SQL, false);
+			SQL=null;
+			if (rs.next()){
+				SQL=String.format("select '%s',%s from dual ",rs.getString(1),disc.getDiscount(rs.getInt(2), rs.getInt(3)));
+			}
+			while (rs.next()){
+				SQL=SQL+String.format("union select '%s',%s from dual ",rs.getString(1),disc.getDiscount(rs.getInt(2), rs.getInt(3)));
+			}
+			if (SQL!=null){
+				SQL="insert into disc (id_row,disc) "+SQL;
+				DataSet.UpdateQuery(SQL);
+				SQL="merge into lines l using (select * from disc) t1 on (l.rowid=t1.id_row) when matched then update set l.DISC=l.disc+t1.disc";
+				DataSet.UpdateQuery(SQL);
+			}
+			SQL=String.format("merge into document d using (select sum(l.kol*l.cost*(1-l.disc/100)) as sum, d.id_doc from document d, lines l where d.id_client = %s and d.day is null and d.numb is null and l.ID_DOC = d.ID_DOC group by d.ID_DOC ) t1 on (d.id_doc=t1.id_doc) when matched then update set d.sum=t1.sum", id_client);
+			DataSet.UpdateQuery(SQL);
+			DataSet.commit();
+		}catch(Exception e){
+			ret=false;
+			JOptionPane.showMessageDialog(null, "Ошибка проверки скидок","Error",JOptionPane.ERROR_MESSAGE);
+			try{
+				DataSet.rollback();
+			}catch(Exception ex){
+				JOptionPane.showMessageDialog(null, "Ошибка rollback","Error",JOptionPane.ERROR_MESSAGE);
+				ex.printStackTrace();
+			}
+			
+			e.printStackTrace();
+			
+			
+		}
+		return ret;
 	}
 
 

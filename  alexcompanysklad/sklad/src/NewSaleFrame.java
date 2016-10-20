@@ -241,6 +241,7 @@ class NewSaleFrame extends MyPanel
 		        clientCombo.getEditor().selectAll();
 		    }
 		    public void focusLost(FocusEvent event){
+		    	System.out.println("Вошел фокус");
 		    	clientChooseMet(true);
 		    	
 		    }
@@ -453,21 +454,18 @@ class NewSaleFrame extends MyPanel
 	}
 	public void clientChooseMet(boolean focusLost){
 //		long timing;
+
 		if (Checking||(!clientCombo.isSelected()&&!focusLost))
 			return;
+    	System.out.println("Вошел action");
 		IndividualDiscount indDisc=new IndividualDiscount();
 		model.setIndDiscount(indDisc);
 		
 		if (isPresentClientNameInBase()){
 		try {
 			String SQL=String.format("Select c.type, trunc(months_between(sysdate, c.day)),c.id_client,nvl(c.iscardinput,0),nvl(c.card_numb,0), nvl(t.sum,0) from client c,(select id_client, sum(sum)/12 as sum from DOCUMENT where day between SYSDATE-365 and SYSDATE group by id_client) t where name='%s' and t.ID_CLIENT (+) = c.ID_CLIENT ", clientCombo.getSelectedItem());
-// 1
-//			timing=(new GregorianCalendar()).getTimeInMillis();
 			ResultSet rs=DataSet.QueryExec(SQL,false);
-//			System.out.println("1: "+((new GregorianCalendar()).getTimeInMillis()-timing));
 			rs.next();
-//			GregorianCalendar lastEdit = new GregorianCalendar();
-//			lastEdit.setTime(rs.getDate(2));
 			clientKoeficientForDiscount=rs.getInt(4);
 			int typeClient=rs.getInt(1);
 			if (typeClient==1 && clientKoeficientForDiscount==1){
@@ -508,7 +506,7 @@ class NewSaleFrame extends MyPanel
 				rs.next();
 				int id_skl=rs.getInt(1);
 				rs.close();		
-				model.setIndDiscount(getDiscForClient(id_client, id_skl));
+				model.setIndDiscount(getDiscForClient(id_client,clientKoeficientForDiscount));
 			}else{
 				okrLabel.setVisible(true);
 				okrCombo.setVisible(true);
@@ -625,6 +623,7 @@ class NewSaleFrame extends MyPanel
 			}
 		}
 		itogoallLabel.setText("Итого по всем накладным: "+formatter.format(model.summ()*curs+getItogoall()));
+		this.transferFocus();
 
 	}
 	private boolean isPresentClientNameInBase(){
@@ -862,6 +861,7 @@ class NewSaleFrame extends MyPanel
 				SQL=String.format("Select d.*,l.* from document d,lines l where d.id_doc=%s and l.id_doc=d.id_doc for update nowait", id_doc);
 				DataSet.QueryExec1(SQL, false);
 			}catch(Exception e){
+				e.printStackTrace();
 				JOptionPane.showMessageDialog(null, "Документ заблокирован другим пользователем! Попробуйте позже.", "Ошибка блокировки", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
@@ -872,7 +872,7 @@ class NewSaleFrame extends MyPanel
 				skladCombo.setSelectedItem(rs.getString(2));
 				clientCombo.setSelectedItem(rs.getString(1));
 				priceCombo.setSelectedItem(rs.getString(3));
-				model.setIndDiscount(getDiscForClient(rs.getInt(9), rs.getInt(8)));
+				model.setIndDiscount(getDiscForClient(rs.getInt(9),clientKoeficientForDiscount));
 //				model.setIndDiscount(new IndividualDiscount(rs.getInt(5)));
 				setNote(rs.getString(4).substring(1));
 				noteText.setText(getNote());
@@ -1268,9 +1268,10 @@ class NewSaleFrame extends MyPanel
 	private void setKoefForPrice(double koefForPrice) {
 		this.koefForPrice = 1+koefForPrice/100;
 	}
-	private IndividualDiscount getDiscForClient(int id_client, int id_skl) throws Exception{
+	public static IndividualDiscount getDiscForClient(int id_client,int clientKoeficientForDiscount) throws Exception{
 //		System.out.println("Зашел");
 		IndividualDiscount indDisc=new IndividualDiscount();
+		indDisc.setId_client(id_client);
 		if (clientKoeficientForDiscount==0)
 			return indDisc;
 		String SQL=String.format("select disc, id_skl from discount where id_client='%s' and id_group is null", id_client);

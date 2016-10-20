@@ -31,7 +31,7 @@ class naklTableModel extends AbstractTableModel{
 	public void setSklad(String aValue){
 		try{
 			String sql=String.format("Select id_skl from sklad where name='%s'", aValue);
-			ResultSet rs=DataSet.QueryExec1(sql, false);
+			ResultSet rs=DataSet.QueryExec(sql, false);
 			rs.next();
 			id_skl=rs.getInt(1);
 		}catch(Exception ex){
